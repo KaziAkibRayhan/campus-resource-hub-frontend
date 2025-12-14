@@ -1,19 +1,19 @@
 // src/components/layout/Sidebar.jsx
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import {
-  Home,
-  BookOpen,
-  Bell,
-  Calendar,
   AlertCircle,
-  Users,
+  Bell,
+  BookOpen,
+  BookOpenText,
+  Calendar,
+  Home,
+  LogOut,
   Settings,
   User,
-  LogOut,
+  Users,
   X,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
@@ -56,8 +56,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             {/* Logo and Close Button */}
             <div className="flex items-center justify-between mb-8">
               <Link to="/dashboard" className="flex items-center space-x-2">
-                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                  <BookOpen size={24} />
+                <div className="bg-opacity-20 p-2 rounded-lg">
+                  <BookOpenText size={24} />
                 </div>
                 <span className="text-xl font-bold">CRH</span>
               </Link>
