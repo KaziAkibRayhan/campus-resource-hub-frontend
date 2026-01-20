@@ -1,71 +1,115 @@
-// src/context/AuthContext.jsx
+// src/context/AuthContext.jsx (Updated for Backend API)
 import React, { createContext, useState, useContext, useEffect } from "react";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Check if user is logged in on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    const token = localStorage.getItem("token");
+
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
+      // Optionally verify token by calling /api/auth/me
+      verifyToken(token);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  // Verify token validity
+  const verifyToken = async (token) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          // Token invalid, clear storage
+          logout();
+        }
+      } else {
+        logout();
+      }
+    } catch (error) {
+      console.error("Token verification error:", error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Login function
   const login = async (email, password) => {
     try {
-      // TODO: Replace with actual API call
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Dummy user data - Replace with API response
-      const userData = {
-        id: "1",
-        name: "Akib Rayhan",
-        email: email,
-        studentId: "4223020858",
-        department: "CSE",
-        role: "student", // student, moderator, admin
-      };
+      const data = await response.json();
 
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("token", "dummy-jwt-token");
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
 
-      return { success: true, user: userData };
+        return { success: true, user: data.user };
+      } else {
+        return { success: false, error: data.message || "Login failed" };
+      }
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error("Login error:", error);
+      return { success: false, error: "Network error. Please try again." };
     }
   };
 
   // Signup function
   const signup = async (userData) => {
     try {
-      // TODO: Replace with actual API call
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
 
-      const newUser = {
-        id: Date.now().toString(),
-        name: userData.name,
-        email: userData.email,
-        studentId: userData.studentId,
-        department: userData.department,
-        role: "student",
-      };
+      const data = await response.json();
 
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      localStorage.setItem("token", "dummy-jwt-token");
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
 
-      return { success: true, user: newUser };
+        return { success: true, user: data.user };
+      } else {
+        // Handle validation errors
+        if (data.errors) {
+          const errorMessages = data.errors
+            .map((err) => err.message)
+            .join(", ");
+          return { success: false, error: errorMessages };
+        }
+        return { success: false, error: data.message || "Signup failed" };
+      }
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error("Signup error:", error);
+      return { success: false, error: "Network error. Please try again." };
     }
   };
 
@@ -77,10 +121,65 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Update user profile
-  const updateUser = (updatedData) => {
-    const updatedUser = { ...user, ...updatedData };
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+  const updateUser = async (updatedData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/auth/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const updatedUser = { ...user, ...data.user };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        return { success: true, user: updatedUser };
+      } else {
+        return { success: false, error: data.message || "Update failed" };
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  };
+
+  // Change password
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/auth/change-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update token if new one is provided
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        return { success: true, message: data.message };
+      } else {
+        return {
+          success: false,
+          error: data.message || "Password change failed",
+        };
+      }
+    } catch (error) {
+      console.error("Change password error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
   };
 
   const value = {
@@ -89,6 +188,7 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     updateUser,
+    changePassword,
     isAuthenticated: !!user,
     loading,
   };
