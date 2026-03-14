@@ -1,5 +1,5 @@
 // src/pages/Resources.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -10,24 +10,58 @@ import {
   Star,
   FileText,
 } from "lucide-react";
-import { dummyResources, departments, semesters } from "../utils/dummyData";
+import { departments, semesters } from "../utils/dummyData";
+import { resourceService } from "../services/api";
+import { toast } from "sonner";
 
 const Resources = () => {
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedSemester, setSelectedSemester] = useState("all");
 
-  const filteredResources = dummyResources.filter((resource) => {
-    const matchesSearch =
-      resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resource.course.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDept =
-      selectedDepartment === "all" ||
-      resource.department === selectedDepartment;
-    const matchesSem =
-      selectedSemester === "all" || resource.semester === selectedSemester;
-    return matchesSearch && matchesDept && matchesSem;
-  });
+  useEffect(() => {
+    fetchResources();
+  }, [searchQuery, selectedDepartment, selectedSemester]);
+
+  const fetchResources = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (searchQuery) params.search = searchQuery;
+      if (selectedDepartment !== "all") params.department = selectedDepartment;
+      if (selectedSemester !== "all") params.semester = selectedSemester;
+
+      const response = await resourceService.getAll(params);
+      setResources(response.data.resources);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to fetch resources");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async (id, fileUrl, fileName) => {
+    try {
+      await resourceService.incrementDownload(id);
+
+      // Fetch the file as a blob to trigger download
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName || "resource-file");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Error downloading file");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -105,7 +139,7 @@ const Resources = () => {
       <div className="flex items-center justify-between">
         <p className="text-gray-600">
           Showing{" "}
-          <span className="font-semibold">{filteredResources.length}</span>{" "}
+          <span className="font-semibold">{resources.length}</span>{" "}
           resources
         </p>
         <select className="px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
@@ -116,86 +150,98 @@ const Resources = () => {
       </div>
 
       {/* Resources List */}
-      <div className="space-y-4">
-        {filteredResources.map((resource) => (
-          <div
-            key={resource.id}
-            className="bg-white border rounded-xl p-6 hover:shadow-lg transition"
-          >
-            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-              {/* Resource Info */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-3">
-                  <FileText className="text-red-500" size={28} />
-                  <h3 className="text-lg font-bold text-gray-800">
-                    {resource.title}
-                  </h3>
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {resources.map((resource) => (
+            <div
+              key={resource._id}
+              className="bg-white border rounded-xl p-6 hover:shadow-lg transition"
+            >
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                {/* Resource Info */}
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <FileText className="text-red-500" size={28} />
+                    <h3 className="text-lg font-bold text-gray-800">
+                      {resource.title}
+                    </h3>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {resource.course}
+                    </span>
+                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {resource.department}
+                    </span>
+                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {resource.semester}
+                    </span>
+                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {resource.fileType}
+                    </span>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <span>
+                      Uploaded by{" "}
+                      <span className="font-medium text-gray-700">
+                        {resource.uploadedBy?.name || "Anonymous"}
+                      </span>
+                    </span>
+                    <span>•</span>
+                    <span>{new Date(resource.createdAt).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span className="flex items-center space-x-1">
+                      <Star
+                        size={16}
+                        className="text-yellow-500 fill-yellow-500"
+                      />
+                      <span className="font-medium text-gray-700">
+                        {resource.rating}
+                      </span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center space-x-1">
+                      <Download size={16} />
+                      <span className="font-medium text-gray-700">
+                        {resource.downloads}
+                      </span>
+                    </span>
+                  </div>
                 </div>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {resource.course}
-                  </span>
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {resource.department}
-                  </span>
-                  <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {resource.semester}
-                  </span>
-                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {resource.type}
-                  </span>
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    onClick={() => window.open(resource.fileUrl, "_blank")}
+                    className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center space-x-2"
+                  >
+                    <Eye size={18} />
+                    <span>Preview</span>
+                  </button>
+                  <button
+                    onClick={() => handleDownload(resource._id, resource.fileUrl, resource.title)}
+                    className="bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition flex items-center justify-center space-x-2"
+                  >
+                    <Download size={18} />
+                    <span>Download</span>
+                  </button>
                 </div>
-
-                {/* Metadata */}
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                  <span>
-                    Uploaded by{" "}
-                    <span className="font-medium text-gray-700">
-                      {resource.uploadedBy}
-                    </span>
-                  </span>
-                  <span>•</span>
-                  <span>{resource.date}</span>
-                  <span>•</span>
-                  <span className="flex items-center space-x-1">
-                    <Star
-                      size={16}
-                      className="text-yellow-500 fill-yellow-500"
-                    />
-                    <span className="font-medium text-gray-700">
-                      {resource.rating}
-                    </span>
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center space-x-1">
-                    <Download size={16} />
-                    <span className="font-medium text-gray-700">
-                      {resource.downloads}
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center space-x-2">
-                  <Eye size={18} />
-                  <span>Preview</span>
-                </button>
-                <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition flex items-center justify-center space-x-2">
-                  <Download size={18} />
-                  <span>Download</span>
-                </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Empty State */}
-      {filteredResources.length === 0 && (
+      {!loading && resources.length === 0 && (
         <div className="bg-white rounded-xl shadow-md p-12 text-center">
           <FileText className="mx-auto text-gray-400 mb-4" size={64} />
           <h3 className="text-xl font-bold text-gray-800 mb-2">

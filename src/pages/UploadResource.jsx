@@ -11,6 +11,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { departments, semesters } from "../utils/dummyData";
+import { resourceService } from "../services/api";
+import { toast } from "sonner";
 
 const UploadResource = () => {
   const navigate = useNavigate();
@@ -19,14 +21,18 @@ const UploadResource = () => {
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // TODO: Replace with actual API call
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("course", values.course);
+      formData.append("department", values.department);
+      formData.append("semester", values.semester);
+      formData.append("description", values.description);
+      formData.append("file", values.file);
 
-      console.log("Form values:", values);
-      console.log("File:", selectedFile);
+      const response = await resourceService.upload(formData);
 
       setUploadSuccess(true);
+      toast.success(response.data.message);
       resetForm();
       setSelectedFile(null);
 
@@ -35,7 +41,7 @@ const UploadResource = () => {
         navigate("/resources");
       }, 2000);
     } catch (error) {
-      console.error("Upload error:", error);
+      toast.error(error.response?.data?.message || "Error uploading resource");
     }
     setSubmitting(false);
   };

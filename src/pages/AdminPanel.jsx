@@ -1,5 +1,5 @@
 // src/pages/AdminPanel.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   CheckCircle,
   XCircle,
@@ -8,28 +8,59 @@ import {
   HardDrive,
   Download,
 } from "lucide-react";
+import { resourceService } from "../services/api";
+import { toast } from "sonner";
 
 const AdminPanel = () => {
-  const pendingResources = [
-    {
-      id: 1,
-      title: "Machine Learning Notes",
-      uploader: "John Doe",
-      date: "2024-12-14",
-    },
-    {
-      id: 2,
-      title: "Network Security Slides",
-      uploader: "Jane Smith",
-      date: "2024-12-13",
-    },
-    {
-      id: 3,
-      title: "Web Development Guide",
-      uploader: "Mike Johnson",
-      date: "2024-12-13",
-    },
-  ];
+  const [pendingResources, setPendingResources] = useState([]);
+  const [totalResources, setTotalResources] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPendingResources();
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await resourceService.getAll({ limit: 1 });
+      setTotalResources(response.data.total);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchPendingResources = async () => {
+    try {
+      setLoading(true);
+      const response = await resourceService.getAll({ isPending: true });
+      setPendingResources(response.data.resources);
+    } catch (error) {
+      toast.error("Failed to fetch pending resources");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await resourceService.approve(id);
+      toast.success("Resource approved");
+      fetchPendingResources();
+    } catch (error) {
+      toast.error("Failed to approve resource");
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await resourceService.reject(id);
+      toast.success("Resource rejected");
+      fetchPendingResources();
+    } catch (error) {
+      toast.error("Failed to reject resource");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -118,57 +149,79 @@ const AdminPanel = () => {
       </div>
 
       {/* Pending Resources Table */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          Pending Resource Approvals
-        </h3>
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="p-6 border-b">
+          <h3 className="text-xl font-bold text-gray-800">Pending Resources</h3>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-gray-700 font-semibold">
-                  Title
+            <thead className="bg-gray-50 text-left">
+              <tr>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+                  Resource
                 </th>
-                <th className="text-left py-3 px-4 text-gray-700 font-semibold">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Uploader
                 </th>
-                <th className="text-left py-3 px-4 text-gray-700 font-semibold">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Date
                 </th>
-                <th className="text-right py-3 px-4 text-gray-700 font-semibold">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {pendingResources.map((resource) => (
-                <tr
-                  key={resource.id}
-                  className="border-b border-gray-100 hover:bg-gray-50"
-                >
-                  <td className="py-3 px-4">
-                    <p className="font-medium text-gray-800">
-                      {resource.title}
-                    </p>
-                  </td>
-                  <td className="py-3 px-4 text-gray-600">
-                    {resource.uploader}
-                  </td>
-                  <td className="py-3 px-4 text-gray-600">{resource.date}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex justify-end space-x-2">
-                      <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition flex items-center space-x-1">
-                        <CheckCircle size={16} />
-                        <span>Approve</span>
-                      </button>
-                      <button className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition flex items-center space-x-1">
-                        <XCircle size={16} />
-                        <span>Reject</span>
-                      </button>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="px-6 py-10 text-center">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : pendingResources.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="px-6 py-10 text-center text-gray-500">
+                    No pending resources to review
+                  </td>
+                </tr>
+              ) : (
+                pendingResources.map((resource) => (
+                  <tr key={resource._id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <p className="font-semibold text-gray-800">
+                        {resource.title}
+                      </p>
+                      <p className="text-sm text-gray-500">{resource.course}</p>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {resource.uploadedBy?.name || "Unknown"}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {new Date(resource.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleApprove(resource._id)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                          title="Approve"
+                        >
+                          <CheckCircle size={20} />
+                        </button>
+                        <button
+                          onClick={() => handleReject(resource._id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Reject"
+                        >
+                          <XCircle size={20} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -180,7 +233,7 @@ const AdminPanel = () => {
           <p className="text-blue-600 text-sm font-medium mb-1">
             Total Resources
           </p>
-          <p className="text-3xl font-bold text-blue-700">1,234</p>
+          <p className="text-3xl font-bold text-blue-700">{totalResources}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-green-600 text-sm font-medium mb-1">

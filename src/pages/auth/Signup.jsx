@@ -30,7 +30,7 @@ const Signup = () => {
     const result = await signup(values);
 
     if (result.success) {
-      navigate("/dashboard");
+      navigate("/login");
     } else {
       setSignupError(result.error || "Signup failed. Please try again.");
     }

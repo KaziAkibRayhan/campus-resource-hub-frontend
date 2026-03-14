@@ -1,5 +1,5 @@
 // src/pages/Dashboard.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -10,15 +10,41 @@ import {
   Download,
   TrendingUp,
 } from "lucide-react";
-import { dummyResources, dummyAnnouncements } from "../utils/dummyData";
+import { resourceService, announcementService, eventService } from "../services/api";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [resources, setResources] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [resResponse, annResponse, eventResponse] = await Promise.all([
+          resourceService.getAll({ limit: 4 }),
+          announcementService.getAll({ limit: 4 }),
+          eventService.getAll({ limit: 4 }),
+        ]);
+        setResources(resResponse.data.resources);
+        setAnnouncements(annResponse.data.announcements);
+        setEvents(eventResponse.data.events);
+      } catch (error) {
+        toast.error("Failed to fetch dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const stats = [
     {
       title: "Total Resources",
-      value: "1,234",
+      value: resources.length > 0 ? resources.length : "0",
       icon: BookOpen,
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-50",
@@ -27,7 +53,7 @@ const Dashboard = () => {
     },
     {
       title: "Announcements",
-      value: "45",
+      value: announcements.length > 0 ? announcements.length : "0",
       icon: Bell,
       color: "from-green-500 to-green-600",
       bgColor: "bg-green-50",
@@ -36,7 +62,7 @@ const Dashboard = () => {
     },
     {
       title: "Upcoming Events",
-      value: "12",
+      value: events.length > 0 ? events.length : "0",
       icon: Calendar,
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-50",
@@ -102,9 +128,9 @@ const Dashboard = () => {
             </Link>
           </div>
           <div className="space-y-3">
-            {dummyResources.slice(0, 4).map((resource) => (
+            {resources.slice(0, 4).map((resource) => (
               <div
-                key={resource.id}
+                key={resource._id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
               >
                 <div className="flex-1">
@@ -121,6 +147,9 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+            {!loading && resources.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">No recent resources</p>
+            )}
           </div>
         </div>
 
@@ -138,9 +167,9 @@ const Dashboard = () => {
             </Link>
           </div>
           <div className="space-y-3">
-            {dummyAnnouncements.slice(0, 4).map((announcement) => (
+            {announcements.slice(0, 4).map((announcement) => (
               <div
-                key={announcement.id}
+                key={announcement._id}
                 className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
               >
                 <div className="flex items-start space-x-3">
@@ -152,12 +181,15 @@ const Dashboard = () => {
                       {announcement.title}
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
-                      {announcement.department} • {announcement.date}
+                      {announcement.department} • {new Date(announcement.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               </div>
             ))}
+            {!loading && announcements.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">No recent announcements</p>
+            )}
           </div>
         </div>
       </div>
