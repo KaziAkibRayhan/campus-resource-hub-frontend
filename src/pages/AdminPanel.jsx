@@ -8,35 +8,35 @@ import {
   HardDrive,
   Download,
 } from "lucide-react";
-import { resourceService } from "../services/api";
+import { announcementService, resourceService } from "../services/api";
 import { toast } from "sonner";
 
 const AdminPanel = () => {
   const [pendingResources, setPendingResources] = useState([]);
+  const [pendingAnnouncements, setPendingAnnouncements] = useState([]);
   const [totalResources, setTotalResources] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPendingResources();
-    fetchStats();
+    fetchData();
   }, []);
 
-  const fetchStats = async () => {
-    try {
-      const response = await resourceService.getAll({ limit: 1 });
-      setTotalResources(response.data.total);
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
-
-  const fetchPendingResources = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await resourceService.getAll({ isPending: true });
-      setPendingResources(response.data.resources);
+      const [resPending, annPending, statsRes] = await Promise.all([
+        resourceService.getAll({ isPending: true }),
+        announcementService.getAll({ approved: false }),
+        resourceService.getAll({ limit: 1 }),
+      ]);
+
+      setPendingResources(resPending.data.resources);
+      setPendingAnnouncements(annPending.data.announcements);
+      setTotalResources(statsRes.data.total);
+      // User stats would require a separate service call if implemented
     } catch (error) {
-      toast.error("Failed to fetch pending resources");
+      toast.error("Failed to fetch dashboard data");
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ const AdminPanel = () => {
     try {
       await resourceService.approve(id);
       toast.success("Resource approved");
-      fetchPendingResources();
+      fetchData();
     } catch (error) {
       toast.error("Failed to approve resource");
     }
@@ -56,7 +56,7 @@ const AdminPanel = () => {
     try {
       await resourceService.reject(id);
       toast.success("Resource rejected");
-      fetchPendingResources();
+      fetchData();
     } catch (error) {
       toast.error("Failed to reject resource");
     }
@@ -82,15 +82,19 @@ const AdminPanel = () => {
           </div>
           <div className="space-y-3">
             <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">3 Resources</p>
+              <p className="font-semibold text-gray-800">
+                {pendingResources.length} Resources
+              </p>
               <p className="text-sm text-gray-600">Awaiting review</p>
             </div>
             <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">2 Announcements</p>
+              <p className="font-semibold text-gray-800">
+                {pendingAnnouncements.length} Announcements
+              </p>
               <p className="text-sm text-gray-600">Awaiting review</p>
             </div>
             <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">1 Lost Item</p>
+              <p className="font-semibold text-gray-800">0 Lost Items</p>
               <p className="text-sm text-gray-600">Awaiting review</p>
             </div>
           </div>
