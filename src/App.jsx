@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 
@@ -19,51 +20,55 @@ import Events from "./pages/Events";
 import LostFound from "./pages/LostFound";
 import Clubs from "./pages/Clubs";
 import AdminPanel from "./pages/AdminPanel";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="resources" element={<Resources />} />
-            <Route path="upload-resource" element={<UploadResource />} />
-            <Route path="my-uploads" element={<MyUploads />} />
-            <Route path="announcements" element={<Announcements />} />
-            <Route path="events" element={<Events />} />
-            <Route path="lost-found" element={<LostFound />} />
-            <Route path="clubs" element={<Clubs />} />
-
-            {/* Admin Only Route */}
+            {/* Protected Routes */}
             <Route
-              path="admin"
+              path="/"
               element={
-                <ProtectedRoute allowedRoles={["admin", "moderator"]}>
-                  <AdminPanel />
+                <ProtectedRoute>
+                  <Layout />
                 </ProtectedRoute>
               }
-            />
-          </Route>
+            >
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="resources" element={<Resources />} />
+              <Route path="upload-resource" element={<UploadResource />} />
+              <Route path="my-uploads" element={<MyUploads />} />
+              <Route path="announcements" element={<Announcements />} />
+              <Route path="events" element={<Events />} />
+              <Route path="lost-found" element={<LostFound />} />
+              <Route path="clubs" element={<Clubs />} />
+              <Route path="profile" element={<Profile />} />
 
-          {/* 404 Redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+              {/* Admin Only Route */}
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "moderator"]}>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
+            {/* 404 Redirect */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

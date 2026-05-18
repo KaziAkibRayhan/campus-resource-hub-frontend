@@ -26,16 +26,8 @@ const Resources = () => {
   const [order, setOrder] = useState("desc");
   const [previewResource, setPreviewResource] = useState(null);
 
-  const getPreviewUrl = (resource) => {
-    if (!resource?.fileUrl) return "";
-    const encodedUrl = encodeURIComponent(resource.fileUrl);
-
-    if (["PDF", "DOCX", "PPTX", "XLSX"].includes(resource.fileType)) {
-      return `https://docs.google.com/gview?embedded=1&url=${encodedUrl}`;
-    }
-
-    return resource.fileUrl;
-  };
+  const canEmbedPreview = (resource) =>
+    ["PDF", "IMAGE"].includes(resource?.fileType);
 
   const fetchResources = useCallback(async () => {
     try {
@@ -291,12 +283,20 @@ const Resources = () => {
 
             {/* Modal Body */}
             <div className="flex-1 bg-gray-100 relative">
-              {previewResource.fileUrl ? (
+              {previewResource.fileType === "PDF" ? (
                 <iframe
-                  src={getPreviewUrl(previewResource)}
+                  src={`${previewResource.fileUrl}#toolbar=1&navpanes=0`}
                   className="w-full h-full border-none"
                   title={`${previewResource.title} preview`}
                 />
+              ) : previewResource.fileType === "IMAGE" ? (
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                  <img
+                    src={previewResource.fileUrl}
+                    alt={previewResource.title}
+                    className="max-h-full max-w-full rounded-lg object-contain shadow"
+                  />
+                </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
                   <div className="bg-blue-100 p-6 rounded-full">
@@ -307,12 +307,13 @@ const Resources = () => {
                       Preview not available
                     </h4>
                     <p className="text-gray-600">
-                      This file type ({previewResource.fileType}) cannot be
-                      previewed directly.
+                      {previewResource.fileType} files cannot be embedded
+                      reliably in the browser. Open it in a new tab or download
+                      it when you are ready.
                     </p>
                   </div>
                   <a
-                    href={getPreviewUrl(previewResource)}
+                    href={previewResource.fileUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2"
@@ -331,13 +332,13 @@ const Resources = () => {
               </div>
               <div className="flex gap-2">
                 <a
-                  href={getPreviewUrl(previewResource)}
+                  href={previewResource.fileUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition flex items-center space-x-2"
                 >
                   <ExternalLink size={20} />
-                  <span>Open</span>
+                  <span>{canEmbedPreview(previewResource) ? "Open" : "Open File"}</span>
                 </a>
                 <button
                   onClick={() =>

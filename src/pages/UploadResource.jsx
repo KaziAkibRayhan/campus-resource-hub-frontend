@@ -9,6 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowLeft,
+  Image,
 } from "lucide-react";
 import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
@@ -18,6 +19,20 @@ const UploadResource = () => {
   const navigate = useNavigate();
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  const setFilePreview = (file) => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setSelectedFile(file);
+    if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl("");
+    }
+  };
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
@@ -34,7 +49,7 @@ const UploadResource = () => {
       setUploadSuccess(true);
       toast.success(response.data.message);
       resetForm();
-      setSelectedFile(null);
+      setFilePreview(null);
 
       // Redirect after success message
       setTimeout(() => {
@@ -261,18 +276,22 @@ const UploadResource = () => {
                     type="file"
                     id="file"
                     name="file"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.jpg,.jpeg,.png,.webp"
                     onChange={(event) => {
                       const file = event.currentTarget.files[0];
                       setFieldValue("file", file);
-                      setSelectedFile(file);
+                      setFilePreview(file);
                     }}
                     className="hidden"
                   />
                   <label htmlFor="file" className="cursor-pointer">
                     {selectedFile ? (
                       <div className="flex flex-col items-center">
-                        <FileText className="text-blue-600 mb-3" size={48} />
+                        {selectedFile.type.startsWith("image/") ? (
+                          <Image className="text-blue-600 mb-3" size={48} />
+                        ) : (
+                          <FileText className="text-blue-600 mb-3" size={48} />
+                        )}
                         <p className="text-blue-700 font-semibold mb-1">
                           {selectedFile.name}
                         </p>
@@ -290,12 +309,34 @@ const UploadResource = () => {
                           Click to upload or drag and drop
                         </p>
                         <p className="text-gray-500 text-sm">
-                          PDF, DOCX, PPTX (Max 20MB)
+                          PDF, DOCX, PPTX, XLSX, Images (Max 20MB)
                         </p>
                       </div>
                     )}
                   </label>
                 </div>
+                {previewUrl && (
+                  <div className="mt-4 rounded-xl border bg-gray-50 overflow-hidden">
+                    <div className="border-b px-4 py-2 text-sm font-semibold text-gray-700">
+                      Preview before upload
+                    </div>
+                    <div className="h-80 flex items-center justify-center bg-white">
+                      {selectedFile?.type === "application/pdf" ? (
+                        <iframe
+                          src={`${previewUrl}#toolbar=1&navpanes=0`}
+                          title="Selected PDF preview"
+                          className="h-full w-full border-none"
+                        />
+                      ) : (
+                        <img
+                          src={previewUrl}
+                          alt="Selected resource preview"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
                 <ErrorMessage
                   name="file"
                   component="div"

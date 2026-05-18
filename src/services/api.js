@@ -1,7 +1,11 @@
 import axios from "axios";
 
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const SOCKET_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -18,6 +22,7 @@ export const authService = {
   login: (credentials) => API.post("/auth/login", credentials),
   signup: (userData) => API.post("/auth/signup", userData),
   getMe: () => API.get("/auth/me"),
+  updateProfile: (formData) => API.put("/auth/update-profile", formData),
 };
 
 export const resourceService = {
@@ -86,6 +91,13 @@ export const clubService = {
 export const notificationService = {
   getAll: () => API.get("/notifications"),
   markAllRead: () => API.put("/notifications/read-all"),
+};
+
+export const chatService = {
+  getUsers: () => API.get("/chat/users"),
+  getConversations: () => API.get("/chat/conversations"),
+  createDirect: (userId) => API.post("/chat/conversations/direct", { userId }),
+  getMessages: (id) => API.get(`/chat/conversations/${id}/messages`),
 };
 
 export default API;

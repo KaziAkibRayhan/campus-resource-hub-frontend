@@ -28,6 +28,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { path: "/events", icon: Calendar, label: "Events" },
     { path: "/lost-found", icon: AlertCircle, label: "Lost & Found" },
     { path: "/clubs", icon: Users, label: "Clubs" },
+    { path: "/profile", icon: User, label: "Profile" },
   ];
 
   // Add admin panel for moderators and admins
@@ -42,14 +43,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-gradient-to-b from-blue-900 to-blue-800 text-white transform ${
+        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-slate-950 dark:bg-slate-900 text-white transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}
       >
@@ -95,8 +96,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         {/* User Section */}
         <div className="p-6 border-t border-blue-700">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <User size={20} />
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {user?.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt={user.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <User size={20} />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold truncate">{user?.name}</p>

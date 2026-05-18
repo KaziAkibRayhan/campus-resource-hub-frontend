@@ -76,6 +76,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  }, []);
+
+  const updateProfile = async (formData) => {
+    try {
+      const response = await authService.updateProfile(formData);
+      if (response.data.success) {
+        updateUser(response.data.user);
+        return { success: true, user: response.data.user };
+      }
+
+      return {
+        success: false,
+        error: response.data.message || "Profile update failed",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Profile update failed",
+      };
+    }
+  };
+
   // Signup function
   const signup = async (userData) => {
     try {
@@ -100,7 +125,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, signup, logout, loading, updateUser, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );
