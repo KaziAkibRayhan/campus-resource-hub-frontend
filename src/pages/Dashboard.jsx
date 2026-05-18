@@ -125,16 +125,16 @@ const Dashboard = () => {
           <Link
             key={index}
             to={stat.link}
-            className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 group"
+            className="bg-white dark:bg-slate-900 rounded-xl shadow-md hover:shadow-lg transition p-6 group border border-transparent dark:border-slate-800"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.bgColor} p-3 rounded-lg`}>
+              <div className={`${stat.bgColor} dark:bg-opacity-10 p-3 rounded-lg`}>
                 <stat.icon className={stat.textColor} size={24} />
               </div>
               <TrendingUp className="text-green-500" size={20} />
             </div>
-            <p className="text-gray-600 text-sm mb-1">{stat.title}</p>
-            <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
+            <p className="text-gray-600 dark:text-slate-400 text-sm mb-1">{stat.title}</p>
+            <p className="text-3xl font-bold text-gray-800 dark:text-white">{stat.value}</p>
           </Link>
         ))}
       </div>
@@ -142,14 +142,14 @@ const Dashboard = () => {
       {/* Recent Resources & Announcements */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Resources */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md p-6 border border-transparent dark:border-slate-800">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
               Recent Resources
             </h3>
             <Link
               to="/resources"
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
             >
               View All →
             </Link>
@@ -158,37 +158,37 @@ const Dashboard = () => {
             {resources.slice(0, 4).map((resource) => (
               <div
                 key={resource._id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-950 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
               >
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-800 text-sm">
+                  <p className="font-semibold text-gray-800 dark:text-slate-100 text-sm">
                     {resource.title}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">
                     {resource.course} • {resource.department}
                   </p>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-slate-400">
                   <Download size={16} />
                   <span>{resource.downloads}</span>
                 </div>
               </div>
             ))}
             {!loading && resources.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No recent resources</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-4">No recent resources</p>
             )}
           </div>
         </div>
 
         {/* Latest Announcements */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md p-6 border border-transparent dark:border-slate-800">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
               Latest Announcements
             </h3>
             <Link
               to="/announcements"
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
             >
               View All →
             </Link>
@@ -197,17 +197,17 @@ const Dashboard = () => {
             {announcements.slice(0, 4).map((announcement) => (
               <div
                 key={announcement._id}
-                className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                className="p-3 bg-gray-50 dark:bg-slate-950 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
-                    <Bell size={16} className="text-blue-600" />
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg flex-shrink-0">
+                    <Bell size={16} className="text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm truncate">
+                    <p className="font-semibold text-gray-800 dark:text-slate-100 text-sm truncate">
                       {announcement.title}
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">
                       {announcement.department} • {new Date(announcement.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -215,49 +215,49 @@ const Dashboard = () => {
               </div>
             ))}
             {!loading && announcements.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No recent announcements</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-4">No recent announcements</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md p-6 border border-transparent dark:border-slate-800">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/upload-resource"
-            className="flex flex-col items-center justify-center p-6 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center"
+            className="flex flex-col items-center justify-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition text-center"
           >
-            <BookOpen className="text-blue-600 mb-2" size={32} />
-            <span className="text-sm font-semibold text-gray-800">
+            <BookOpen className="text-blue-600 dark:text-blue-400 mb-2" size={32} />
+            <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">
               Upload Resource
             </span>
           </Link>
           <Link
             to="/events"
-            className="flex flex-col items-center justify-center p-6 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-center"
+            className="flex flex-col items-center justify-center p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition text-center"
           >
-            <Calendar className="text-purple-600 mb-2" size={32} />
-            <span className="text-sm font-semibold text-gray-800">
+            <Calendar className="text-purple-600 dark:text-purple-400 mb-2" size={32} />
+            <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">
               View Events
             </span>
           </Link>
           <Link
             to="/lost-found"
-            className="flex flex-col items-center justify-center p-6 bg-orange-50 rounded-lg hover:bg-orange-100 transition text-center"
+            className="flex flex-col items-center justify-center p-6 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition text-center"
           >
-            <AlertCircle className="text-orange-600 mb-2" size={32} />
-            <span className="text-sm font-semibold text-gray-800">
+            <AlertCircle className="text-orange-600 dark:text-orange-400 mb-2" size={32} />
+            <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">
               Report Item
             </span>
           </Link>
           <Link
             to="/clubs"
-            className="flex flex-col items-center justify-center p-6 bg-green-50 rounded-lg hover:bg-green-100 transition text-center"
+            className="flex flex-col items-center justify-center p-6 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition text-center"
           >
-            <BookOpen className="text-green-600 mb-2" size={32} />
-            <span className="text-sm font-semibold text-gray-800">
+            <BookOpen className="text-green-600 dark:text-green-400 mb-2" size={32} />
+            <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">
               Explore Clubs ({counts.clubs})
             </span>
           </Link>

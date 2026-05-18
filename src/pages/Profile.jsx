@@ -116,7 +116,7 @@ const Profile = () => {
       <div className="grid lg:grid-cols-[320px_1fr] gap-6">
         <section className="bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-100 dark:border-slate-800 p-6">
           <div className="flex flex-col items-center text-center">
-            <div className="relative h-32 w-32 rounded-full bg-blue-100 text-blue-700 overflow-hidden flex items-center justify-center shadow-inner">
+            <div className="relative h-32 w-32 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 overflow-hidden flex items-center justify-center shadow-inner">
               {imageSrc ? (
                 <img
                   src={imageSrc}
@@ -145,7 +145,7 @@ const Profile = () => {
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {user?.studentId}
             </p>
-            <span className="mt-3 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold capitalize">
+            <span className="mt-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-sm font-semibold capitalize">
               {user?.role}
             </span>
           </div>
@@ -323,7 +323,7 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-5 py-3 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold flex items-center justify-center gap-2"
+                  className="px-5 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold flex items-center justify-center gap-2 transition"
                 >
                   <XCircle size={18} />
                   Cancel

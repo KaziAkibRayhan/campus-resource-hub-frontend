@@ -78,10 +78,10 @@ const Resources = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
             Academic Resources
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-slate-400 mt-1">
             Browse and download study materials
           </p>
         </div>
@@ -95,53 +95,81 @@ const Resources = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md p-6 border border-transparent dark:border-slate-800">
         <div className="grid md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+            <Search
+              className="absolute left-3 top-3 text-gray-400"
+              size={20}
+            />
             <input
               type="text"
               placeholder="Search resources..."
-              className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100"
             />
           </div>
 
           {/* Department Filter */}
-          <select
-            className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={selectedDepartment}
-            onChange={(e) => setSelectedDepartment(e.target.value)}
-          >
-            <option value="all">All Departments</option>
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <Filter
+              className="absolute left-3 top-3 text-gray-400"
+              size={18}
+            />
+            <select
+              value={selectedDepartment}
+              onChange={(event) => setSelectedDepartment(event.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100"
+            >
+              <option value="all">All Departments</option>
+              {departments.map((department) => (
+                <option key={department} value={department}>
+                  {department}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Semester Filter */}
-          <select
-            className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-          >
-            <option value="all">All Semesters</option>
-            {semesters.map((sem) => (
-              <option key={sem} value={sem}>
-                {sem} Semester
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <Filter
+              className="absolute left-3 top-3 text-gray-400"
+              size={18}
+            />
+            <select
+              value={selectedSemester}
+              onChange={(event) => setSelectedSemester(event.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100"
+            >
+              <option value="all">All Semesters</option>
+              {semesters.map((semester) => (
+                <option key={semester} value={semester}>
+                  {semester}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* More Filters Button */}
-          <button className="bg-gray-100 px-4 py-3 rounded-lg flex items-center justify-center space-x-2 hover:bg-gray-200 transition">
-            <Filter size={20} />
-            <span>More Filters</span>
-          </button>
+          {/* Sort By */}
+          <div className="flex items-center space-x-2">
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100"
+            >
+              <option value="createdAt">Sort by Date</option>
+              <option value="downloads">Sort by Downloads</option>
+              <option value="title">Sort by Title</option>
+            </select>
+            <button
+              onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
+              className="p-2 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100"
+            >
+              {order === "asc" ? "↑" : "↓"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -169,216 +197,166 @@ const Resources = () => {
       </div>
 
       {/* Resources List */}
-      {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {resources.map((resource) => (
-            <div
-              key={resource._id}
-              className="bg-white border rounded-xl p-6 hover:shadow-lg transition"
-            >
-              <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                {/* Resource Info */}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <FileText className="text-red-500" size={28} />
-                    <h3 className="text-lg font-bold text-gray-800">
-                      {resource.title}
-                    </h3>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {resource.course}
-                    </span>
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {resource.department}
-                    </span>
-                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {resource.semester}
-                    </span>
-                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {resource.fileType}
-                    </span>
-                  </div>
-
-                  {/* Metadata */}
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                    <span>
-                      Uploaded by{" "}
-                      <span className="font-medium text-gray-700">
-                        {resource.uploadedBy?.name || "Anonymous"}
-                      </span>
-                    </span>
-                    <span>•</span>
-                    <span>{new Date(resource.createdAt).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span className="flex items-center space-x-1">
-                      <Star
-                        size={16}
-                        className="text-yellow-500 fill-yellow-500"
-                      />
-                      <span className="font-medium text-gray-700">
-                        {resource.rating}
-                      </span>
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center space-x-1">
-                      <Download size={16} />
-                      <span className="font-medium text-gray-700">
-                        {resource.downloads}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => setPreviewResource(resource)}
-                    className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center space-x-2"
-                  >
-                    <Eye size={18} />
-                    <span>Preview</span>
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleDownload(resource._id, resource.fileUrl, resource.title)
-                    }
-                    className="bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition flex items-center justify-center space-x-2"
-                  >
-                    <Download size={18} />
-                    <span>Download</span>
-                  </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {loading
+          ? Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-white dark:bg-slate-900 rounded-xl shadow-md p-6 animate-pulse border border-transparent dark:border-slate-800"
+              >
+                <div className="h-4 bg-gray-200 dark:bg-slate-800 rounded w-3/4 mb-4"></div>
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-1/2 mb-6"></div>
+                <div className="flex justify-between items-center">
+                  <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded w-20"></div>
+                  <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded w-8"></div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          : resources.map((resource) => (
+              <div
+                key={resource._id}
+                className="bg-white dark:bg-slate-900 rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col border border-transparent dark:border-slate-800"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                    <FileText size={24} />
+                  </div>
+                  <span className="text-xs font-bold px-2 py-1 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 rounded-full">
+                    {resource.fileType}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1 line-clamp-1">
+                  {resource.title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-slate-400 mb-4 line-clamp-2">
+                  {resource.description}
+                </p>
+                <div className="mt-auto space-y-4">
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 border-t border-gray-100 dark:border-slate-800 pt-4">
+                    <span>{resource.department}</span>
+                    <span>Sem {resource.semester}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setPreviewResource(resource)}
+                      className="flex-1 flex items-center justify-center space-x-1 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition text-sm font-semibold"
+                    >
+                      <Eye size={16} />
+                      <span>Preview</span>
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDownload(
+                          resource._id,
+                          resource.fileUrl,
+                          resource.title
+                        )
+                      }
+                      className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+                      title="Download"
+                    >
+                      <Download size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+      </div>
+
+      {!loading && resources.length === 0 && (
+        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-transparent dark:border-slate-800">
+          <FileText size={48} className="mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+            No resources found
+          </h3>
+          <p className="text-gray-600 dark:text-slate-400">
+            Try adjusting your search or filters to find what you're looking for.
+          </p>
         </div>
       )}
 
-      {/* PDF Preview Modal */}
+      {/* Preview Modal */}
       {previewResource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
-          <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-transparent dark:border-slate-800">
+            <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
               <div className="flex items-center space-x-3">
-                <FileText className="text-red-500" size={24} />
-                <h3 className="text-lg font-bold text-gray-800 truncate max-w-md">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                  <FileText size={20} />
+                </div>
+                <h3 className="font-bold text-gray-800 dark:text-white truncate max-w-md">
                   {previewResource.title}
                 </h3>
               </div>
               <button
                 onClick={() => setPreviewResource(null)}
-                className="p-2 hover:bg-gray-100 rounded-full transition"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition text-gray-500 dark:text-slate-400"
               >
-                <X size={24} className="text-gray-500" />
+                <X size={20} />
               </button>
             </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 bg-gray-100 relative">
-              {previewResource.fileType === "PDF" ? (
-                <iframe
-                  src={`${previewResource.fileUrl}#toolbar=1&navpanes=0`}
-                  className="w-full h-full border-none"
-                  title={`${previewResource.title} preview`}
-                />
-              ) : previewResource.fileType === "IMAGE" ? (
-                <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="flex-1 overflow-auto bg-gray-50 dark:bg-slate-950 p-4">
+              {canEmbedPreview(previewResource) ? (
+                previewResource.fileType === "PDF" ? (
+                  <iframe
+                    src={`${previewResource.fileUrl}#toolbar=0`}
+                    className="w-full h-[60vh] rounded-lg border dark:border-slate-800"
+                    title={previewResource.title}
+                  />
+                ) : (
                   <img
                     src={previewResource.fileUrl}
                     alt={previewResource.title}
-                    className="max-h-full max-w-full rounded-lg object-contain shadow"
+                    className="max-w-full mx-auto rounded-lg shadow-md"
                   />
-                </div>
+                )
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
-                  <div className="bg-blue-100 p-6 rounded-full">
-                    <FileText size={64} className="text-blue-600" />
+                <div className="h-[40vh] flex flex-col items-center justify-center text-center p-8 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                  <div className="bg-gray-100 dark:bg-slate-800 p-6 rounded-full mb-4">
+                    <ExternalLink size={48} className="text-gray-400" />
                   </div>
-                  <div className="text-center">
-                    <h4 className="text-xl font-bold text-gray-800">
-                      Preview not available
-                    </h4>
-                    <p className="text-gray-600">
-                      {previewResource.fileType} files cannot be embedded
-                      reliably in the browser. Open it in a new tab or download
-                      it when you are ready.
-                    </p>
-                  </div>
-                  <a
-                    href={previewResource.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2"
+                  <h4 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                    Preview not available
+                  </h4>
+                  <p className="text-gray-600 dark:text-slate-400 max-w-xs mb-6">
+                    This file type ({previewResource.fileType}) cannot be
+                    previewed in the browser.
+                  </p>
+                  <button
+                    onClick={() =>
+                      handleDownload(
+                        previewResource._id,
+                        previewResource.fileUrl,
+                        previewResource.title
+                      )
+                    }
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold flex items-center space-x-2"
                   >
-                    <ExternalLink size={20} />
-                    <span>Open Preview</span>
-                  </a>
+                    <Download size={20} />
+                    <span>Download to View</span>
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                Uploaded by {previewResource.uploadedBy?.name}
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+              <div className="text-sm text-gray-500 dark:text-slate-400">
+                {previewResource.course} • {previewResource.department}
               </div>
-              <div className="flex gap-2">
-                <a
-                  href={previewResource.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition flex items-center space-x-2"
-                >
-                  <ExternalLink size={20} />
-                  <span>{canEmbedPreview(previewResource) ? "Open" : "Open File"}</span>
-                </a>
-                <button
-                  onClick={() =>
-                    handleDownload(
-                      previewResource._id,
-                      previewResource.fileUrl,
-                      previewResource.title
-                    )
-                  }
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2"
-                >
-                  <Download size={20} />
-                  <span>Download</span>
-                </button>
-              </div>
+              <button
+                onClick={() =>
+                  handleDownload(
+                    previewResource._id,
+                    previewResource.fileUrl,
+                    previewResource.title
+                  )
+                }
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold flex items-center space-x-2"
+              >
+                <Download size={18} />
+                <span>Download</span>
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && resources.length === 0 && (
-        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-          <FileText className="mx-auto text-gray-400 mb-4" size={64} />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">
-            No resources found
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Try adjusting your filters or search query
-          </p>
-          <button
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedDepartment("all");
-              setSelectedSemester("all");
-            }}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Clear Filters
-          </button>
         </div>
       )}
     </div>
