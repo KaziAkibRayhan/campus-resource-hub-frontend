@@ -145,70 +145,70 @@ const AdminPanel = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-800">Admin Panel</h2>
-        <p className="text-gray-600 mt-1">Manage platform content and users</p>
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Admin Panel</h2>
+        <p className="text-gray-600 dark:text-slate-400 mt-1">Manage platform content and users</p>
       </div>
 
       {/* Overview Cards */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* Pending Approvals */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800">
+            <h3 className="text-lg font-bold text-[var(--text-main)]">
               Pending Approvals
             </h3>
             <FileText className="text-yellow-500" size={24} />
           </div>
           <div className="space-y-3">
-            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 rounded">
+              <p className="font-semibold text-[var(--text-main)]">
                 {pendingResources.length} Resources
               </p>
-              <p className="text-sm text-gray-600">Awaiting review</p>
+              <p className="text-sm text-[var(--text-muted)]">Awaiting review</p>
             </div>
-            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 rounded">
+              <p className="font-semibold text-[var(--text-main)]">
                 {pendingAnnouncements.length} Announcements
               </p>
-              <p className="text-sm text-gray-600">Awaiting review</p>
+              <p className="text-sm text-[var(--text-muted)]">Awaiting review</p>
             </div>
-            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 rounded">
+              <p className="font-semibold text-[var(--text-main)]">
                 {pendingEvents.length} Events
               </p>
-              <p className="text-sm text-gray-600">Awaiting review</p>
+              <p className="text-sm text-[var(--text-muted)]">Awaiting review</p>
             </div>
-            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="font-semibold text-gray-800">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 rounded">
+              <p className="font-semibold text-[var(--text-main)]">
                 {pendingLostFound.length} Lost & Found
               </p>
-              <p className="text-sm text-gray-600">Awaiting review</p>
+              <p className="text-sm text-[var(--text-muted)]">Awaiting review</p>
             </div>
           </div>
         </div>
 
         {/* User Management */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800">User Management</h3>
+            <h3 className="text-lg font-bold text-[var(--text-main)]">User Management</h3>
             <Users className="text-blue-500" size={24} />
           </div>
           <div className="space-y-3">
-            <button className="w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition">
-              <p className="font-semibold text-gray-800">All Users</p>
-              <p className="text-sm text-gray-600">
+            <button className="w-full p-3 bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg text-left transition">
+              <p className="font-semibold text-[var(--text-main)]">All Users</p>
+              <p className="text-sm text-[var(--text-muted)]">
                 {formatNumber(stats?.users?.total)} registered
               </p>
             </button>
-            <button className="w-full p-3 bg-green-50 hover:bg-green-100 rounded-lg text-left transition">
-              <p className="font-semibold text-gray-800">Moderators</p>
-              <p className="text-sm text-gray-600">
+            <button className="w-full p-3 bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg text-left transition">
+              <p className="font-semibold text-[var(--text-main)]">Moderators</p>
+              <p className="text-sm text-[var(--text-muted)]">
                 {formatNumber(stats?.users?.moderators)} active
               </p>
             </button>
-            <button className="w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition">
-              <p className="font-semibold text-gray-800">Blocked Users</p>
-              <p className="text-sm text-gray-600">
+            <button className="w-full p-3 bg-purple-50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/20 rounded-lg text-left transition">
+              <p className="font-semibold text-[var(--text-main)]">Blocked Users</p>
+              <p className="text-sm text-[var(--text-muted)]">
                 {formatNumber(stats?.users?.blocked)} blocked
               </p>
             </button>
@@ -216,30 +216,30 @@ const AdminPanel = () => {
         </div>
 
         {/* System Reports */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800">System Status</h3>
-            <HardDrive className="text-green-500" size={24} />
+            <h3 className="text-lg font-bold text-[var(--text-main)]">System Status</h3>
+            <HardDrive className="text-green-500" size="24" />
           </div>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-2">
-                <p className="font-semibold text-gray-800">Storage Used</p>
-                <p className="text-sm text-gray-600">
+                <p className="font-semibold text-[var(--text-main)]">Storage Used</p>
+                <p className="text-sm text-[var(--text-muted)]">
                   {formatBytes(stats?.resources?.storageUsed)}
                 </p>
               </div>
-              <div className="bg-gray-200 rounded-full h-2">
+              <div className="bg-[var(--bg-secondary)] rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
                   style={{ width: `${stats?.resources?.storageUsed ? 65 : 0}%` }}
                 ></div>
               </div>
             </div>
-            <div className="w-full p-3 bg-purple-50 rounded-lg flex items-center justify-between">
+            <div className="w-full p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg flex items-center justify-between">
               <div>
-                <p className="font-semibold text-gray-800">Approved Resources</p>
-                <p className="text-sm text-gray-600">
+                <p className="font-semibold text-[var(--text-main)]">Approved Resources</p>
+                <p className="text-sm text-[var(--text-muted)]">
                   {formatNumber(stats?.resources?.approved)} visible
                 </p>
               </div>
@@ -276,23 +276,23 @@ const AdminPanel = () => {
             secondary: "type",
           },
         ].map((section) => (
-          <div key={section.title} className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-5 border-b">
-              <h3 className="text-lg font-bold text-gray-800">{section.title}</h3>
+          <div key={section.title} className="bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-hidden border border-transparent dark:border-slate-800">
+            <div className="p-5 border-b border-gray-100 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">{section.title}</h3>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-slate-800">
               {loading ? (
-                <div className="p-6 text-center text-gray-500">Loading...</div>
+                <div className="p-6 text-center text-gray-500 dark:text-slate-400">Loading...</div>
               ) : section.items.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">Nothing pending</div>
+                <div className="p-6 text-center text-gray-500 dark:text-slate-400">Nothing pending</div>
               ) : (
                 section.items.slice(0, 5).map((item) => (
                   <div key={item._id} className="p-4 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 truncate">
+                      <p className="font-semibold text-gray-800 dark:text-slate-200 truncate">
                         {item[section.primary]}
                       </p>
-                      <p className="text-sm text-gray-500 capitalize">
+                      <p className="text-sm text-gray-500 dark:text-slate-400 capitalize">
                         {item[section.secondary]}
                       </p>
                     </div>
@@ -301,7 +301,7 @@ const AdminPanel = () => {
                         onClick={() =>
                           handleApproveContent(section.service, item._id, section.label)
                         }
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg"
                         title="Approve"
                       >
                         <CheckCircle size={18} />
@@ -310,7 +310,7 @@ const AdminPanel = () => {
                         onClick={() =>
                           handleRejectContent(section.service, item._id, section.label)
                         }
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
                         title="Reject"
                       >
                         <XCircle size={18} />
@@ -325,29 +325,29 @@ const AdminPanel = () => {
       </div>
 
       {/* Pending Resources Table */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 border-b">
-          <h3 className="text-xl font-bold text-gray-800">Pending Resources</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-hidden border border-transparent dark:border-slate-800">
+        <div className="p-6 border-b border-gray-100 dark:border-slate-800">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">Pending Resources</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 text-left">
+            <thead className="bg-gray-50 dark:bg-slate-800/50 text-left">
               <tr>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">
                   Resource
                 </th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">
                   Uploader
                 </th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">
                   Date
                 </th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300 text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
                   <td colSpan="4" className="px-6 py-10 text-center">
@@ -358,37 +358,37 @@ const AdminPanel = () => {
                 </tr>
               ) : pendingResources.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-10 text-center text-gray-500">
+                  <td colSpan="4" className="px-6 py-10 text-center text-gray-500 dark:text-slate-400">
                     No pending resources to review
                   </td>
                 </tr>
               ) : (
                 pendingResources.map((resource) => (
-                  <tr key={resource._id} className="hover:bg-gray-50 transition">
+                  <tr key={resource._id} className="hover:bg-gray-50 dark:hover:bg-slate-800/30 transition">
                     <td className="px-6 py-4">
-                      <p className="font-semibold text-gray-800">
+                      <p className="font-semibold text-gray-800 dark:text-slate-200">
                         {resource.title}
                       </p>
-                      <p className="text-sm text-gray-500">{resource.course}</p>
+                      <p className="text-sm text-gray-500 dark:text-slate-400">{resource.course}</p>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-6 py-4 text-gray-600 dark:text-slate-300">
                       {resource.uploadedBy?.name || "Unknown"}
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-6 py-4 text-gray-600 dark:text-slate-300">
                       {new Date(resource.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleApprove(resource._id)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                          className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition"
                           title="Approve"
                         >
                           <CheckCircle size={20} />
                         </button>
                         <button
                           onClick={() => handleReject(resource._id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                           title="Reject"
                         >
                           <XCircle size={20} />
@@ -405,63 +405,63 @@ const AdminPanel = () => {
 
       {/* Quick Stats */}
       <div className="grid md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-blue-600 text-sm font-medium mb-1">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 transition-colors shadow-sm">
+          <p className="text-blue-600 dark:text-blue-400 text-sm font-medium mb-1">
             Total Resources
           </p>
-          <p className="text-3xl font-bold text-blue-700">
+          <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
             {formatNumber(stats?.resources?.total)}
           </p>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-600 text-sm font-medium mb-1">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 transition-colors shadow-sm">
+          <p className="text-green-600 dark:text-green-400 text-sm font-medium mb-1">
             Active Users
           </p>
-          <p className="text-3xl font-bold text-green-700">
+          <p className="text-3xl font-bold text-green-700 dark:text-green-300">
             {formatNumber(stats?.users?.active)}
           </p>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <p className="text-purple-600 text-sm font-medium mb-1">
+        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 transition-colors shadow-sm">
+          <p className="text-purple-600 dark:text-purple-400 text-sm font-medium mb-1">
             Total Downloads
           </p>
-          <p className="text-3xl font-bold text-purple-700">
+          <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">
             {formatNumber(stats?.resources?.totalDownloads)}
           </p>
         </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <p className="text-orange-600 text-sm font-medium mb-1">
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 transition-colors shadow-sm">
+          <p className="text-orange-600 dark:text-orange-400 text-sm font-medium mb-1">
             Active Clubs
           </p>
-          <p className="text-3xl font-bold text-orange-700">
+          <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">
             {formatNumber(stats?.clubs?.total)}
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 border-b">
-          <h3 className="text-xl font-bold text-gray-800">User Management</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-hidden border border-transparent dark:border-slate-800">
+        <div className="p-6 border-b border-gray-100 dark:border-slate-800">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">User Management</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 text-left">
+            <thead className="bg-gray-50 dark:bg-slate-800/50 text-left">
               <tr>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">User</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Department</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Role</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Actions</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">User</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">Department</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">Role</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300">Status</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-slate-300 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
               {users.slice(0, 10).map((targetUser) => (
-                <tr key={targetUser._id} className="hover:bg-gray-50">
+                <tr key={targetUser._id} className="hover:bg-gray-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4">
-                    <p className="font-semibold text-gray-800">{targetUser.name}</p>
-                    <p className="text-sm text-gray-500">{targetUser.email}</p>
+                    <p className="font-semibold text-gray-800 dark:text-slate-200">{targetUser.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{targetUser.email}</p>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">{targetUser.department}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-slate-300">{targetUser.department}</td>
                   <td className="px-6 py-4">
                     {user?.role === "admin" ? (
                       <select
@@ -469,22 +469,22 @@ const AdminPanel = () => {
                         onChange={(event) =>
                           handleRoleChange(targetUser, event.target.value)
                         }
-                        className="px-3 py-2 border rounded-lg text-sm"
+                        className="px-3 py-2 text-sm"
                       >
                         <option value="student">student</option>
                         <option value="moderator">moderator</option>
                         <option value="admin">admin</option>
                       </select>
                     ) : (
-                      <span className="text-gray-600">{targetUser.role}</span>
+                      <span className="text-gray-600 dark:text-slate-300">{targetUser.role}</span>
                     )}
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
                         targetUser.isBlocked
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                       }`}
                     >
                       {targetUser.isBlocked ? "Blocked" : "Active"}
@@ -493,7 +493,7 @@ const AdminPanel = () => {
                   <td className="px-6 py-4 text-right">
                     <button
                       onClick={() => handleUserBlocked(targetUser)}
-                      className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+                      className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm transition"
                     >
                       {targetUser.isBlocked ? "Unblock" : "Block"}
                     </button>

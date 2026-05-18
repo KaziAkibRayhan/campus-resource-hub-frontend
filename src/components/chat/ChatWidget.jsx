@@ -148,13 +148,13 @@ const ChatWidget = () => {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-4 z-40 w-[calc(100vw-2rem)] max-w-5xl h-[72vh] bg-white rounded-2xl shadow-2xl border overflow-hidden grid md:grid-cols-[320px_1fr] animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <aside className="border-r bg-gray-50 flex flex-col min-h-0">
-            <div className="p-4 border-b bg-white">
+        <div className="fixed bottom-24 right-4 z-40 w-[calc(100vw-2rem)] max-w-5xl h-[72vh] bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-color)] overflow-hidden grid md:grid-cols-[320px_1fr] animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <aside className="border-r border-[var(--border-color)] bg-[var(--bg-main)] flex flex-col min-h-0">
+            <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-gray-900">Campus Chat</h3>
-                  <p className="text-xs text-gray-500">
+                  <h3 className="font-bold text-[var(--text-main)]">Campus Chat</h3>
+                  <p className="text-xs text-[var(--text-muted)]">
                     {onlineUsers.length} online
                   </p>
                 </div>
@@ -166,12 +166,12 @@ const ChatWidget = () => {
                 <button
                   key={conversation._id}
                   onClick={() => openConversation(conversation)}
-                  className={`w-full p-4 text-left border-b hover:bg-white transition ${
-                    activeConversation?._id === conversation._id ? "bg-white" : ""
+                  className={`w-full p-4 text-left border-b border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition ${
+                    activeConversation?._id === conversation._id ? "bg-[var(--bg-hover)]" : ""
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 flex items-center justify-center">
                       {conversation.members?.find(
                         (member) => member._id !== user?.id && member._id !== user?._id
                       )?.profileImage ? (
@@ -190,10 +190,10 @@ const ChatWidget = () => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-gray-800 truncate">
+                      <p className="font-semibold text-gray-800 dark:text-slate-200 truncate">
                         {getConversationName(conversation, user)}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
                         {conversation.lastMessage?.text || "No messages yet"}
                       </p>
                     </div>
@@ -202,16 +202,16 @@ const ChatWidget = () => {
               ))}
 
               <div className="p-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                <p className="text-xs font-semibold text-[var(--text-muted)] uppercase mb-2">
                   Start a private chat
                 </p>
                 {users.slice(0, 12).map((chatUser) => (
                   <button
                     key={chatUser._id}
                     onClick={() => startDirectChat(chatUser._id)}
-                    className="w-full p-2 rounded-lg hover:bg-white flex items-center gap-2 text-left"
+                    className="w-full p-2 rounded-lg hover:bg-[var(--bg-hover)] flex items-center gap-2 text-left"
                   >
-                    <div className="relative h-8 w-8 rounded-full bg-blue-100 text-blue-700 overflow-hidden flex items-center justify-center text-xs font-bold">
+                    <div className="relative h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 overflow-hidden flex items-center justify-center text-xs font-bold">
                       {chatUser.profileImage ? (
                         <img
                           src={chatUser.profileImage}
@@ -230,7 +230,7 @@ const ChatWidget = () => {
                         }`}
                       />
                     </div>
-                    <span className="text-sm text-gray-700 truncate">
+                    <span className="text-sm text-[var(--text-main)] truncate">
                       {chatUser.name}
                     </span>
                   </button>
@@ -239,18 +239,18 @@ const ChatWidget = () => {
             </div>
           </aside>
 
-          <section className="flex flex-col min-h-0">
+          <section className="flex flex-col min-h-0 bg-[var(--bg-card)]">
             {activeConversation ? (
               <>
-                <div className="p-4 border-b bg-white">
-                  <h3 className="font-bold text-gray-900">
+                <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
+                  <h3 className="font-bold text-[var(--text-main)]">
                     {getConversationName(activeConversation, user)}
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[var(--text-muted)]">
                     Private conversation
                   </p>
                 </div>
-                <div className="flex-1 overflow-y-auto bg-gray-50 p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto bg-[var(--bg-main)] p-4 space-y-3">
                   {messages.map((message) => {
                     const mine =
                       message.sender?._id === user?.id ||
@@ -264,7 +264,7 @@ const ChatWidget = () => {
                           className={`max-w-[78%] rounded-2xl px-4 py-2 shadow-sm ${
                             mine
                               ? "bg-blue-600 text-white rounded-br-sm"
-                              : "bg-white text-gray-800 rounded-bl-sm"
+                              : "bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-color)] rounded-bl-sm"
                           }`}
                         >
                           {!mine && (
@@ -275,7 +275,7 @@ const ChatWidget = () => {
                           <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                           <p
                             className={`text-[11px] mt-1 ${
-                              mine ? "text-blue-100" : "text-gray-400"
+                              mine ? "text-blue-100" : "text-[var(--text-muted)]"
                             }`}
                           >
                             {new Date(message.createdAt).toLocaleTimeString([], {
@@ -294,25 +294,25 @@ const ChatWidget = () => {
                   })}
                   <div ref={messagesEndRef} />
                 </div>
-                <form onSubmit={sendMessage} className="p-4 border-t bg-white flex gap-2">
+                <form onSubmit={sendMessage} className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-card)] flex gap-2">
                   <input
                     value={messageText}
                     onChange={(event) => setMessageText(event.target.value)}
                     placeholder="Write a message..."
-                    className="flex-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-3"
                   />
-                  <button className="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+                  <button className="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-md">
                     <Send size={20} />
                   </button>
                 </form>
               </>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-gray-50">
-                <MessageCircle size={56} className="text-blue-500 mb-4" />
-                <h3 className="text-xl font-bold text-gray-800">
+              <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-[var(--bg-main)]">
+                <MessageCircle size={56} className="text-blue-500 mb-4 opacity-50" />
+                <h3 className="text-xl font-bold text-[var(--text-main)]">
                   Select a conversation
                 </h3>
-                <p className="text-gray-500 mt-2">
+                <p className="text-[var(--text-muted)] mt-2">
                   Start a one-to-one conversation with another campus user.
                 </p>
               </div>

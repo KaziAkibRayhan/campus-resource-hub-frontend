@@ -71,15 +71,15 @@ const Clubs = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">Campus Clubs</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-3xl font-bold text-[var(--text-main)]">Campus Clubs</h2>
+          <p className="text-[var(--text-muted)] mt-1">
             Explore and join student organizations
           </p>
         </div>
         {canManage && (
           <button
             onClick={() => setShowCreate((value) => !value)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md"
           >
             <Plus size={20} />
             Create Club
@@ -87,14 +87,14 @@ const Clubs = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-4">
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-4 border border-[var(--border-color)]">
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-3 text-[var(--text-muted)]" size={18} />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search clubs..."
-            className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -102,14 +102,14 @@ const Clubs = () => {
       {showCreate && (
         <form
           onSubmit={handleCreate}
-          className="bg-white rounded-xl shadow-md p-6 space-y-4"
+          className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 space-y-4 border border-[var(--border-color)]"
         >
           <div className="grid md:grid-cols-2 gap-4">
             <input
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               placeholder="Club name"
-              className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3"
               required
             />
             <input
@@ -118,7 +118,7 @@ const Clubs = () => {
                 setForm({ ...form, category: event.target.value })
               }
               placeholder="Category"
-              className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3"
             />
           </div>
           <textarea
@@ -128,20 +128,20 @@ const Clubs = () => {
             }
             placeholder="Description"
             rows="3"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3"
             required
           />
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setShowCreate(false)}
-              className="px-5 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className="px-5 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)] transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition"
             >
               Save Club
             </button>
@@ -154,12 +154,12 @@ const Clubs = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       ) : clubs.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-          <Users className="mx-auto text-gray-400 mb-4" size={64} />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-12 text-center border border-[var(--border-color)]">
+          <Users className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" size={64} />
+          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
             No clubs found
           </h3>
-          <p className="text-gray-600">
+          <p className="text-[var(--text-muted)]">
             Clubs created by admins or moderators will appear here.
           </p>
         </div>
@@ -168,32 +168,32 @@ const Clubs = () => {
           {clubs.map((club) => (
             <div
               key={club._id}
-              className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition"
+              className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
             >
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <Users size={32} className="text-white" />
+              <div className="w-16 h-16 bg-blue-600/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <Users size={32} className="text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 text-center mb-2">
+              <h3 className="text-xl font-bold text-[var(--text-main)] text-center mb-2">
                 {club.name}
               </h3>
-              <p className="text-gray-500 text-center text-xs uppercase tracking-wide mb-2">
+              <p className="text-[var(--text-muted)] text-center text-xs uppercase tracking-wide mb-2">
                 {club.category || "General"}
               </p>
-              <p className="text-gray-600 text-center text-sm mb-4 min-h-12">
+              <p className="text-[var(--text-muted)] text-center text-sm mb-4 min-h-12">
                 {club.description}
               </p>
-              <div className="text-center pt-4 border-t border-gray-200">
-                <p className="text-2xl font-bold text-blue-600">
+              <div className="text-center pt-4 border-t border-[var(--border-color)]">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {club.memberCount}
                 </p>
-                <p className="text-xs text-gray-500">Members</p>
+                <p className="text-xs text-[var(--text-muted)]">Members</p>
               </div>
               <button
                 onClick={() => handleMembership(club)}
                 className={`mt-4 w-full py-2 rounded-lg transition font-medium ${
                   club.isMember
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]"
+                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
                 }`}
               >
                 {club.isMember ? "Leave Club" : "Join Club"}

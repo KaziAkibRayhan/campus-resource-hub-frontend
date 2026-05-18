@@ -52,8 +52,8 @@ const Announcements = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Announcements</h2>
-          <p className="text-gray-600 dark:text-slate-400 mt-1">Stay updated with campus news</p>
+          <h2 className="text-3xl font-bold text-[var(--text-main)]">Announcements</h2>
+          <p className="text-[var(--text-muted)] mt-1">Stay updated with campus news</p>
         </div>
         {(user?.role === "admin" || user?.role === "moderator") && (
           <button
@@ -76,7 +76,7 @@ const Announcements = () => {
           {announcements.map((announcement) => (
             <div
               key={announcement._id}
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-md p-6 hover:shadow-lg transition border border-transparent dark:border-slate-800"
+              className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start space-x-4">
@@ -84,10 +84,10 @@ const Announcements = () => {
                     <Bell className="text-blue-600 dark:text-blue-400" size={24} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                    <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
                       {announcement.title}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
                       <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full font-medium">
                         {announcement.department}
                       </span>
@@ -98,18 +98,18 @@ const Announcements = () => {
                   </div>
                 </div>
               </div>
-              <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-slate-300">
+              <div className="prose dark:prose-invert max-w-none text-[var(--text-main)] opacity-90">
                 <p>{announcement.content}</p>
               </div>
             </div>
           ))}
           {announcements.length === 0 && (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-transparent dark:border-slate-800">
-              <Bell size={48} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+            <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)]">
+              <Bell size={48} className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" />
+              <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
                 No announcements yet
               </h3>
-              <p className="text-gray-600 dark:text-slate-400">
+              <p className="text-[var(--text-muted)]">
                 Check back later for campus updates.
               </p>
             </div>
@@ -119,21 +119,21 @@ const Announcements = () => {
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-transparent dark:border-slate-800">
-            <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+          <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-[var(--border-color)]">
+            <div className="p-6 border-b border-[var(--border-color)] flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-[var(--text-main)]">
                 Create Announcement
               </h3>
               <button
                 onClick={() => setShowCreate(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition text-gray-500 dark:text-slate-400"
+                className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition text-[var(--text-muted)]"
               >
                 <X size={24} />
               </button>
             </div>
             <form onSubmit={handleCreate} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Title
                 </label>
                 <input
@@ -141,12 +141,12 @@ const Announcements = () => {
                   required
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 outline-none"
+                  className="w-full px-4 py-3"
                   placeholder="Announcement title"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Department
                 </label>
                 <select
@@ -154,7 +154,7 @@ const Announcements = () => {
                   onChange={(e) =>
                     setForm({ ...form, department: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 outline-none"
+                  className="w-full px-4 py-3"
                 >
                   <option value="All">All Departments</option>
                   {departments.map((dept) => (
@@ -165,7 +165,7 @@ const Announcements = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Content
                 </label>
                 <textarea
@@ -173,7 +173,7 @@ const Announcements = () => {
                   rows="5"
                   value={form.content}
                   onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 outline-none"
+                  className="w-full px-4 py-3"
                   placeholder="Announcement details..."
                 />
               </div>
@@ -187,7 +187,7 @@ const Announcements = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreate(false)}
-                  className="flex-1 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 py-3 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition"
+                  className="flex-1 bg-[var(--bg-secondary)] text-[var(--text-main)] py-3 rounded-lg font-bold hover:bg-[var(--bg-hover)] transition border border-[var(--border-color)]"
                 >
                   Cancel
                 </button>

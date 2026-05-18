@@ -8,21 +8,20 @@ import ChatWidget from "../chat/ChatWidget";
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
   return (
-    <div className="flex h-screen bg-slate-100 dark:bg-slate-950 overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+    <div className="flex h-screen bg-[var(--bg-main)] transition-colors duration-300">
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <Header setSidebarOpen={setSidebarOpen} />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden lg:ml-72">
+        <Header toggleSidebar={toggleSidebar} />
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-transparent">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar bg-[var(--bg-main)]">
+          <div className="max-w-7xl mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
-        <ChatWidget />
       </div>
     </div>
   );

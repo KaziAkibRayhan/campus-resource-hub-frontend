@@ -99,7 +99,7 @@ const Signup = () => {
                         id="name"
                         name="name"
                         placeholder="John Doe"
-                        className={`w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                           errors.name && touched.name
                             ? "border-red-500"
                             : "border-gray-300 dark:border-slate-700"
@@ -131,7 +131,7 @@ const Signup = () => {
                         id="email"
                         name="email"
                         placeholder="john@university.edu"
-                        className={`w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                           errors.email && touched.email
                             ? "border-red-500"
                             : "border-gray-300 dark:border-slate-700"
@@ -166,7 +166,7 @@ const Signup = () => {
                         id="studentId"
                         name="studentId"
                         placeholder="4223020858"
-                        className={`w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                           errors.studentId && touched.studentId
                             ? "border-red-500"
                             : "border-gray-300 dark:border-slate-700"
@@ -197,7 +197,7 @@ const Signup = () => {
                         as="select"
                         id="department"
                         name="department"
-                        className={`w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none ${
+                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none ${
                           errors.department && touched.department
                             ? "border-red-500"
                             : "border-gray-300 dark:border-slate-700"
@@ -239,7 +239,7 @@ const Signup = () => {
                         id="password"
                         name="password"
                         placeholder="••••••••"
-                        className={`w-full pl-11 pr-12 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        className={`w-full pl-11 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                           errors.password && touched.password
                             ? "border-red-500"
                             : "border-gray-300 dark:border-slate-700"
@@ -278,7 +278,7 @@ const Signup = () => {
                         id="confirmPassword"
                         name="confirmPassword"
                         placeholder="••••••••"
-                        className={`w-full pl-11 pr-12 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        className={`w-full pl-11 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                           errors.confirmPassword && touched.confirmPassword
                             ? "border-red-500"
                             : "border-gray-300 dark:border-slate-700"

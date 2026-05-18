@@ -114,7 +114,7 @@ const Profile = () => {
       </div>
 
       <div className="grid lg:grid-cols-[320px_1fr] gap-6">
-        <section className="bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-100 dark:border-slate-800 p-6">
+        <section className="bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)] p-6">
           <div className="flex flex-col items-center text-center">
             <div className="relative h-32 w-32 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 overflow-hidden flex items-center justify-center shadow-inner">
               {imageSrc ? (
@@ -139,10 +139,10 @@ const Profile = () => {
                 </label>
               )}
             </div>
-            <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
+            <h3 className="mt-4 text-xl font-bold text-[var(--text-main)]">
               {user?.name}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--text-muted)]">
               {user?.studentId}
             </p>
             <span className="mt-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-sm font-semibold capitalize">
@@ -151,31 +151,31 @@ const Profile = () => {
           </div>
 
             <div className="mt-6 space-y-3 text-sm">
-            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-3 text-[var(--text-muted)]">
               <Mail size={17} />
               <span className="truncate">{user?.email}</span>
             </div>
-            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-3 text-[var(--text-muted)]">
               <CheckCircle size={17} />
               <span>{user?.department}</span>
             </div>
           </div>
         </section>
 
-        <section className="bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-100 dark:border-slate-800 p-6">
+        <section className="bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-bold text-[var(--text-main)]">
                 Account Information
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 Changes sync immediately across the app.
               </p>
             </div>
             {!editMode && (
               <button
                 onClick={startEdit}
-                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold"
+                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold transition shadow-md"
               >
                 Edit Profile
               </button>
@@ -184,15 +184,15 @@ const Profile = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {editMode && (
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5 bg-slate-50 dark:bg-slate-950">
+              <div className="rounded-xl border border-[var(--border-color)] p-5 bg-[var(--bg-main)]">
                 <div className="flex items-center gap-2 mb-4">
-                  <ImageUp size={18} className="text-slate-500" />
-                  <h4 className="font-bold text-slate-800 dark:text-white">
+                  <ImageUp size={18} className="text-[var(--text-muted)]" />
+                  <h4 className="font-bold text-[var(--text-main)]">
                     Profile Picture
                   </h4>
                 </div>
                 <div className="flex flex-col md:flex-row gap-5 items-start">
-                  <div className="h-28 w-28 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                  <div className="h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-secondary)] flex items-center justify-center">
                     {imageSrc ? (
                       <img
                         src={imageSrc}
@@ -229,19 +229,19 @@ const Profile = () => {
 
             <div className="grid md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Name
                 </label>
                 <input
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   disabled={!editMode}
-                  className="w-full px-4 py-3 border rounded-lg bg-white disabled:bg-slate-50 dark:bg-slate-950 dark:border-slate-700 dark:text-white"
+                  className="w-full px-4 py-3"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Email
                 </label>
                 <input
@@ -249,7 +249,7 @@ const Profile = () => {
                   value={form.email}
                   onChange={(event) => setForm({ ...form, email: event.target.value })}
                   disabled={!editMode}
-                  className="w-full px-4 py-3 border rounded-lg bg-white disabled:bg-slate-50 dark:bg-slate-950 dark:border-slate-700 dark:text-white"
+                  className="w-full px-4 py-3"
                   required
                 />
               </div>
@@ -257,7 +257,7 @@ const Profile = () => {
 
             <div className="grid md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Department
                 </label>
                 <select
@@ -266,7 +266,7 @@ const Profile = () => {
                     setForm({ ...form, department: event.target.value })
                   }
                   disabled={!editMode}
-                  className="w-full px-4 py-3 border rounded-lg bg-white disabled:bg-slate-50 dark:bg-slate-950 dark:border-slate-700 dark:text-white"
+                  className="w-full px-4 py-3"
                 >
                   {departments.map((department) => (
                     <option key={department} value={department}>
@@ -276,22 +276,22 @@ const Profile = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Student ID
                 </label>
                 <input
                   value={user?.studentId || ""}
                   disabled
-                  className="w-full px-4 py-3 border rounded-lg bg-slate-50 dark:bg-slate-950 dark:border-slate-700 dark:text-slate-300"
+                  className="w-full px-4 py-3"
                 />
               </div>
             </div>
 
             {editMode && (
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5 bg-slate-50 dark:bg-slate-950">
+              <div className="rounded-xl border border-[var(--border-color)] p-5 bg-[var(--bg-main)]">
                 <div className="flex items-center gap-2 mb-4">
-                  <Lock size={18} className="text-slate-500" />
-                  <h4 className="font-bold text-slate-800 dark:text-white">
+                  <Lock size={18} className="text-[var(--text-muted)]" />
+                  <h4 className="font-bold text-[var(--text-main)]">
                     Change Password
                   </h4>
                 </div>
@@ -303,7 +303,7 @@ const Profile = () => {
                       setForm({ ...form, currentPassword: event.target.value })
                     }
                     placeholder="Current password"
-                    className="w-full px-4 py-3 border rounded-lg bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                    className="w-full px-4 py-3"
                   />
                   <input
                     type="password"
@@ -312,7 +312,7 @@ const Profile = () => {
                       setForm({ ...form, newPassword: event.target.value })
                     }
                     placeholder="New password"
-                    className="w-full px-4 py-3 border rounded-lg bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                    className="w-full px-4 py-3"
                   />
                 </div>
               </div>

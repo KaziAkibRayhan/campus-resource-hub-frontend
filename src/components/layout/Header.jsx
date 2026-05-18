@@ -1,150 +1,87 @@
 // src/components/layout/Header.jsx
 import React, { useEffect, useState } from "react";
-import { Menu, Bell, Search, Moon, Sun } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, Bell, Search, Moon, Sun, User } from "lucide-react";
 import { notificationService } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
-const Header = ({ setSidebarOpen, title = "Campus Resource Hub" }) => {
+const Header = ({ toggleSidebar }) => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [notifications, setNotifications] = useState([]);
-  const [unread, setUnread] = useState(0);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await notificationService.getAll();
-        setNotifications(response.data.notifications);
-        setUnread(response.data.unread);
-      } catch (error) {
-        console.error("Notification fetch error:", error);
-      }
-    };
-
-    fetchNotifications();
-  }, []);
-
-  const handleToggle = async () => {
-    setOpen((value) => !value);
-    if (!open && unread > 0) {
-      try {
-        await notificationService.markAllRead();
-        setUnread(0);
-      } catch (error) {
-        console.error("Notification read error:", error);
-      }
-    }
-  };
 
   return (
-    <header className="bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 z-10 sticky top-0">
-      <div className="flex items-center justify-between p-4">
-        {/* Left: Menu Button & Title */}
+    <header className="sticky top-0 z-40 flex h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 lg:px-8">
+      <div className="flex w-full items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden hover:bg-gray-100 dark:hover:bg-slate-800 p-2 rounded-lg transition"
+            onClick={toggleSidebar}
+            className="p-2.5 lg:hidden hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
-            <Menu size={24} className="text-gray-700 dark:text-slate-200" />
+            <Menu size={22} className="text-[var(--text-main)]" />
           </button>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden sm:block">
-            {title}
-          </h1>
+          <div className="hidden lg:block">
+            <h1 className="text-xl font-bold text-[var(--text-main)]">
+              Campus Resource Hub
+            </h1>
+          </div>
         </div>
 
-        {/* Right: Search & Notifications */}
-        <div className="flex items-center space-x-4">
-          {/* Search Bar - Hidden on small screens */}
-          <div className="hidden md:flex items-center">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-2.5 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
-              />
-            </div>
+        <div className="flex items-center space-x-3 lg:space-x-5">
+          {/* Search Bar */}
+          <div className="hidden md:flex relative group">
+            <Search className="absolute left-3 top-3 text-[var(--text-muted)] group-focus-within:text-blue-500 transition-colors" size={18} />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-64 lg:w-80 pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all outline-none"
+            />
           </div>
 
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
-            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-all duration-300 hover:rotate-12 group"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {theme === "dark" ? (
-              <Sun size={22} className="text-amber-400" />
+              <Sun size={22} className="text-yellow-400" />
             ) : (
               <Moon size={22} className="text-slate-600" />
             )}
           </button>
 
-          {/* Notification Bell */}
-          <div className="relative">
-          <button
-            onClick={handleToggle}
-            className="relative hover:bg-gray-100 dark:hover:bg-slate-800 p-2 rounded-lg transition"
-          >
-            <Bell size={24} className="text-gray-600 dark:text-slate-200" />
-            {unread > 0 && (
-              <span className="absolute top-1 right-1 bg-red-500 text-white text-xs min-w-5 h-5 px-1 rounded-full flex items-center justify-center font-semibold">
-                {unread}
-              </span>
-            )}
+          {/* Notifications */}
+          <button className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors relative group">
+            <Bell size={22} className="text-[var(--text-muted)]" />
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 border-2 border-[var(--bg-card)] group-hover:scale-110 transition-transform"></span>
           </button>
-          {open && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden z-50">
-              <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-                <p className="font-bold text-gray-800 dark:text-white">Notifications</p>
-              </div>
-              <div className="max-h-96 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500 dark:text-slate-400 text-center">
-                    No notifications
-                  </div>
-                ) : (
-                  notifications.map((notification) => (
-                    <div
-                      key={notification._id}
-                      className="p-4 border-b border-slate-200 dark:border-slate-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-slate-900"
-                    >
-                      <p className="font-semibold text-gray-800 dark:text-white text-sm">
-                        {notification.title}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-slate-300 mt-1">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
-                        {new Date(notification.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-          </div>
 
-          <div className="hidden sm:flex items-center gap-3 pl-2">
-            <div className="h-9 w-9 rounded-full bg-blue-100 text-blue-700 overflow-hidden flex items-center justify-center font-bold">
-              {user?.profileImage ? (
-                <img
-                  src={user.profileImage}
-                  alt={user.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                user?.name?.charAt(0) || "U"
-              )}
+          {/* User Profile */}
+          <div className="flex items-center space-x-3 pl-2 lg:pl-4 border-l border-[var(--border-color)]">
+            <div className="hidden lg:block text-right">
+              <p className="text-sm font-bold text-[var(--text-main)] leading-none mb-1">
+                {user?.name}
+              </p>
+              <p className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                {user?.role}
+              </p>
             </div>
-            <div className="hidden lg:block leading-tight">
-              <p className="text-sm font-semibold text-gray-800 dark:text-white">{user?.name}</p>
-              <p className="text-xs text-gray-500 dark:text-slate-400 capitalize">{user?.role}</p>
-            </div>
+            <Link to="/profile" className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-full border-2 border-blue-600/20 p-0.5 hover:border-blue-600/50 transition-colors">
+                <div className="h-full w-full rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                  {user?.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User size={20} className="text-[var(--text-muted)]" />
+                  )}
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

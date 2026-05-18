@@ -16,111 +16,104 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
-  const location = useLocation();
+const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
-  const navItems = [
-    { path: "/dashboard", icon: Home, label: "Dashboard" },
-    { path: "/resources", icon: BookOpen, label: "Resources" },
-    { path: "/my-uploads", icon: FileText, label: "My Uploads" },
-    { path: "/announcements", icon: Bell, label: "Announcements" },
-    { path: "/events", icon: Calendar, label: "Events" },
-    { path: "/lost-found", icon: AlertCircle, label: "Lost & Found" },
-    { path: "/clubs", icon: Users, label: "Clubs" },
-    { path: "/profile", icon: User, label: "Profile" },
+  const menuItems = [
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: BookOpen, label: "Resources", path: "/resources" },
+    { icon: FileText, label: "My Uploads", path: "/my-uploads" },
+    { icon: Bell, label: "Announcements", path: "/announcements" },
+    { icon: Calendar, label: "Events", path: "/events" },
+    { icon: AlertCircle, label: "Lost & Found", path: "/lost-found" },
+    { icon: Users, label: "Clubs", path: "/clubs" },
+    { icon: User, label: "Profile", path: "/profile" },
   ];
 
-  // Add admin panel for moderators and admins
-  if (user && (user.role === "admin" || user.role === "moderator")) {
-    navItems.push({ path: "/admin", icon: Settings, label: "Admin Panel" });
+  if (user?.role === "admin" || user?.role === "moderator") {
+    menuItems.push({ icon: Settings, label: "Admin Panel", path: "/admin" });
   }
-
-  const isActive = (path) => location.pathname === path;
 
   return (
     <>
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
+      {/* Mobile Backdrop */}
+      {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          onClick={toggleSidebar}
         />
       )}
 
       {/* Sidebar */}
-      <div
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-slate-950 dark:bg-slate-900 text-white transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}
+      <aside
+        className={`fixed top-0 left-0 z-50 h-full w-72 bg-[var(--bg-sidebar)] text-[var(--text-main)] transform transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-[var(--border-color)] ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            {/* Logo and Close Button */}
-            <div className="flex items-center justify-between mb-8">
-              <Link to="/dashboard" className="flex items-center space-x-2">
-                <div className="bg-opacity-20 p-2 rounded-lg">
-                  <BookOpenText size={24} />
-                </div>
-                <span className="text-xl font-bold">CRH</span>
-              </Link>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="lg:hidden hover:bg-white hover:bg-opacity-10 p-2 rounded-lg transition"
-              >
-                <X size={24} />
-              </button>
-            </div>
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="p-6 border-b border-[var(--border-color)]">
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="bg-blue-600 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                <BookOpen size={24} className="text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-[var(--text-main)]">CRH</span>
+            </Link>
+          </div>
 
-            {/* Navigation */}
-            <nav className="space-y-2">
-              {navItems.map((item) => (
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition ${
-                    isActive(item.path)
-                      ? "bg-blue-700 shadow-lg"
-                      : "hover:bg-blue-700 hover:bg-opacity-50"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                    isActive
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                      : "text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-slate-800/50 hover:text-[var(--text-main)]"
                   }`}
+                  onClick={() => window.innerWidth < 1024 && toggleSidebar()}
                 >
-                  <item.icon size={20} />
+                  <item.icon
+                    size={20}
+                    className={isActive ? "text-white" : "group-hover:text-[var(--text-main)]"}
+                  />
                   <span className="font-medium">{item.label}</span>
                 </Link>
-              ))}
-            </nav>
-          </div>
-        </div>
+              );
+            })}
+          </nav>
 
-        {/* User Section */}
-        <div className="p-6 border-t border-blue-700">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {user?.profileImage ? (
-                <img
-                  src={user.profileImage}
-                  alt={user.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <User size={20} />
-              )}
+          {/* User Info & Logout */}
+          <div className="p-4 border-t border-[var(--border-color)] space-y-2">
+            <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-800/30">
+              <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-600/30 overflow-hidden">
+                {user?.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User size={20} className="text-blue-600 dark:text-blue-400" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold truncate text-[var(--text-main)]">{user?.name}</p>
+                <p className="text-xs text-[var(--text-muted)] truncate capitalize">
+                  {user?.role}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold truncate">{user?.name}</p>
-              <p className="text-xs text-blue-300 truncate">{user?.role}</p>
-            </div>
+            <button
+              onClick={logout}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors group"
+            >
+              <LogOut size={20} className="group-hover:scale-110 transition-transform" />
+              <span className="font-medium">Logout</span>
+            </button>
           </div>
-          <button
-            onClick={logout}
-            className="flex items-center space-x-2 text-blue-300 hover:text-white transition w-full px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
         </div>
-      </div>
+      </aside>
     </>
   );
 };

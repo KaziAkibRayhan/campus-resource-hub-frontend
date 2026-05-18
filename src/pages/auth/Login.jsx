@@ -70,14 +70,14 @@ const Login = () => {
                   <div className="relative">
                     <Mail
                       className="absolute left-3 top-3.5 text-gray-400"
-                      size={20} 
+                      size={20}
                     />
                     <Field
                       type="email"
                       id="email"
                       name="email"
                       placeholder="student@university.edu"
-                      className={`w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                      className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.email && touched.email
                           ? "border-red-500"
                           : "border-gray-300 dark:border-slate-700"
@@ -109,7 +109,7 @@ const Login = () => {
                       id="password"
                       name="password"
                       placeholder="••••••••"
-                      className={`w-full pl-11 pr-12 py-3 border rounded-lg bg-white dark:bg-slate-950 text-gray-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                      className={`w-full pl-11 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.password && touched.password
                           ? "border-red-500"
                           : "border-gray-300 dark:border-slate-700"
@@ -181,12 +181,14 @@ const Login = () => {
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 bg-blue-50 rounded-lg p-4 text-center">
-          <p className="text-sm text-gray-600 mb-2">Demo Credentials:</p>
-          <p className="text-xs text-gray-500">
-            Email: <span className="font-semibold">student@university.edu</span>{" "}
-            | Password: <span className="font-semibold">Password123</span>
+        <div className="mt-8 bg-gray-50 dark:bg-slate-900/50 rounded-xl p-6 border border-gray-100 dark:border-slate-800 text-center">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+            Demo Credentials
           </p>
+          <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+            <p>Email: <span className="font-semibold text-slate-800 dark:text-slate-200">student@university.edu</span></p>
+            <p>Password: <span className="font-semibold text-slate-800 dark:text-slate-200">Password123</span></p>
+          </div>
         </div>
       </div>
     </div>
