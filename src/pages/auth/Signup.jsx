@@ -16,7 +16,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { departments } from "../../utils/dummyData";
+import { departments } from "../../utils/constants";
 
 const Signup = () => {
   const navigate = useNavigate();

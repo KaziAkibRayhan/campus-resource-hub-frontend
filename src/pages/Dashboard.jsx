@@ -10,29 +10,56 @@ import {
   Download,
   TrendingUp,
 } from "lucide-react";
-import { resourceService, announcementService, eventService } from "../services/api";
+import {
+  announcementService,
+  clubService,
+  eventService,
+  lostFoundService,
+  resourceService,
+} from "../services/api";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [resources, setResources] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [events, setEvents] = useState([]);
+  const [counts, setCounts] = useState({
+    resources: 0,
+    announcements: 0,
+    events: 0,
+    lostFound: 0,
+    clubs: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [resResponse, annResponse, eventResponse] = await Promise.all([
+        const [
+          resResponse,
+          annResponse,
+          eventResponse,
+          lostFoundResponse,
+          clubResponse,
+        ] = await Promise.all([
           resourceService.getAll({ limit: 4 }),
           announcementService.getAll({ limit: 4 }),
           eventService.getAll({ limit: 4 }),
+          lostFoundService.getAll(),
+          clubService.getAll(),
         ]);
         setResources(resResponse.data.resources);
         setAnnouncements(annResponse.data.announcements);
-        setEvents(eventResponse.data.events);
+        setCounts({
+          resources: resResponse.data.total || resResponse.data.count || 0,
+          announcements: annResponse.data.count || 0,
+          events: eventResponse.data.count || 0,
+          lostFound: lostFoundResponse.data.count || 0,
+          clubs: clubResponse.data.count || 0,
+        });
       } catch (error) {
+        console.error("Dashboard fetch error:", error);
         toast.error("Failed to fetch dashboard data");
       } finally {
         setLoading(false);
@@ -44,7 +71,7 @@ const Dashboard = () => {
   const stats = [
     {
       title: "Total Resources",
-      value: resources.length > 0 ? resources.length : "0",
+      value: counts.resources,
       icon: BookOpen,
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-50",
@@ -53,7 +80,7 @@ const Dashboard = () => {
     },
     {
       title: "Announcements",
-      value: announcements.length > 0 ? announcements.length : "0",
+      value: counts.announcements,
       icon: Bell,
       color: "from-green-500 to-green-600",
       bgColor: "bg-green-50",
@@ -62,7 +89,7 @@ const Dashboard = () => {
     },
     {
       title: "Upcoming Events",
-      value: events.length > 0 ? events.length : "0",
+      value: counts.events,
       icon: Calendar,
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-50",
@@ -71,7 +98,7 @@ const Dashboard = () => {
     },
     {
       title: "Lost Items",
-      value: "8",
+      value: counts.lostFound,
       icon: AlertCircle,
       color: "from-orange-500 to-orange-600",
       bgColor: "bg-orange-50",
@@ -231,7 +258,7 @@ const Dashboard = () => {
           >
             <BookOpen className="text-green-600 mb-2" size={32} />
             <span className="text-sm font-semibold text-gray-800">
-              Explore Clubs
+              Explore Clubs ({counts.clubs})
             </span>
           </Link>
         </div>

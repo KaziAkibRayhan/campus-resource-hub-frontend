@@ -13,6 +13,7 @@ import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
 import UploadResource from "./pages/UploadResource";
+import MyUploads from "./pages/MyUploads";
 import Announcements from "./pages/Announcements";
 import Events from "./pages/Events";
 import LostFound from "./pages/LostFound";
@@ -41,6 +42,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="resources" element={<Resources />} />
             <Route path="upload-resource" element={<UploadResource />} />
+            <Route path="my-uploads" element={<MyUploads />} />
             <Route path="announcements" element={<Announcements />} />
             <Route path="events" element={<Events />} />
             <Route path="lost-found" element={<LostFound />} />

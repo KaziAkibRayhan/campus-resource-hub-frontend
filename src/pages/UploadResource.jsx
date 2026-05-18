@@ -10,7 +10,7 @@ import {
   AlertCircle,
   ArrowLeft,
 } from "lucide-react";
-import { departments, semesters } from "../utils/dummyData";
+import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
 import { toast } from "sonner";
 
@@ -97,7 +97,7 @@ const UploadResource = () => {
           validationSchema={uploadResourceSchema}
           onSubmit={handleSubmit}
         >
-          {({ isSubmitting, errors, touched, setFieldValue, values }) => (
+          {({ isSubmitting, errors, touched, setFieldValue }) => (
             <Form className="space-y-6">
               {/* Title */}
               <div>

@@ -1,5 +1,12 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
 import { authService } from "../services/api";
 
 const AuthContext = createContext(null);
@@ -8,21 +15,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-      verifyToken();
-    } else {
-      setLoading(false);
-    }
+  // Logout function
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   }, []);
 
   // Verify token validity
-  const verifyToken = async () => {
+  const verifyToken = useCallback(async () => {
     try {
       const response = await authService.getMe();
       if (response.data.success) {
@@ -37,7 +38,20 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
+
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (storedUser && token) {
+      setUser(JSON.parse(storedUser));
+      verifyToken();
+    } else {
+      setLoading(false);
+    }
+  }, [verifyToken]);
 
   // Login function
   const login = async (email, password) => {
@@ -83,13 +97,6 @@ export const AuthProvider = ({ children }) => {
         error: error.response?.data?.message || "Signup failed",
       };
     }
-  };
-
-  // Logout function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
   };
 
   return (

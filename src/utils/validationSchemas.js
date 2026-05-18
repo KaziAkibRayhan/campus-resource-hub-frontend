@@ -53,7 +53,7 @@ export const uploadResourceSchema = Yup.object({
     .test("fileSize", "File size must be less than 20MB", (value) => {
       return value && value.size <= 20 * 1024 * 1024; // 20MB
     })
-    .test("fileType", "Only PDF, DOCX, PPTX files are allowed", (value) => {
+    .test("fileType", "Only PDF, DOCX, PPTX, and XLSX files are allowed", (value) => {
       return (
         value &&
         [
@@ -62,6 +62,7 @@ export const uploadResourceSchema = Yup.object({
           "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "application/vnd.ms-powerpoint",
           "application/msword",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ].includes(value.type)
       );
     }),
@@ -107,7 +108,7 @@ export const lostFoundSchema = Yup.object({
     })
     .test("fileType", "Only image files are allowed", (value) => {
       if (!value) return true; // Image is optional
-      return ["image/jpeg", "image/jpg", "image/png", "image/gif"].includes(
+      return ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
         value.type
       );
     }),

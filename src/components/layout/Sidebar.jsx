@@ -5,6 +5,7 @@ import {
   BookOpen,
   BookOpenText,
   Calendar,
+  FileText,
   Home,
   LogOut,
   Settings,
@@ -22,6 +23,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navItems = [
     { path: "/dashboard", icon: Home, label: "Dashboard" },
     { path: "/resources", icon: BookOpen, label: "Resources" },
+    { path: "/my-uploads", icon: FileText, label: "My Uploads" },
     { path: "/announcements", icon: Bell, label: "Announcements" },
     { path: "/events", icon: Calendar, label: "Events" },
     { path: "/lost-found", icon: AlertCircle, label: "Lost & Found" },
