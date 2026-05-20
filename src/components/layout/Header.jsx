@@ -1,10 +1,10 @@
 // src/components/layout/Header.jsx
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, Bell, Search, Moon, Sun, User } from "lucide-react";
-import { notificationService } from "../../services/api";
+import { Menu, Search, Moon, Sun, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Header = ({ toggleSidebar }) => {
   const { user } = useAuth();
@@ -52,10 +52,7 @@ const Header = ({ toggleSidebar }) => {
           </button>
 
           {/* Notifications */}
-          <button className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors relative group">
-            <Bell size={22} className="text-[var(--text-muted)]" />
-            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 border-2 border-[var(--bg-card)] group-hover:scale-110 transition-transform"></span>
-          </button>
+          <NotificationDropdown />
 
           {/* User Profile */}
           <div className="flex items-center space-x-3 pl-2 lg:pl-4 border-l border-[var(--border-color)]">

@@ -23,6 +23,7 @@ const Layout = () => {
           </div>
         </main>
       </div>
+      <ChatWidget />
     </div>
   );
 };

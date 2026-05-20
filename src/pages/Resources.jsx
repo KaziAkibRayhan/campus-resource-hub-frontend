@@ -15,6 +15,7 @@ import {
 import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
 import { toast } from "sonner";
+import ResourcePreview from "../components/resources/ResourcePreview";
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
@@ -277,87 +278,11 @@ const Resources = () => {
 
       {/* Preview Modal */}
       {previewResource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-[var(--border-color)]">
-            <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-card)]">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                  <FileText size={20} />
-                </div>
-                <h3 className="font-bold text-[var(--text-main)] truncate max-w-md">
-                  {previewResource.title}
-                </h3>
-              </div>
-              <button
-                onClick={() => setPreviewResource(null)}
-                className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition text-[var(--text-muted)]"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto bg-[var(--bg-main)] p-4">
-              {canEmbedPreview(previewResource) ? (
-                previewResource.fileType === "PDF" ? (
-                  <iframe
-                    src={`${previewResource.fileUrl}#toolbar=0`}
-                    className="w-full h-[60vh] rounded-lg border border-[var(--border-color)]"
-                    title={previewResource.title}
-                  />
-                ) : (
-                  <img
-                    src={previewResource.fileUrl}
-                    alt={previewResource.title}
-                    className="max-w-full mx-auto rounded-lg shadow-md border border-[var(--border-color)]"
-                  />
-                )
-              ) : (
-                <div className="h-[40vh] flex flex-col items-center justify-center text-center p-8 bg-[var(--bg-card)] rounded-xl border border-dashed border-[var(--border-color)]">
-                  <div className="bg-[var(--bg-secondary)] p-6 rounded-full mb-4">
-                    <ExternalLink size={48} className="text-[var(--text-muted)]" />
-                  </div>
-                  <h4 className="text-xl font-bold text-[var(--text-main)] mb-2">
-                    Preview not available
-                  </h4>
-                  <p className="text-[var(--text-muted)] max-w-xs mb-6">
-                    This file type ({previewResource.fileType}) cannot be
-                    previewed in the browser.
-                  </p>
-                  <button
-                    onClick={() =>
-                      handleDownload(
-                        previewResource._id,
-                        previewResource.fileUrl,
-                        previewResource.title
-                      )
-                    }
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold flex items-center space-x-2"
-                  >
-                    <Download size={20} />
-                    <span>Download to View</span>
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="p-4 border-t border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-card)]">
-              <div className="text-sm text-[var(--text-muted)]">
-                {previewResource.course} • {previewResource.department}
-              </div>
-              <button
-                onClick={() =>
-                  handleDownload(
-                    previewResource._id,
-                    previewResource.fileUrl,
-                    previewResource.title
-                  )
-                }
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold flex items-center space-x-2 shadow-md"
-              >
-                <Download size={18} />
-                <span>Download</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <ResourcePreview
+          resource={previewResource}
+          onClose={() => setPreviewResource(null)}
+          onDownload={handleDownload}
+        />
       )}
     </div>
   );

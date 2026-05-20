@@ -90,14 +90,31 @@ export const clubService = {
 
 export const notificationService = {
   getAll: () => API.get("/notifications"),
+  markRead: (id) => API.put(`/notifications/${id}/read`),
   markAllRead: () => API.put("/notifications/read-all"),
+  delete: (id) => API.delete(`/notifications/${id}`),
 };
 
 export const chatService = {
+  verifyAccess: () => API.post("/chat/verify"),
   getUsers: () => API.get("/chat/users"),
   getConversations: () => API.get("/chat/conversations"),
   createDirect: (userId) => API.post("/chat/conversations/direct", { userId }),
+  createGroup: (data) => API.post("/chat/conversations/group", data),
   getMessages: (id) => API.get(`/chat/conversations/${id}/messages`),
+  updateGroupInfo: (id, data) => API.patch(`/chat/conversations/${id}/info`, data),
+  addMembers: (id, memberIds) => API.post(`/chat/conversations/${id}/members`, { memberIds }),
+  removeMember: (id, userId) => API.delete(`/chat/conversations/${id}/members`, { data: { userId } }),
+  promoteAdmin: (id, userId) => API.post(`/chat/conversations/${id}/admins`, { userId }),
+  demoteAdmin: (id, userId) => API.delete(`/chat/conversations/${id}/admins`, { data: { userId } }),
+  leaveGroup: (id) => API.post(`/chat/conversations/${id}/leave`),
+  uploadAttachment: (formData, onUploadProgress) =>
+    API.post("/chat/attachments", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      onUploadProgress,
+    }),
+  downloadAttachment: (messageId, attachmentIndex) =>
+    API.get(`/chat/messages/${messageId}/attachments/${attachmentIndex}/download`),
 };
 
 export default API;
