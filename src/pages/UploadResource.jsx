@@ -90,8 +90,7 @@ const UploadResource = () => {
               Upload Successful!
             </h3>
             <p className="text-green-700 dark:text-green-300 text-sm">
-              Your resource has been submitted for admin approval. You'll be
-              notified once it's approved.
+              Your resource is now live and visible to everyone. Redirecting to resources...
             </p>
           </div>
         </div>

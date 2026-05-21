@@ -42,7 +42,9 @@ export const resourceService = {
 
 export const announcementService = {
   getAll: (params) => API.get("/announcements", { params }),
+  getMine: () => API.get("/announcements", { params: { mine: true } }),
   create: (data) => API.post("/announcements", data),
+  update: (id, data) => API.put(`/announcements/${id}`, data),
   approve: (id) => API.put(`/announcements/${id}/approve`),
   reject: (id, reason) => API.put(`/announcements/${id}/reject`, { reason }),
   delete: (id) => API.delete(`/announcements/${id}`),
@@ -50,7 +52,9 @@ export const announcementService = {
 
 export const eventService = {
   getAll: (params) => API.get("/events", { params }),
+  getMine: () => API.get("/events", { params: { mine: true } }),
   create: (data) => API.post("/events", data),
+  update: (id, data) => API.put(`/events/${id}`, data),
   register: (id) => API.post(`/events/${id}/register`),
   approve: (id) => API.put(`/events/${id}/approve`),
   reject: (id, reason) => API.put(`/events/${id}/reject`, { reason }),
@@ -63,10 +67,12 @@ export const adminService = {
   setUserBlocked: (id, isBlocked) =>
     API.put(`/admin/users/${id}/block`, { isBlocked }),
   updateUserRole: (id, role) => API.put(`/admin/users/${id}/role`, { role }),
+  getAllResources: (params) => API.get("/resources", { params: { ...params, all: true } }),
 };
 
 export const lostFoundService = {
   getAll: (params) => API.get("/lost-found", { params }),
+  getMine: () => API.get("/lost-found", { params: { mine: true } }),
   create: (formData) =>
     API.post("/lost-found", formData, {
       headers: { "Content-Type": "multipart/form-data" },

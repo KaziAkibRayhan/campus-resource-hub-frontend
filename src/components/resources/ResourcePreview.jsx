@@ -2,26 +2,21 @@ import React, { useState } from "react";
 import { X, Download, ExternalLink, FileText, Loader2, AlertTriangle } from "lucide-react";
 
 const ResourcePreview = ({ resource, onClose, onDownload }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
   if (!resource) return null;
+
+  const isImage = resource.fileType === "IMAGE";
+  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource.fileType);
+
+  const [loading, setLoading] = useState(isEmbeddable);
+  const [error, setError] = useState(false);
 
   const getPreviewUrl = () => {
     const url = resource.fileUrl;
-    if (resource.fileType === "PDF") {
-      // Cloudinary PDF preview sometimes needs specific format
-      return `${url}#toolbar=0&view=FitH`;
-    }
-    if (["DOCX", "PPTX", "XLSX", "DOC"].includes(resource.fileType)) {
-      // Use Google Docs Viewer for Office documents
+    if (["PDF", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource.fileType)) {
       return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
     }
     return url;
   };
-
-  const isImage = resource.fileType === "IMAGE";
-  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource.fileType);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
