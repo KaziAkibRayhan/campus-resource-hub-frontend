@@ -26,30 +26,37 @@ const getConversationImage = (conversation, currentUser) => {
   return other?.profileImage;
 };
 
-const Avatar = ({ src, name, size = 10, online }) => (
-  <div className="relative flex-shrink-0">
-    {src ? (
-      <img
-        src={src}
-        alt={name}
-        className={`w-${size} h-${size} rounded-full object-cover`}
-      />
-    ) : (
-      <div
-        className={`w-${size} h-${size} rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-sm`}
-      >
-        {name?.[0]?.toUpperCase() || <User size={size * 2} />}
-      </div>
-    )}
-    {online !== undefined && (
-      <span
-        className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
-          online ? "bg-green-500" : "bg-gray-400"
-        }`}
-      />
-    )}
-  </div>
-);
+const Avatar = ({ src, name, size = 10, online }) => {
+  const avatarSize = size * 4; // Convert abstract size to pixels (e.g., 10 -> 40px)
+  const iconSize = size * 2; // For the Lucide-React User icon
+
+  return (
+    <div
+      className="relative flex-shrink-0"
+      style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={name}
+          className="rounded-full object-cover w-full h-full"
+        />
+      ) : (
+        <div className="rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-sm w-full h-full">
+          {name?.[0]?.toUpperCase()}
+          {!name && <User size={iconSize} />}
+        </div>
+      )}
+      {online !== undefined && (
+        <span
+          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
+            online ? "bg-green-500" : "bg-gray-400"
+          }`}
+        />
+      )}
+    </div>
+  );
+};
 
 const ChatWidget = () => {
   const { user } = useAuth();
