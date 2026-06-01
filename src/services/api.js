@@ -103,6 +103,8 @@ export const notificationService = {
 
 export const chatService = {
   verifyAccess: () => API.post("/chat/verify"),
+  searchHub: (params) => API.get("/chat/search", { params }),
+  askAssistant: (question) => API.post("/chat/assistant", { question }),
   getUsers: () => API.get("/chat/users"),
   getConversations: () => API.get("/chat/conversations"),
   createDirect: (userId) => API.post("/chat/conversations/direct", { userId }),

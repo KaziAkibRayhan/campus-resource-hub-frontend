@@ -1130,6 +1130,16 @@ const ChatWidget = () => {
     </div>
   );
 
+  const toggleMessages = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+
+    setOpen(true);
+    setView("list");
+  };
+
   // ══════════════════════════════════════════════════════════════
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -1149,20 +1159,27 @@ const ChatWidget = () => {
         {!verifying && !verifyError && view === "direct-info" && activeConversation && renderDirectInfoView()}
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 active:scale-90 ${
-          open ? "bg-gray-700 rotate-90" : "bg-blue-600 hover:bg-blue-700"
-        } text-white`}
-      >
-        {open ? <X size={26} /> : (
-          <div className="relative">
-            <MessageCircle size={26} />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full" />
-          </div>
-        )}
-      </button>
+      {/* Messages entry point */}
+      <div className="flex flex-col items-end gap-3">
+        <button
+          onClick={toggleMessages}
+          className="group flex items-center gap-2 transition-all duration-300 active:scale-95"
+        >
+          <span className="px-3 py-1.5 rounded-full text-xs font-bold shadow-lg bg-white dark:bg-slate-900 text-blue-600 border border-blue-100 dark:border-blue-900/50">
+            Messages
+          </span>
+          <span className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 ${
+            open ? "bg-gray-700 rotate-90" : "bg-blue-600 hover:bg-blue-700"
+          }`}>
+            {open ? <X size={25} /> : (
+              <div className="relative">
+                <MessageCircle size={25} />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full" />
+              </div>
+            )}
+          </span>
+        </button>
+      </div>
     </div>
   );
 };
