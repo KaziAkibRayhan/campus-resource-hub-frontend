@@ -97,8 +97,8 @@ const Header = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 lg:px-8">
-      <div className="flex w-full items-center justify-between">
+    <header className="sticky top-0 z-40 flex min-h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 py-3 lg:px-8">
+      <div className="flex w-full flex-wrap items-center gap-3">
         <div className="flex items-center space-x-4">
           <button
             onClick={toggleSidebar}
@@ -113,9 +113,8 @@ const Header = ({ toggleSidebar }) => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 lg:space-x-5">
-          {/* AI Search Bar */}
-          <div ref={searchRef} className="hidden md:block relative">
+        {/* AI Search Bar */}
+        <div ref={searchRef} className="order-3 w-full md:order-none md:flex-1 md:w-auto md:max-w-[28rem] relative">
             <form onSubmit={handleAiSearch} className="relative group">
               <Bot className="absolute left-3 top-3 text-blue-500 transition-colors" size={18} />
               <input
@@ -126,8 +125,8 @@ const Header = ({ toggleSidebar }) => {
                   setAiQuery(event.target.value);
                   if (aiError) setAiError("");
                 }}
-                placeholder="Ask AI about resources, clubs, events..."
-                className="w-72 lg:w-[28rem] pl-10 pr-20 py-2.5 rounded-xl text-sm transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)]"
+                placeholder="Ask AI about resources..."
+                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)]"
               />
               <div className="absolute right-2 top-1.5 flex items-center gap-1">
                 {aiQuery && (
@@ -152,7 +151,7 @@ const Header = ({ toggleSidebar }) => {
             </form>
 
             {searchOpen && (
-              <div className="absolute right-0 top-14 w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
+              <div className="absolute left-0 right-0 top-14 w-full md:left-auto md:w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
                 <div className="p-4 border-b border-[var(--border-color)] bg-blue-50/70 dark:bg-blue-950/20 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center">
                     <Bot size={18} />
@@ -225,7 +224,9 @@ const Header = ({ toggleSidebar }) => {
                 </div>
               </div>
             )}
-          </div>
+        </div>
+
+        <div className="ml-auto flex items-center space-x-2 lg:space-x-5">
 
           {/* Theme Toggle */}
           <button

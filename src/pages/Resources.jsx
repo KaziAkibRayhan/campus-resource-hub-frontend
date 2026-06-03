@@ -184,15 +184,15 @@ const Resources = () => {
       </div>
 
       {/* Results Count */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[var(--text-muted)]">
           Showing{" "}
           <span className="font-semibold text-[var(--text-main)]">{resources.length}</span>{" "}
           resources
         </p>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <select
-            className="px-4 py-2 pr-10 text-sm appearance-none"
+            className="w-full sm:w-auto px-4 py-2 pr-10 text-sm appearance-none"
             value={`${sortBy}:${order}`}
             onChange={(event) => {
               const [nextSortBy, nextOrder] = event.target.value.split(":");

@@ -50,17 +50,19 @@ const Announcements = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold text-[var(--text-main)]">Announcements</h2>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] break-words">
+            Announcements
+          </h2>
           <p className="text-[var(--text-muted)] mt-1">Stay updated with campus news</p>
         </div>
         {(user?.role === "admin" || user?.role === "moderator") && (
           <button
             onClick={() => setShowCreate(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2 shadow-md"
+            className="w-full sm:w-auto bg-blue-600 text-white px-4 sm:px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md text-sm sm:text-base"
           >
-            <Plus size={20} />
+            <Plus size={20} className="flex-shrink-0" />
             <span>Create Announcement</span>
           </button>
         )}
@@ -76,29 +78,29 @@ const Announcements = () => {
           {announcements.map((announcement) => (
             <div
               key={announcement._id}
-              className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
+              className="bg-[var(--bg-card)] rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition border border-[var(--border-color)]"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg flex-shrink-0">
-                    <Bell className="text-blue-600 dark:text-blue-400" size={24} />
+                <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 sm:p-3 rounded-lg flex-shrink-0">
+                    <Bell className="text-blue-600 dark:text-blue-400" size={22} />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
+                  <div className="min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-[var(--text-main)] mb-2 break-words">
                       {announcement.title}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[var(--text-muted)]">
                       <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full font-medium">
                         {announcement.department}
                       </span>
-                      <span>Posted by {announcement.postedBy?.name || "Admin"}</span>
-                      <span>•</span>
+                      <span className="break-words">Posted by {announcement.postedBy?.name || "Admin"}</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{new Date(announcement.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="prose dark:prose-invert max-w-none text-[var(--text-main)] opacity-90">
+              <div className="prose dark:prose-invert max-w-none text-[var(--text-main)] opacity-90 break-words">
                 <p>{announcement.content}</p>
               </div>
             </div>
@@ -119,9 +121,9 @@ const Announcements = () => {
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-[var(--border-color)]">
-            <div className="p-6 border-b border-[var(--border-color)] flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-[var(--text-main)]">
+          <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-lg max-h-[calc(100vh-2rem)] shadow-2xl overflow-hidden border border-[var(--border-color)]">
+            <div className="p-4 sm:p-6 border-b border-[var(--border-color)] flex items-center justify-between gap-3">
+              <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-main)]">
                 Create Announcement
               </h3>
               <button
@@ -131,7 +133,7 @@ const Announcements = () => {
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleCreate} className="p-6 space-y-5">
+            <form onSubmit={handleCreate} className="p-4 sm:p-6 space-y-5 overflow-y-auto max-h-[calc(100vh-7rem)]">
               <div>
                 <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
                   Title

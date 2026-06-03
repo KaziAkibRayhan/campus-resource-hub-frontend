@@ -22,6 +22,44 @@ const TABS = [
   { id: "users",        label: "Users",          icon: Users      },
 ];
 
+const adminColors = {
+  blue: {
+    card: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50",
+    text: "text-blue-700 dark:text-blue-300",
+    muted: "text-blue-600 dark:text-blue-400",
+    icon: "text-blue-500 dark:text-blue-300",
+    soft: "bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-950/30 border-blue-500",
+  },
+  green: {
+    card: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/50",
+    text: "text-green-700 dark:text-green-300",
+    muted: "text-green-600 dark:text-green-400",
+    icon: "text-green-500 dark:text-green-300",
+    soft: "bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30 border-green-500",
+  },
+  purple: {
+    card: "bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/50",
+    text: "text-purple-700 dark:text-purple-300",
+    muted: "text-purple-600 dark:text-purple-400",
+    icon: "text-purple-500 dark:text-purple-300",
+    soft: "bg-purple-50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-950/30 border-purple-500",
+  },
+  orange: {
+    card: "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/50",
+    text: "text-orange-700 dark:text-orange-300",
+    muted: "text-orange-600 dark:text-orange-400",
+    icon: "text-orange-500 dark:text-orange-300",
+    soft: "bg-orange-50 dark:bg-orange-950/20 hover:bg-orange-100 dark:hover:bg-orange-950/30 border-orange-500",
+  },
+  red: {
+    card: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50",
+    text: "text-red-700 dark:text-red-300",
+    muted: "text-red-600 dark:text-red-400",
+    icon: "text-red-500 dark:text-red-300",
+    soft: "bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 border-red-500",
+  },
+};
+
 const AdminPanel = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab]         = useState("overview");
@@ -149,16 +187,16 @@ const AdminPanel = () => {
           { label: "Active Clubs",     value: stats?.clubs?.total,              icon: Package,    color: "orange" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label}
-            className={`bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-200 dark:border-${color}-800 rounded-xl p-5 shadow-sm`}
+            className={`${adminColors[color].card} border rounded-xl p-5 shadow-sm`}
           >
             <div className="flex items-center justify-between mb-2">
-              <p className={`text-${color}-600 dark:text-${color}-400 text-sm font-medium`}>{label}</p>
+              <p className={`${adminColors[color].muted} text-sm font-medium`}>{label}</p>
               {React.createElement(Icon, {
                 size: 18,
-                className: `text-${color}-400`,
+                className: adminColors[color].icon,
               })}
             </div>
-            <p className={`text-3xl font-bold text-${color}-700 dark:text-${color}-300`}>{fmt(value)}</p>
+            <p className={`text-3xl font-bold ${adminColors[color].text}`}>{fmt(value)}</p>
           </div>
         ))}
       </div>
@@ -181,10 +219,10 @@ const AdminPanel = () => {
               <button
                 key={label}
                 onClick={() => setActiveTab(tab)}
-                className={`w-full p-3 bg-${color}-50 dark:bg-${color}-900/10 border-l-4 border-${color}-500 rounded flex justify-between items-center hover:bg-${color}-100 dark:hover:bg-${color}-900/20 transition`}
+                className={`w-full p-3 ${adminColors[color].soft} border-l-4 rounded flex justify-between items-center transition`}
               >
                 <span className="font-semibold text-[var(--text-main)]">{label}</span>
-                <span className={`text-lg font-bold text-${color}-600`}>{count}</span>
+                <span className={`text-lg font-bold ${adminColors[color].muted}`}>{count}</span>
               </button>
             ))}
           </div>
@@ -205,19 +243,19 @@ const AdminPanel = () => {
                 <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: "45%" }} />
               </div>
             </div>
-            <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg flex items-center justify-between">
+            <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg flex items-center justify-between border border-green-200/70 dark:border-green-900/40">
               <div>
                 <p className="font-semibold text-[var(--text-main)]">Live Resources</p>
                 <p className="text-sm text-[var(--text-muted)]">{fmt(stats?.resources?.approved)} visible</p>
               </div>
-              <Eye size={20} className="text-green-600" />
+              <Eye size={20} className="text-green-600 dark:text-green-400" />
             </div>
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg flex items-center justify-between">
+            <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg flex items-center justify-between border border-purple-200/70 dark:border-purple-900/40">
               <div>
                 <p className="font-semibold text-[var(--text-main)]">Total Downloads</p>
                 <p className="text-sm text-[var(--text-muted)]">{fmt(stats?.resources?.totalDownloads)}</p>
               </div>
-              <Download size={20} className="text-purple-600" />
+              <Download size={20} className="text-purple-600 dark:text-purple-400" />
             </div>
           </div>
         </div>
@@ -234,9 +272,9 @@ const AdminPanel = () => {
               { label: "Moderators",   value: stats?.users?.moderators,  color: "purple"},
               { label: "Blocked",      value: stats?.users?.blocked,     color: "red"   },
             ].map(({ label, value, color }) => (
-              <div key={label} className={`p-3 bg-${color}-50 dark:bg-${color}-900/10 rounded-lg flex justify-between`}>
+              <div key={label} className={`p-3 ${adminColors[color].card} border rounded-lg flex justify-between`}>
                 <span className="font-semibold text-[var(--text-main)]">{label}</span>
-                <span className={`font-bold text-${color}-600`}>{fmt(value)}</span>
+                <span className={`font-bold ${adminColors[color].muted}`}>{fmt(value)}</span>
               </div>
             ))}
           </div>
@@ -383,7 +421,7 @@ const AdminPanel = () => {
       <div className="p-5 border-b border-[var(--border-color)] flex items-center gap-3">
         {React.createElement(Icon, {
           size: 20,
-          className: `text-${color}-500`,
+          className: adminColors[color].icon,
         })}
         <h3 className="font-bold text-[var(--text-main)]">{title} <span className="text-[var(--text-muted)] font-normal">({items.length})</span></h3>
       </div>
