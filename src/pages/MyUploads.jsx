@@ -211,7 +211,7 @@ const LostFoundEditForm = ({ item, onSave, onCancel, saving }) => {
 // ═══════════════════════════════════════════════════════════════
 // ITEM CARD — generic wrapper
 // ═══════════════════════════════════════════════════════════════
-const ItemCard = ({ title, meta, badges, date, onEdit, onDelete, editForm, expanded, onToggle }) => (
+const ItemCard = ({ title, meta, badges, date, onDelete, editForm, expanded, onToggle }) => (
   <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] shadow-sm overflow-hidden">
     <div className="p-5">
       <div className="flex items-start justify-between gap-4">
@@ -286,7 +286,7 @@ const MyUploads = () => {
       setAnn(ann.data.announcements      || []);
       setEvents(evt.data.events          || []);
       setLostFound(lf.data.items         || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load your uploads");
     } finally {
       setLoading(false);
@@ -507,7 +507,7 @@ const MyUploads = () => {
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
             }`}
           >
-            <Icon size={15} />
+            {React.createElement(Icon, { size: 15 })}
             {label}
             {counts[id] > 0 && (
               <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${

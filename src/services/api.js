@@ -28,10 +28,7 @@ export const authService = {
 export const resourceService = {
   getAll: (params) => API.get("/resources", { params }),
   getById: (id) => API.get(`/resources/${id}`),
-  upload: (formData) =>
-    API.post("/resources", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+  upload: (formData) => API.post("/resources", formData),
   getMyUploads: () => API.get("/resources/user/my-uploads"),
   update: (id, data) => API.put(`/resources/${id}`, data),
   delete: (id) => API.delete(`/resources/${id}`),
@@ -73,14 +70,8 @@ export const adminService = {
 export const lostFoundService = {
   getAll: (params) => API.get("/lost-found", { params }),
   getMine: () => API.get("/lost-found", { params: { mine: true } }),
-  create: (formData) =>
-    API.post("/lost-found", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  update: (id, formData) =>
-    API.put(`/lost-found/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+  create: (formData) => API.post("/lost-found", formData),
+  update: (id, formData) => API.put(`/lost-found/${id}`, formData),
   delete: (id) => API.delete(`/lost-found/${id}`),
   approve: (id) => API.put(`/lost-found/${id}/approve`),
   reject: (id, reason) => API.put(`/lost-found/${id}/reject`, { reason }),
@@ -118,7 +109,6 @@ export const chatService = {
   leaveGroup: (id) => API.post(`/chat/conversations/${id}/leave`),
   uploadAttachment: (formData, onUploadProgress) =>
     API.post("/chat/attachments", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
       onUploadProgress,
     }),
   downloadAttachment: (messageId, attachmentIndex) =>

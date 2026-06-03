@@ -153,7 +153,10 @@ const AdminPanel = () => {
           >
             <div className="flex items-center justify-between mb-2">
               <p className={`text-${color}-600 dark:text-${color}-400 text-sm font-medium`}>{label}</p>
-              <Icon size={18} className={`text-${color}-400`} />
+              {React.createElement(Icon, {
+                size: 18,
+                className: `text-${color}-400`,
+              })}
             </div>
             <p className={`text-3xl font-bold text-${color}-700 dark:text-${color}-300`}>{fmt(value)}</p>
           </div>
@@ -378,7 +381,10 @@ const AdminPanel = () => {
   const ContentSection = ({ title, icon: Icon, items, color, renderRow }) => (
     <div className="bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)] overflow-hidden">
       <div className="p-5 border-b border-[var(--border-color)] flex items-center gap-3">
-        <Icon size={20} className={`text-${color}-500`} />
+        {React.createElement(Icon, {
+          size: 20,
+          className: `text-${color}-500`,
+        })}
         <h3 className="font-bold text-[var(--text-main)]">{title} <span className="text-[var(--text-muted)] font-normal">({items.length})</span></h3>
       </div>
       <div className="divide-y divide-[var(--border-color)]">
@@ -608,7 +614,7 @@ const AdminPanel = () => {
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
             }`}
           >
-            <Icon size={16} />
+            {React.createElement(Icon, { size: 16 })}
             {label}
           </button>
         ))}

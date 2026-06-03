@@ -132,14 +132,18 @@ const ChatWidget = () => {
     try {
       const res = await chatService.getUsers();
       setUsers(res.data.users);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to load chat users:", error);
+    }
   }, []);
 
   const refreshConversations = useCallback(async () => {
     try {
       const res = await chatService.getConversations();
       setConversations(res.data.conversations);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+    }
   }, []);
 
   // ── Auto-verify ────────────────────────────────────────────────
@@ -1142,11 +1146,11 @@ const ChatWidget = () => {
 
   // ══════════════════════════════════════════════════════════════
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
       {/* Chat Window */}
       <div
-        className={`bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-color)] w-[385px] h-[560px] mb-4 flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right ${
-          open ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
+        className={`bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-color)] w-[min(385px,calc(100vw-2rem))] h-[min(560px,calc(100vh-7rem))] mb-4 flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right ${
+          open ? "scale-100 opacity-100 pointer-events-auto" : "scale-0 opacity-0 pointer-events-none"
         }`}
       >
         {verifying && renderLoadingView()}
@@ -1163,7 +1167,7 @@ const ChatWidget = () => {
       <div className="flex flex-col items-end gap-3">
         <button
           onClick={toggleMessages}
-          className="group flex items-center gap-2 transition-all duration-300 active:scale-95"
+          className="group flex items-center gap-2 transition-all duration-300 active:scale-95 pointer-events-auto"
         >
           <span className="px-3 py-1.5 rounded-full text-xs font-bold shadow-lg bg-white dark:bg-slate-900 text-blue-600 border border-blue-100 dark:border-blue-900/50">
             Messages

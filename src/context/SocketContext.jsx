@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
@@ -26,6 +27,7 @@ export const SocketProvider = ({ children }) => {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSocket(null);
         setIsConnected(false);
       }

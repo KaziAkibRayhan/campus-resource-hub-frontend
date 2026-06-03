@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { X, Download, ExternalLink, FileText, Loader2, AlertTriangle } from "lucide-react";
 
 const ResourcePreview = ({ resource, onClose, onDownload }) => {
-  if (!resource) return null;
-
-  const isImage = resource.fileType === "IMAGE";
-  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource.fileType);
-
-  const [loading, setLoading] = useState(isEmbeddable);
+  const isImage = resource?.fileType === "IMAGE";
+  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource?.fileType);
+  const [loading, setLoading] = useState(() => isEmbeddable);
   const [error, setError] = useState(false);
+
+  if (!resource) return null;
 
   const getPreviewUrl = () => {
     const url = resource.fileUrl;

@@ -7,10 +7,8 @@ import {
   Filter,
   Download,
   Eye,
-  Star,
   FileText,
-  X,
-  ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
@@ -26,9 +24,6 @@ const Resources = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
   const [previewResource, setPreviewResource] = useState(null);
-
-  const canEmbedPreview = (resource) =>
-    ["PDF", "IMAGE"].includes(resource?.fileType);
 
   const fetchResources = useCallback(async () => {
     try {
@@ -101,7 +96,7 @@ const Resources = () => {
           {/* Search */}
           <div className="relative">
             <Search
-              className="absolute left-3 top-3 text-[var(--text-muted)]"
+              className="absolute left-3 top-3 text-[var(--text-muted)] pointer-events-none"
               size={20}
             />
             <input
@@ -116,7 +111,7 @@ const Resources = () => {
           {/* Department Filter */}
           <div className="relative">
             <Filter
-              className="absolute left-3 top-3 text-[var(--text-muted)]"
+              className="absolute left-3 top-3 text-[var(--text-muted)] pointer-events-none"
               size={18}
             />
             <select
@@ -131,12 +126,16 @@ const Resources = () => {
                 </option>
               ))}
             </select>
+            <ChevronDown
+              className="absolute right-3 top-3 text-[var(--text-muted)] pointer-events-none"
+              size={18}
+            />
           </div>
 
           {/* Semester Filter */}
           <div className="relative">
             <Filter
-              className="absolute left-3 top-3 text-[var(--text-muted)]"
+              className="absolute left-3 top-3 text-[var(--text-muted)] pointer-events-none"
               size={18}
             />
             <select
@@ -151,19 +150,29 @@ const Resources = () => {
                 </option>
               ))}
             </select>
+            <ChevronDown
+              className="absolute right-3 top-3 text-[var(--text-muted)] pointer-events-none"
+              size={18}
+            />
           </div>
 
           {/* Sort By */}
           <div className="flex items-center space-x-2">
-            <select
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value)}
-              className="flex-1 px-4 py-2"
-            >
-              <option value="createdAt">Sort by Date</option>
-              <option value="downloads">Sort by Downloads</option>
-              <option value="title">Sort by Title</option>
-            </select>
+            <div className="relative flex-1">
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+                className="w-full px-4 py-2 pr-10 appearance-none"
+              >
+                <option value="createdAt">Sort by Date</option>
+                <option value="downloads">Sort by Downloads</option>
+                <option value="title">Sort by Title</option>
+              </select>
+              <ChevronDown
+                className="absolute right-3 top-3 text-[var(--text-muted)] pointer-events-none"
+                size={18}
+              />
+            </div>
             <button
               onClick={() => setOrder(order === "asc" ? "desc" : "asc")}
               className="p-2 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-color)] transition shadow-sm"
@@ -181,20 +190,26 @@ const Resources = () => {
           <span className="font-semibold text-[var(--text-main)]">{resources.length}</span>{" "}
           resources
         </p>
-        <select
-          className="px-4 py-2 text-sm"
-          value={`${sortBy}:${order}`}
-          onChange={(event) => {
-            const [nextSortBy, nextOrder] = event.target.value.split(":");
-            setSortBy(nextSortBy);
-            setOrder(nextOrder);
-          }}
-        >
-          <option value="createdAt:desc">Sort by: Latest</option>
-          <option value="downloads:desc">Sort by: Most Downloaded</option>
-          <option value="rating:desc">Sort by: Highest Rated</option>
-          <option value="title:asc">Sort by: Title A-Z</option>
-        </select>
+        <div className="relative">
+          <select
+            className="px-4 py-2 pr-10 text-sm appearance-none"
+            value={`${sortBy}:${order}`}
+            onChange={(event) => {
+              const [nextSortBy, nextOrder] = event.target.value.split(":");
+              setSortBy(nextSortBy);
+              setOrder(nextOrder);
+            }}
+          >
+            <option value="createdAt:desc">Sort by: Latest</option>
+            <option value="downloads:desc">Sort by: Most Downloaded</option>
+            <option value="rating:desc">Sort by: Highest Rated</option>
+            <option value="title:asc">Sort by: Title A-Z</option>
+          </select>
+          <ChevronDown
+            className="absolute right-3 top-2.5 text-[var(--text-muted)] pointer-events-none"
+            size={16}
+          />
+        </div>
       </div>
 
       {/* Resources List */}

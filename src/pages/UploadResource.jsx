@@ -1,5 +1,5 @@
 // src/pages/UploadResource.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { uploadResourceSchema } from "../utils/validationSchemas";
@@ -19,6 +19,13 @@ const UploadResource = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const setFilePreview = (file) => {
     if (previewUrl) {
@@ -58,6 +65,12 @@ const UploadResource = () => {
       toast.error(error.response?.data?.message || "Error uploading resource");
     }
     setSubmitting(false);
+  };
+
+  const handleSelectedFile = (file, setFieldValue, setFieldTouched) => {
+    setFieldValue("file", file || null);
+    setFieldTouched("file", true, false);
+    setFilePreview(file || null);
   };
 
   return (
@@ -110,7 +123,7 @@ const UploadResource = () => {
           validationSchema={uploadResourceSchema}
           onSubmit={handleSubmit}
         >
-          {({ isSubmitting, errors, touched, setFieldValue }) => (
+          {({ isSubmitting, errors, touched, setFieldValue, setFieldTouched }) => (
             <Form className="space-y-6">
               {/* Title */}
               <div>
@@ -265,10 +278,26 @@ const UploadResource = () => {
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
                     errors.file && touched.file
                       ? "border-red-500 dark:border-red-800 bg-red-50 dark:bg-red-900/10"
+                      : isDragging
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                       : selectedFile
                       ? "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10"
                       : "border-[var(--border-color)] bg-[var(--bg-main)] hover:border-blue-400"
                   }`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setIsDragging(false);
+                    handleSelectedFile(
+                      event.dataTransfer.files?.[0],
+                      setFieldValue,
+                      setFieldTouched
+                    );
+                  }}
                 >
                   <input
                     type="file"
@@ -276,13 +305,15 @@ const UploadResource = () => {
                     name="file"
                     accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.jpg,.jpeg,.png,.webp"
                     onChange={(event) => {
-                      const file = event.currentTarget.files[0];
-                      setFieldValue("file", file);
-                      setFilePreview(file);
+                      handleSelectedFile(
+                        event.currentTarget.files?.[0],
+                        setFieldValue,
+                        setFieldTouched
+                      );
                     }}
                     className="hidden"
                   />
-                  <label htmlFor="file" className="cursor-pointer">
+                  <label htmlFor="file" className="block cursor-pointer">
                     {selectedFile ? (
                       <div className="flex flex-col items-center">
                         {selectedFile.type.startsWith("image/") ? (
