@@ -97,24 +97,19 @@ const Header = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex min-h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 py-3 lg:px-8">
+    <header className="sticky top-0 z-40 flex min-h-20 lg:h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 py-3 lg:px-8 lg:py-0">
       <div className="flex w-full flex-wrap items-center gap-3">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 lg:hidden">
           <button
             onClick={toggleSidebar}
             className="p-2.5 lg:hidden hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
             <Menu size={22} className="text-[var(--text-main)]" />
           </button>
-          <div className="hidden lg:block">
-            <h1 className="text-xl font-bold text-[var(--text-main)]">
-              Campus Resource Hub
-            </h1>
-          </div>
         </div>
 
         {/* AI Search Bar */}
-        <div ref={searchRef} className="order-3 w-full md:order-none md:flex-1 md:w-auto md:max-w-[28rem] relative">
+        <div ref={searchRef} className="order-3 w-full md:order-none md:w-[28rem] md:max-w-[28rem] relative">
             <form onSubmit={handleAiSearch} className="relative group">
               <Bot className="absolute left-3 top-3 text-blue-500 transition-colors" size={18} />
               <input

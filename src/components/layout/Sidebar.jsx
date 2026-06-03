@@ -53,12 +53,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-[var(--border-color)]">
-            <Link to="/" className="flex items-center space-x-3 group">
+          <div className="h-20 px-6 border-b border-[var(--border-color)] flex items-center">
+            <Link to="/" className="flex items-center space-x-3 group min-w-0">
               <div className="bg-blue-600 p-2 rounded-xl group-hover:scale-110 transition-transform">
                 <BookOpen size={24} className="text-white" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-[var(--text-main)]">CRH</span>
+              <div className="min-w-0">
+                <span className="block text-xl font-bold tracking-tight text-[var(--text-main)] leading-none">
+                  CRH
+                </span>
+                <span className="mt-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] truncate">
+                  Campus Resource Hub
+                </span>
+              </div>
             </Link>
           </div>
 

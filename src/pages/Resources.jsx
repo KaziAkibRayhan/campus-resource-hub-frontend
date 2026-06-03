@@ -24,6 +24,19 @@ const Resources = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
   const [previewResource, setPreviewResource] = useState(null);
+  const [failedPreviews, setFailedPreviews] = useState({});
+
+  const documentPreviewTypes = ["PDF", "DOC", "DOCX", "PPT", "PPTX", "XLSX"];
+
+  const getDocumentPreviewUrl = (fileUrl) =>
+    `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+
+  const getDocumentBadgeClass = (fileType) => {
+    if (fileType === "PDF") return "bg-red-600/90";
+    if (["PPT", "PPTX"].includes(fileType)) return "bg-orange-600/90";
+    if (fileType === "XLSX") return "bg-green-600/90";
+    return "bg-blue-600/90";
+  };
 
   const fetchResources = useCallback(async () => {
     try {
@@ -231,16 +244,53 @@ const Resources = () => {
           : resources.map((resource) => (
               <div
                 key={resource._id}
-                className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg transition p-6 flex flex-col border border-[var(--border-color)]"
+                className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg transition p-5 flex flex-col border border-[var(--border-color)] overflow-hidden"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                    <FileText size={24} />
+                {resource.fileType === "IMAGE" ? (
+                  <div className="relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                    <img
+                      src={resource.fileUrl}
+                      alt={resource.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                    <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-slate-950/70 text-white rounded-full">
+                      IMAGE
+                    </span>
                   </div>
-                  <span className="text-xs font-bold px-2 py-1 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded-full">
-                    {resource.fileType}
-                  </span>
-                </div>
+                ) : documentPreviewTypes.includes(resource.fileType) &&
+                  !failedPreviews[resource._id] ? (
+                  <div className="relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                    <div className="absolute inset-0 overflow-hidden">
+                      <iframe
+                        src={getDocumentPreviewUrl(resource.fileUrl)}
+                        title={`${resource.title} ${resource.fileType} preview`}
+                        loading="lazy"
+                        scrolling="no"
+                        onError={() =>
+                          setFailedPreviews((current) => ({
+                            ...current,
+                            [resource._id]: true,
+                          }))
+                        }
+                        className="h-[145%] w-[145%] origin-top-left scale-[0.72] border-0 pointer-events-none"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 to-transparent pointer-events-none" />
+                    <span className={`absolute right-2 top-2 text-xs font-bold px-2 py-1 ${getDocumentBadgeClass(resource.fileType)} text-white rounded-full`}>
+                      {resource.fileType}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                      <FileText size={24} />
+                    </div>
+                    <span className="text-xs font-bold px-2 py-1 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded-full">
+                      {resource.fileType}
+                    </span>
+                  </div>
+                )}
                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-1 line-clamp-1">
                   {resource.title}
                 </h3>
