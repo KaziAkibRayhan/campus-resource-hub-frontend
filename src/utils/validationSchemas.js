@@ -20,8 +20,7 @@ export const signupSchema = Yup.object({
     .email("Invalid email address")
     .required("Email is required"),
   studentId: Yup.string()
-    .matches(/^[0-9]+$/, "Student ID must contain only numbers")
-    .min(10, "Student ID must be at least 10 digits")
+    .matches(/^[0-9]{6,20}$/, "Student ID must be 6 to 20 digits")
     .required("Student ID is required"),
   department: Yup.string().required("Department is required"),
   password: Yup.string()
@@ -32,6 +31,36 @@ export const signupSchema = Yup.object({
     .required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password"), null], "Passwords must match")
+    .required("Confirm password is required"),
+});
+
+export const otpSchema = Yup.object({
+  otp: Yup.string()
+    .matches(/^[0-9]{6}$/, "OTP must be a 6 digit code")
+    .required("OTP is required"),
+});
+
+export const forgotPasswordSchema = Yup.object({
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
+});
+
+export const resetPasswordSchema = Yup.object({
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
+  otp: Yup.string()
+    .matches(/^[0-9]{6}$/, "OTP must be a 6 digit code")
+    .required("OTP is required"),
+  newPassword: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .matches(/[0-9]/, "Password must contain at least one number")
+    .required("Password is required"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
     .required("Confirm password is required"),
 });
 

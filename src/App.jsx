@@ -11,6 +11,7 @@ import Layout from "./components/layout/Layout";
 // Auth Pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Main Pages
 import Dashboard from "./pages/Dashboard";
@@ -35,6 +36,7 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
                 {/* Protected Routes */}
                 <Route

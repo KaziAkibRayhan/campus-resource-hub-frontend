@@ -21,6 +21,10 @@ API.interceptors.request.use((config) => {
 export const authService = {
   login: (credentials) => API.post("/auth/login", credentials),
   signup: (userData) => API.post("/auth/signup", userData),
+  verifySignupOtp: (data) => API.post("/auth/verify-signup-otp", data),
+  forgotPassword: (data) => API.post("/auth/forgot-password", data),
+  verifyResetOtp: (data) => API.post("/auth/verify-reset-otp", data),
+  resetPassword: (data) => API.post("/auth/reset-password", data),
   getMe: () => API.get("/auth/me"),
   updateProfile: (formData) => API.put("/auth/update-profile", formData),
 };

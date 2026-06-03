@@ -106,10 +106,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.signup(userData);
       if (response.data.success) {
-        setUser(response.data.user);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        localStorage.setItem("token", response.data.token);
-        return { success: true, user: response.data.user };
+        return {
+          success: true,
+          message: response.data.message,
+          email: response.data.email,
+        };
       } else {
         return {
           success: false,
@@ -124,9 +125,72 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const verifySignupOtp = async (email, otp) => {
+    try {
+      const response = await authService.verifySignupOtp({ email, otp });
+      if (response.data.success) {
+        setUser(response.data.user);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("token", response.data.token);
+        return { success: true, user: response.data.user };
+      }
+
+      return {
+        success: false,
+        error: response.data.message || "Verification failed",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Verification failed",
+      };
+    }
+  };
+
+  const forgotPassword = async (email) => {
+    try {
+      const response = await authService.forgotPassword({ email });
+      return {
+        success: response.data.success,
+        message: response.data.message,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Failed to send reset code",
+      };
+    }
+  };
+
+  const resetPassword = async ({ email, otp, newPassword }) => {
+    try {
+      const response = await authService.resetPassword({ email, otp, newPassword });
+      return {
+        success: response.data.success,
+        message: response.data.message,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Failed to reset password",
+      };
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, login, signup, logout, loading, updateUser, updateProfile }}
+      value={{
+        user,
+        login,
+        signup,
+        verifySignupOtp,
+        forgotPassword,
+        resetPassword,
+        logout,
+        loading,
+        updateUser,
+        updateProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>
