@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { X, Download, ExternalLink, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { resourceService } from "../../services/api";
 import ShareMenu from "./ShareMenu";
+import PdfPreview from "./PdfPreview";
 
 const ResourcePreview = ({ resource, onClose, onDownload }) => {
   const isImage = resource?.fileType === "IMAGE";
+  const isPdf = resource?.fileType === "PDF";
   const isOffice = ["DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
   const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
   const [loading, setLoading] = useState(() => isEmbeddable);
@@ -90,6 +92,17 @@ const ResourcePreview = ({ resource, onClose, onDownload }) => {
                 onLoad={() => setLoading(false)}
                 onError={() => { setLoading(false); setError(true); }}
                 className="max-w-full max-h-full object-contain shadow-xl"
+              />
+            ) : isPdf ? (
+              <PdfPreview
+                url={resourceService.fileUrl(resource._id)}
+                title={resource.title}
+                mode="viewer"
+                onLoad={() => setLoading(false)}
+                onError={() => {
+                  setLoading(false);
+                  setError(true);
+                }}
               />
             ) : (
               <iframe

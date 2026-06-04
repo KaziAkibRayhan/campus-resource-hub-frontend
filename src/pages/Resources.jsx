@@ -18,6 +18,7 @@ import { resourceService } from "../services/api";
 import { toast } from "sonner";
 import ResourcePreview from "../components/resources/ResourcePreview";
 import ShareMenu from "../components/resources/ShareMenu";
+import PdfPreview from "../components/resources/PdfPreview";
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
@@ -293,12 +294,10 @@ const Resources = () => {
                     className="group/thumb relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] cursor-pointer"
                     title="Click to preview"
                   >
-                    <iframe
-                      src={`${resourceService.fileUrl(resource._id)}#toolbar=0&navpanes=0&scrollbar=0&page=1&view=FitH`}
-                      title={`${resource.title} preview`}
-                      loading="lazy"
-                      scrolling="no"
-                      className="h-full w-[calc(100%+18px)] border-0 bg-white pointer-events-none"
+                    <PdfPreview
+                      url={resourceService.fileUrl(resource._id)}
+                      title={resource.title}
+                      mode="thumbnail"
                     />
                     <div className="absolute inset-0 bg-transparent transition-colors group-hover/thumb:bg-black/10" />
                     <span className="absolute bottom-2 left-2 text-[11px] font-semibold text-white flex items-center gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity drop-shadow">
