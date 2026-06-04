@@ -3,13 +3,29 @@ import { X, Download, ExternalLink, FileText, Loader2, AlertTriangle } from "luc
 import { resourceService } from "../../services/api";
 import ShareMenu from "./ShareMenu";
 import PdfPreview from "./PdfPreview";
+import PptxPreview from "./PptxPreview";
+import XlsxPreview from "./XlsxPreview";
 
 const ResourcePreview = ({ resource, onClose, onDownload }) => {
+  const extension = (resource?.fileUrl || "")
+    .split("?")[0]
+    .split(".")
+    .pop()
+    ?.toLowerCase();
   const isImage = resource?.fileType === "IMAGE";
   const isPdf = resource?.fileType === "PDF";
   const isWord = ["DOCX", "DOC"].includes(resource?.fileType);
-  const isOffice = ["PPTX", "XLSX", "PPT"].includes(resource?.fileType);
-  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
+  const isPresentation = ["PPTX", "PPT"].includes(resource?.fileType);
+  const isSpreadsheet = resource?.fileType === "XLSX";
+  const isWordPreviewable =
+    isWord && ["docx", "docm", "dotx", "dotm"].includes(extension);
+  const isPresentationPreviewable =
+    isPresentation && ["pptx", "pptm", "ppsx", "ppsm", "potx", "potm"].includes(extension);
+  const isSpreadsheetPreviewable =
+    isSpreadsheet && ["xls", "xlsx", "xlsm", "xlsb", "xlt", "xltx", "xltm"].includes(extension);
+  const isOffice = false;
+  const isEmbeddable =
+    isPdf || isImage || isWordPreviewable || isPresentationPreviewable || isSpreadsheetPreviewable;
   const [loading, setLoading] = useState(() => isEmbeddable);
   const [error, setError] = useState(false);
 
@@ -107,13 +123,31 @@ const ResourcePreview = ({ resource, onClose, onDownload }) => {
                   setError(true);
                 }}
               />
-            ) : isWord ? (
+            ) : isWordPreviewable ? (
               <iframe
                 src={resourceService.previewHtmlUrl(resource._id)}
                 className="w-full h-full border-none bg-white"
                 title={resource.title}
                 onLoad={() => setLoading(false)}
                 onError={() => { setLoading(false); setError(true); }}
+              />
+            ) : isPresentationPreviewable ? (
+              <PptxPreview
+                url={resourceService.fileUrl(resource._id)}
+                onLoad={() => setLoading(false)}
+                onError={() => {
+                  setLoading(false);
+                  setError(true);
+                }}
+              />
+            ) : isSpreadsheetPreviewable ? (
+              <XlsxPreview
+                url={resourceService.fileUrl(resource._id)}
+                onLoad={() => setLoading(false)}
+                onError={() => {
+                  setLoading(false);
+                  setError(true);
+                }}
               />
             ) : (
               <iframe

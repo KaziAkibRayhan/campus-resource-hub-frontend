@@ -303,7 +303,7 @@ const UploadResource = () => {
                     type="file"
                     id="file"
                     name="file"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.jpg,.jpeg,.png,.webp"
+                    accept=".pdf,.doc,.docx,.docm,.dot,.dotx,.dotm,.ppt,.pptx,.pptm,.pps,.ppsx,.ppsm,.pot,.potx,.potm,.xls,.xlsx,.xlsm,.xlsb,.xlt,.xltx,.xltm,.jpg,.jpeg,.png,.webp,.gif,.avif,.svg,.bmp"
                     onChange={(event) => {
                       handleSelectedFile(
                         event.currentTarget.files?.[0],
@@ -337,7 +337,7 @@ const UploadResource = () => {
                           Click to upload or drag & drop
                         </p>
                         <p className="text-sm text-[var(--text-muted)]">
-                          PDF, DOC, PPT, Images (Max 10MB)
+                          PDF, Word, PowerPoint, Excel, Images (Max 20MB)
                         </p>
                       </div>
                     )}

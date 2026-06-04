@@ -82,21 +82,76 @@ export const uploadResourceSchema = Yup.object({
     .test("fileSize", "File size must be less than 20MB", (value) => {
       return value && value.size <= 20 * 1024 * 1024; // 20MB
     })
-    .test("fileType", "Only PDF, DOCX, PPTX, XLSX, and images are allowed", (value) => {
+    .test("fileType", "Only PDF, Word, PowerPoint, Excel, and images are allowed", (value) => {
+      if (!value) return false;
+
+      const allowedTypes = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-word.document.macroEnabled.12",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+        "application/vnd.ms-word.template.macroEnabled.12",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+        "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+        "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+        "application/vnd.openxmlformats-officedocument.presentationml.template",
+        "application/vnd.ms-powerpoint.template.macroEnabled.12",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "application/vnd.ms-excel.sheet.macroEnabled.12",
+        "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+        "application/vnd.ms-excel.template.macroEnabled.12",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "image/avif",
+        "image/svg+xml",
+        "image/bmp",
+      ];
+      const allowedExtensions = [
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".docm",
+        ".dot",
+        ".dotx",
+        ".dotm",
+        ".ppt",
+        ".pptx",
+        ".pptm",
+        ".pps",
+        ".ppsx",
+        ".ppsm",
+        ".pot",
+        ".potx",
+        ".potm",
+        ".xls",
+        ".xlsx",
+        ".xlsm",
+        ".xlsb",
+        ".xlt",
+        ".xltx",
+        ".xltm",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".gif",
+        ".avif",
+        ".svg",
+        ".bmp",
+      ];
+      const fileName = value.name?.toLowerCase() || "";
+
       return (
-        value &&
-        [
-          "application/pdf",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "application/vnd.ms-powerpoint",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "image/jpeg",
-          "image/jpg",
-          "image/png",
-          "image/webp",
-        ].includes(value.type)
+        allowedTypes.includes(value.type) ||
+        allowedExtensions.some((extension) => fileName.endsWith(extension))
       );
     }),
 });

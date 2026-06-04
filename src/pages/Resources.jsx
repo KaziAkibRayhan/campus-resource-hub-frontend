@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import ResourcePreview from "../components/resources/ResourcePreview";
 import ShareMenu from "../components/resources/ShareMenu";
 import PdfPreview from "../components/resources/PdfPreview";
+import PptxPreview from "../components/resources/PptxPreview";
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
@@ -56,6 +57,21 @@ const Resources = () => {
       return { Icon: FileText, from: "from-blue-500/15", to: "to-sky-500/5", ring: "text-blue-500" };
     return { Icon: File, from: "from-slate-500/15", to: "to-slate-500/5", ring: "text-slate-400" };
   };
+
+  const getResourceExtension = (resource) =>
+    (resource?.fileUrl || "")
+      .split("?")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
+
+  const canPreviewWord = (resource) =>
+    ["DOCX", "DOC"].includes(resource.fileType) &&
+    ["docx", "docm", "dotx", "dotm"].includes(getResourceExtension(resource));
+
+  const canPreviewPresentation = (resource) =>
+    ["PPTX", "PPT"].includes(resource.fileType) &&
+    ["pptx", "pptm", "ppsx", "ppsm", "potx", "potm"].includes(getResourceExtension(resource));
 
   const fetchResources = useCallback(async () => {
     try {
@@ -333,7 +349,7 @@ const Resources = () => {
                       PDF
                     </span>
                   </div>
-                ) : ["DOCX", "DOC"].includes(resource.fileType) ? (
+                ) : canPreviewWord(resource) ? (
                   <div
                     onClick={() => setPreviewResource(resource)}
                     onKeyDown={(event) => {
@@ -358,6 +374,31 @@ const Resources = () => {
                       <Eye size={13} /> Click to preview
                     </span>
                     <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-blue-600/90 text-white rounded-full">
+                      {resource.fileType}
+                    </span>
+                  </div>
+                ) : canPreviewPresentation(resource) ? (
+                  <div
+                    onClick={() => setPreviewResource(resource)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setPreviewResource(resource);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="group/thumb relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border border-[var(--border-color)] bg-white cursor-pointer"
+                  >
+                    <PptxPreview
+                      url={resourceService.fileUrl(resource._id)}
+                      mode="thumbnail"
+                    />
+                    <div className="absolute inset-0 bg-transparent transition-colors group-hover/thumb:bg-black/10" />
+                    <span className="absolute bottom-2 left-2 text-[11px] font-semibold text-slate-900 flex items-center gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity drop-shadow">
+                      <Eye size={13} /> Click to preview
+                    </span>
+                    <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-orange-600/90 text-white rounded-full">
                       {resource.fileType}
                     </span>
                   </div>
