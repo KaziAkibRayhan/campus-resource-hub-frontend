@@ -12,6 +12,8 @@ import {
   Presentation,
   File,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
@@ -30,6 +32,10 @@ const Resources = () => {
   const [order, setOrder] = useState("desc");
   const [previewResource, setPreviewResource] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResources, setTotalResources] = useState(0);
+  const pageSize = 12;
 
   const getDocumentBadgeClass = (fileType) => {
     if (fileType === "PDF") return "bg-red-600/90";
@@ -60,19 +66,31 @@ const Resources = () => {
       if (selectedSemester !== "all") params.semester = selectedSemester;
       params.sortBy = sortBy;
       params.order = order;
+      params.page = currentPage;
+      params.limit = pageSize;
 
       const response = await resourceService.getAll(params);
       setResources(response.data.resources);
+      const nextTotalPages = response.data.totalPages || 1;
+      setTotalPages(nextTotalPages);
+      setTotalResources(response.data.total || 0);
+      if (currentPage > nextTotalPages) {
+        setCurrentPage(nextTotalPages);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to fetch resources");
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedDepartment, selectedSemester, sortBy, order]);
+  }, [searchQuery, selectedDepartment, selectedSemester, sortBy, order, currentPage]);
 
   useEffect(() => {
     fetchResources();
   }, [fetchResources]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedDepartment, selectedSemester, sortBy, order]);
 
   const handleDownload = async (id, _fileUrl, fileName) => {
     try {
@@ -105,7 +123,7 @@ const Resources = () => {
   }, [searchParams, resources, loading, setSearchParams]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -222,7 +240,15 @@ const Resources = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[var(--text-muted)]">
           Showing{" "}
-          <span className="font-semibold text-[var(--text-main)]">{resources.length}</span>{" "}
+          <span className="font-semibold text-[var(--text-main)]">
+            {totalResources === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+            -
+            {Math.min(currentPage * pageSize, totalResources)}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-[var(--text-main)]">
+            {totalResources}
+          </span>{" "}
           resources
         </p>
         <div className="relative w-full sm:w-auto">
@@ -307,6 +333,34 @@ const Resources = () => {
                       PDF
                     </span>
                   </div>
+                ) : ["DOCX", "DOC"].includes(resource.fileType) ? (
+                  <div
+                    onClick={() => setPreviewResource(resource)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setPreviewResource(resource);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="group/thumb relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border border-[var(--border-color)] bg-white cursor-pointer"
+                    title="Click to preview"
+                  >
+                    <iframe
+                      src={resourceService.previewHtmlUrl(resource._id)}
+                      title={`${resource.title} preview`}
+                      loading="lazy"
+                      className="h-[260%] w-[260%] origin-top-left scale-[0.385] border-0 bg-white pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-transparent transition-colors group-hover/thumb:bg-black/10" />
+                    <span className="absolute bottom-2 left-2 text-[11px] font-semibold text-slate-900 flex items-center gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity drop-shadow">
+                      <Eye size={13} /> Click to preview
+                    </span>
+                    <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-blue-600/90 text-white rounded-full">
+                      {resource.fileType}
+                    </span>
+                  </div>
                 ) : (
                   (() => {
                     const { Icon, from, to, ring } = getDocumentThumb(resource.fileType);
@@ -384,6 +438,80 @@ const Resources = () => {
           <p className="text-[var(--text-muted)]">
             Try adjusting your search or filters to find what you're looking for.
           </p>
+        </div>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 shadow-md">
+          <p className="text-sm text-[var(--text-muted)]">
+            Page{" "}
+            <span className="font-bold text-[var(--text-main)]">
+              {currentPage}
+            </span>{" "}
+            of{" "}
+            <span className="font-bold text-[var(--text-main)]">
+              {totalPages}
+            </span>
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+              disabled={currentPage === 1}
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1)
+              .filter((page) => {
+                if (totalPages <= 5) return true;
+                return (
+                  page === 1 ||
+                  page === totalPages ||
+                  Math.abs(page - currentPage) <= 1
+                );
+              })
+              .map((page, index, visiblePages) => {
+                const previousPage = visiblePages[index - 1];
+                const showGap = previousPage && page - previousPage > 1;
+
+                return (
+                  <React.Fragment key={page}>
+                    {showGap && (
+                      <span className="px-1 text-sm text-[var(--text-muted)]">
+                        ...
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-9 min-w-9 rounded-lg border px-3 text-sm font-bold transition ${
+                        currentPage === page
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                );
+              })}
+
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((page) => Math.min(page + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       )}
 

@@ -7,7 +7,8 @@ import PdfPreview from "./PdfPreview";
 const ResourcePreview = ({ resource, onClose, onDownload }) => {
   const isImage = resource?.fileType === "IMAGE";
   const isPdf = resource?.fileType === "PDF";
-  const isOffice = ["DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
+  const isWord = ["DOCX", "DOC"].includes(resource?.fileType);
+  const isOffice = ["PPTX", "XLSX", "PPT"].includes(resource?.fileType);
   const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
   const [loading, setLoading] = useState(() => isEmbeddable);
   const [error, setError] = useState(false);
@@ -103,6 +104,14 @@ const ResourcePreview = ({ resource, onClose, onDownload }) => {
                   setLoading(false);
                   setError(true);
                 }}
+              />
+            ) : isWord ? (
+              <iframe
+                src={resourceService.previewHtmlUrl(resource._id)}
+                className="w-full h-full border-none bg-white"
+                title={resource.title}
+                onLoad={() => setLoading(false)}
+                onError={() => { setLoading(false); setError(true); }}
               />
             ) : (
               <iframe

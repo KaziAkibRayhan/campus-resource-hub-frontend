@@ -43,6 +43,7 @@ export const resourceService = {
   // `download: true` forces a download; otherwise it's served inline for preview.
   fileUrl: (id, { download = false } = {}) =>
     `${API_BASE_URL}/resources/${id}/file${download ? "?download=1" : ""}`,
+  previewHtmlUrl: (id) => `${API_BASE_URL}/resources/${id}/preview-html`,
 };
 
 export const announcementService = {
