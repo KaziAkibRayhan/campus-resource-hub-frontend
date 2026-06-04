@@ -42,7 +42,7 @@ const Avatar = ({ src, name, size = 10, online }) => {
           className="rounded-full object-cover w-full h-full"
         />
       ) : (
-        <div className="rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-sm w-full h-full">
+        <div className="rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-sm w-full h-full">
           {name?.[0]?.toUpperCase()}
           {!name && <User size={iconSize} />}
         </div>
@@ -413,12 +413,12 @@ const ChatWidget = () => {
   const renderAttachment = (attachment, messageId, index) => {
     const isImage = attachment.fileType === "IMAGE";
     const colorMap = {
-      PDF: "bg-red-100 text-red-600",
-      DOCX: "bg-blue-100 text-blue-600",
-      DOC: "bg-blue-100 text-blue-600",
-      PPTX: "bg-orange-100 text-orange-600",
-      XLSX: "bg-green-100 text-green-600",
-      ZIP: "bg-purple-100 text-purple-600",
+      PDF: "bg-red-500/10 text-red-400",
+      DOCX: "bg-blue-500/10 text-blue-400",
+      DOC: "bg-blue-500/10 text-blue-400",
+      PPTX: "bg-orange-500/10 text-orange-400",
+      XLSX: "bg-green-500/10 text-green-400",
+      ZIP: "bg-purple-500/10 text-purple-400",
     };
 
     const handleDl = async (e) => {
@@ -431,7 +431,7 @@ const ChatWidget = () => {
 
     if (isImage) {
       return (
-        <div className="mt-2 rounded-lg overflow-hidden max-w-[220px] group relative border border-gray-200 dark:border-slate-700">
+        <div className="mt-2 rounded-lg overflow-hidden max-w-[220px] group relative border border-[var(--border-color)]">
           <img
             src={attachment.thumbnailUrl || attachment.fileUrl}
             alt={attachment.fileName}
@@ -448,9 +448,9 @@ const ChatWidget = () => {
     return (
       <div
         onClick={handleDl}
-        className="mt-2 p-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition group max-w-[220px]"
+        className="mt-2 p-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] flex items-center gap-2 cursor-pointer hover:bg-[var(--bg-hover)] transition group max-w-[220px]"
       >
-        <div className={`p-1.5 rounded ${colorMap[attachment.fileType] || "bg-gray-100 text-gray-600"}`}>
+        <div className={`p-1.5 rounded ${colorMap[attachment.fileType] || "bg-slate-500/10 text-slate-400"}`}>
           <FileText size={16} />
         </div>
         <div className="flex-1 min-w-0">
@@ -548,7 +548,7 @@ const ChatWidget = () => {
             onClick={() => setView("create-group")}
             className="w-full p-3 flex items-center gap-3 hover:bg-[var(--bg-hover)] rounded-xl text-blue-600 transition"
           >
-            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
               <Users size={20} />
             </div>
             <div className="text-left">
@@ -647,7 +647,7 @@ const ChatWidget = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-gray-50/30 dark:bg-slate-900/30">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-[var(--bg-main)]">
           {loading ? (
             <div className="flex justify-center items-center h-full">
               <Loader2 className="animate-spin text-blue-500" size={28} />
@@ -691,7 +691,7 @@ const ChatWidget = () => {
                       className={`px-3 py-2 rounded-2xl text-sm shadow-sm ${
                         isMe
                           ? "bg-blue-600 text-white rounded-br-none"
-                          : "bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-[var(--border-color)]"
+                          : "bg-[var(--bg-secondary)] text-[var(--text-main)] rounded-bl-none border border-[var(--border-color)]"
                       }`}
                     >
                       {m.text && <p className="whitespace-pre-wrap break-words leading-relaxed">{m.text}</p>}
@@ -713,13 +713,13 @@ const ChatWidget = () => {
         {/* Typing / Upload status */}
         <div className="px-3 min-h-[20px]">
           {isUploading && (
-            <div className="mb-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg text-[10px] text-blue-600 flex items-center justify-between">
+            <div className="mb-1 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg text-[10px] text-blue-400 flex items-center justify-between">
               <span className="flex items-center gap-1"><Upload size={10} /> Uploading...</span>
               <span>{uploadProgress}%</span>
             </div>
           )}
           {uploadError && pendingFile && (
-            <div className="mb-1 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg text-[10px] text-red-600">
+            <div className="mb-1 flex items-center gap-2 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg text-[10px] text-red-400">
               <AlertTriangle size={10} />
               <span className="flex-1 truncate">{uploadError}</span>
               <button onClick={() => handleFileUpload(pendingFile)} className="px-2 py-0.5 bg-red-600 text-white rounded text-[9px]">Retry</button>
@@ -859,7 +859,7 @@ const ChatWidget = () => {
             </div>
             <h2 className="text-xl font-bold text-[var(--text-main)]">{otherMember.name}</h2>
             <p className="text-sm text-gray-500 mt-1 capitalize">{otherMember.role}</p>
-            <span className={`mt-2 px-3 py-1 rounded-full text-xs font-bold ${online ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+            <span className={`mt-2 px-3 py-1 rounded-full text-xs font-bold ${online ? "bg-green-500/10 text-green-400" : "bg-slate-500/10 text-[var(--text-muted)]"}`}>
               {online ? "● Online" : "● Offline"}
             </span>
           </div>
@@ -942,7 +942,7 @@ const ChatWidget = () => {
           {/* Group hero / edit form */}
           <div className="p-5 border-b border-[var(--border-color)] bg-gradient-to-b from-blue-50/40 to-transparent dark:from-blue-900/10">
             <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 mb-3 shadow-inner">
+              <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 mb-3 shadow-inner">
                 {activeConversation.image ? (
                   <img src={activeConversation.image} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
@@ -981,7 +981,7 @@ const ChatWidget = () => {
             <div className="p-4 border-b border-[var(--border-color)]">
               <button
                 onClick={() => setShowAddMember(!showAddMember)}
-                className="w-full flex items-center gap-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl text-blue-600 text-sm font-semibold transition"
+                className="w-full flex items-center gap-2 p-2.5 bg-blue-500/10 hover:bg-blue-500/15 rounded-xl text-blue-400 text-sm font-semibold transition"
               >
                 <Plus size={18} />
                 Add Members
@@ -1054,7 +1054,7 @@ const ChatWidget = () => {
                         </p>
                         <div className="flex items-center gap-1 mt-0.5">
                           {memberIsAdmin && (
-                            <span className="text-[9px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
+                            <span className="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
                               <Shield size={8} /> Admin
                             </span>
                           )}
@@ -1169,7 +1169,7 @@ const ChatWidget = () => {
           onClick={toggleMessages}
           className="group flex items-center gap-2 transition-all duration-300 active:scale-95 pointer-events-auto"
         >
-          <span className="px-3 py-1.5 rounded-full text-xs font-bold shadow-lg bg-white dark:bg-slate-900 text-blue-600 border border-blue-100 dark:border-blue-900/50">
+          <span className="px-3 py-1.5 rounded-full text-xs font-bold shadow-lg bg-[var(--bg-card)] text-blue-400 border border-[var(--border-color)]">
             Messages
           </span>
           <span className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl text-white transition-all duration-300 ${

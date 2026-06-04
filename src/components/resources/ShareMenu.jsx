@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Share2,
   Link2,
@@ -22,7 +23,9 @@ import { toast } from "sonner";
 const ShareMenu = ({ resource, variant = "icon", align = "right" }) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [menuPosition, setMenuPosition] = useState(null);
   const containerRef = useRef(null);
+  const menuRef = useRef(null);
 
   const shareUrl = `${window.location.origin}/resources?resource=${resource._id}`;
   const shareTitle = resource.title || "Campus Resource";
@@ -34,18 +37,69 @@ const ShareMenu = ({ resource, variant = "icon", align = "right" }) => {
   useEffect(() => {
     if (!open) return;
     const onClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      const clickedTrigger = containerRef.current?.contains(e.target);
+      const clickedMenu = menuRef.current?.contains(e.target);
+      if (!clickedTrigger && !clickedMenu) {
         setOpen(false);
       }
     };
     const onKey = (e) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", onClick);
+    document.addEventListener("pointerdown", onClick);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("pointerdown", onClick);
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      const trigger = containerRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 192;
+      const menuHeight = menuRef.current?.offsetHeight || 230;
+      const gap = 8;
+      const padding = 12;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openUp = spaceBelow < menuHeight + gap && spaceAbove > spaceBelow;
+
+      const preferredLeft =
+        align === "right" ? rect.right - menuWidth : rect.left;
+      const left = Math.min(
+        Math.max(preferredLeft, padding),
+        window.innerWidth - menuWidth - padding
+      );
+      const top = openUp
+        ? Math.max(rect.top - menuHeight - gap, padding)
+        : Math.min(rect.bottom + gap, window.innerHeight - menuHeight - padding);
+
+      setMenuPosition({
+        left,
+        top,
+        transformOrigin: openUp
+          ? align === "right"
+            ? "bottom right"
+            : "bottom left"
+          : align === "right"
+          ? "top right"
+          : "top left",
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, align]);
 
   const handleTrigger = async (e) => {
     e.stopPropagation();
@@ -119,52 +173,58 @@ const ShareMenu = ({ resource, variant = "icon", align = "right" }) => {
         {variant === "button" && <span>Share</span>}
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          onClick={(e) => e.stopPropagation()}
-          className={`absolute z-50 mt-2 w-48 overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
-            align === "right" ? "right-0" : "left-0"
-          }`}
-        >
-          <div className="px-3 py-2 border-b border-[var(--border-color)]">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-              Share this resource
-            </p>
-          </div>
-          {options.map((opt) => {
-            const Icon = opt.icon;
-            const inner = (
-              <>
-                <Icon size={17} className={opt.accent} />
-                <span className="text-[var(--text-main)]">{opt.label}</span>
-              </>
-            );
-            return opt.href ? (
-              <a
-                key={opt.label}
-                href={opt.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[var(--bg-hover)] transition"
-                role="menuitem"
-              >
-                {inner}
-              </a>
-            ) : (
-              <button
-                key={opt.label}
-                onClick={opt.onClick}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[var(--bg-hover)] transition text-left"
-                role="menuitem"
-              >
-                {inner}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              left: menuPosition?.left ?? -9999,
+              top: menuPosition?.top ?? -9999,
+              transformOrigin: menuPosition?.transformOrigin,
+            }}
+            className="fixed z-[80] w-48 overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+          >
+            <div className="px-3 py-2 border-b border-[var(--border-color)]">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Share this resource
+              </p>
+            </div>
+            {options.map((opt) => {
+              const Icon = opt.icon;
+              const inner = (
+                <>
+                  <Icon size={17} className={opt.accent} />
+                  <span className="text-[var(--text-main)]">{opt.label}</span>
+                </>
+              );
+              return opt.href ? (
+                <a
+                  key={opt.label}
+                  href={opt.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[var(--bg-hover)] transition"
+                  role="menuitem"
+                >
+                  {inner}
+                </a>
+              ) : (
+                <button
+                  key={opt.label}
+                  onClick={opt.onClick}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium hover:bg-[var(--bg-hover)] transition text-left"
+                  role="menuitem"
+                >
+                  {inner}
+                </button>
+              );
+            })}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

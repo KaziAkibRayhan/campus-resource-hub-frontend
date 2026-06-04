@@ -29,12 +29,12 @@ const Header = ({ toggleSidebar }) => {
   };
 
   const typeColors = {
-    resource: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-    club: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-    announcement: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-    event: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-    "lost-found": "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-    person: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    resource: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+    club: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+    announcement: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+    event: "bg-green-500/10 text-green-400 border border-green-500/20",
+    "lost-found": "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+    person: "bg-slate-500/10 text-slate-300 border border-slate-500/20",
   };
 
   useEffect(() => {
@@ -102,7 +102,7 @@ const Header = ({ toggleSidebar }) => {
         <div className="flex items-center space-x-4 lg:hidden">
           <button
             onClick={toggleSidebar}
-            className="p-2.5 lg:hidden hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-2.5 lg:hidden hover:bg-[var(--bg-hover)] rounded-xl transition-colors"
           >
             <Menu size={22} className="text-[var(--text-main)]" />
           </button>
@@ -147,7 +147,7 @@ const Header = ({ toggleSidebar }) => {
 
             {searchOpen && (
               <div className="absolute left-0 right-0 top-14 w-full md:left-auto md:w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
-                <div className="p-4 border-b border-[var(--border-color)] bg-blue-50/70 dark:bg-blue-950/20 flex items-center gap-3">
+                <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center">
                     <Bot size={18} />
                   </div>
@@ -164,13 +164,13 @@ const Header = ({ toggleSidebar }) => {
                       <p className="text-sm font-medium">Thinking with campus data...</p>
                     </div>
                   ) : aiError ? (
-                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 text-sm">
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                       {aiError}
                     </div>
                   ) : aiAnswer || aiSources.length > 0 ? (
                     <>
                       {aiAnswer && (
-                        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40">
+                        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
                           <p className="text-[10px] font-bold uppercase text-blue-500 mb-1">AI Answer</p>
                           <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap leading-relaxed">
                             {aiAnswer}
@@ -226,7 +226,7 @@ const Header = ({ toggleSidebar }) => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-all duration-300 hover:rotate-12 group"
+            className="p-2.5 hover:bg-[var(--bg-hover)] rounded-xl transition-all duration-300 hover:rotate-12 group"
             title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {theme === "dark" ? (
@@ -251,7 +251,7 @@ const Header = ({ toggleSidebar }) => {
             </div>
             <Link to="/profile" className="flex-shrink-0">
               <div className="h-10 w-10 rounded-full border-2 border-blue-600/20 p-0.5 hover:border-blue-600/50 transition-colors">
-                <div className="h-full w-full rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                <div className="h-full w-full rounded-full bg-[var(--bg-secondary)] flex items-center justify-center overflow-hidden">
                   {user?.profileImage ? (
                     <img
                       src={user.profileImage}
