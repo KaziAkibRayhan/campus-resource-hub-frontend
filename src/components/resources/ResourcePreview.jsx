@@ -28,39 +28,41 @@ const ResourcePreview = ({ resource, onClose, onDownload }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-[var(--border-color)] animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-2 backdrop-blur-md animate-in fade-in duration-300 sm:p-4">
+      <div className="bg-[var(--bg-card)] rounded-2xl w-full max-w-5xl h-[calc(100dvh-1rem)] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-[var(--border-color)] animate-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-card)]">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-              <FileText size={20} />
+        <div className="border-b border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:p-4">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 sm:h-10 sm:w-10">
+                <FileText size={19} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-bold text-[var(--text-main)] sm:max-w-md sm:text-lg">
+                  {resource.title}
+                </h3>
+                <p className="truncate text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
+                  {resource.fileType} • {resource.department} • Sem {resource.semester}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-[var(--text-main)] truncate max-w-md">
-                {resource.title}
-              </h3>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
-                {resource.fileType} • {resource.department} • Sem {resource.semester}
-              </p>
+            <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+              <ShareMenu resource={resource} variant="icon" align="right" />
+              <button
+                onClick={() => onDownload(resource._id, resource.fileUrl, resource.title)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-blue-500 transition hover:bg-[var(--bg-hover)] sm:h-10 sm:w-10"
+                title="Download"
+              >
+                <Download size={19} />
+              </button>
+              <button
+                onClick={onClose}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-muted)] transition hover:bg-[var(--bg-hover)] sm:h-10 sm:w-10"
+                title="Close"
+              >
+                <X size={20} />
+              </button>
             </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <ShareMenu resource={resource} variant="icon" align="right" />
-            <button
-              onClick={() => onDownload(resource._id, resource.fileUrl, resource.title)}
-              className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition text-blue-600"
-              title="Download"
-            >
-              <Download size={20} />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition text-[var(--text-muted)]"
-              title="Close"
-            >
-              <X size={20} />
-            </button>
           </div>
         </div>
 
@@ -145,21 +147,23 @@ const ResourcePreview = ({ resource, onClose, onDownload }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-card)] flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="text-sm">
-              <span className="text-[var(--text-muted)]">Course:</span>
-              <span className="ml-1 font-bold text-[var(--text-main)]">{resource.course}</span>
+        <div className="border-t border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid grid-cols-2 gap-3 text-xs sm:flex sm:items-center sm:gap-4 sm:text-sm">
+              <div className="min-w-0">
+                <span className="text-[var(--text-muted)]">Course:</span>
+                <span className="ml-1 break-words font-bold text-[var(--text-main)]">{resource.course}</span>
+              </div>
+              <div className="hidden h-4 w-px bg-[var(--border-color)] sm:block"></div>
+              <div className="min-w-0">
+                <span className="text-[var(--text-muted)]">Size:</span>
+                <span className="ml-1 break-words font-bold text-[var(--text-main)]">{(resource.fileSize / (1024 * 1024)).toFixed(2)} MB</span>
+              </div>
             </div>
-            <div className="h-4 w-px bg-[var(--border-color)]"></div>
-            <div className="text-sm">
-              <span className="text-[var(--text-muted)]">Size:</span>
-              <span className="ml-1 font-bold text-[var(--text-main)]">{(resource.fileSize / (1024 * 1024)).toFixed(2)} MB</span>
-            </div>
+            <p className="text-left text-[10px] text-[var(--text-muted)] italic sm:text-right sm:text-xs">
+              Powered by Campus Resource Hub Preview System
+            </p>
           </div>
-          <p className="text-xs text-[var(--text-muted)] italic">
-            Powered by Campus Resource Hub Preview System
-          </p>
         </div>
       </div>
     </div>
