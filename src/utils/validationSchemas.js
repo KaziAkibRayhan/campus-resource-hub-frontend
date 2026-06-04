@@ -107,6 +107,8 @@ export const uploadResourceSchema = Yup.object({
         "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
         "image/jpeg",
         "image/jpg",
+        "image/pjpeg",
+        "image/x-citrix-jpeg",
         "image/png",
         "image/webp",
         "image/gif",

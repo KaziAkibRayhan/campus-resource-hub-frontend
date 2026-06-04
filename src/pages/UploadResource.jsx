@@ -62,7 +62,11 @@ const UploadResource = () => {
         navigate("/resources");
       }, 2000);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error uploading resource");
+      const message =
+        error.code === "ECONNABORTED"
+          ? "Upload timed out. Please try again with a smaller file or check your connection."
+          : error.response?.data?.message || "Error uploading resource";
+      toast.error(message);
     }
     setSubmitting(false);
   };
