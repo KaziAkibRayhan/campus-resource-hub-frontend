@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 export const SOCKET_URL = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const API = axios.create({
@@ -39,6 +39,10 @@ export const resourceService = {
   incrementDownload: (id) => API.put(`/resources/${id}/download`),
   approve: (id) => API.put(`/resources/${id}/approve`),
   reject: (id, reason) => API.put(`/resources/${id}/reject`, { reason }),
+  // Server-streamed file URL — bypasses Cloudinary's PDF/raw delivery block.
+  // `download: true` forces a download; otherwise it's served inline for preview.
+  fileUrl: (id, { download = false } = {}) =>
+    `${API_BASE_URL}/resources/${id}/file${download ? "?download=1" : ""}`,
 };
 
 export const announcementService = {

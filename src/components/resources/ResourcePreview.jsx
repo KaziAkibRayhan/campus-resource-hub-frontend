@@ -1,20 +1,27 @@
 import React, { useState } from "react";
 import { X, Download, ExternalLink, FileText, Loader2, AlertTriangle } from "lucide-react";
+import { resourceService } from "../../services/api";
+import ShareMenu from "./ShareMenu";
 
 const ResourcePreview = ({ resource, onClose, onDownload }) => {
   const isImage = resource?.fileType === "IMAGE";
-  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource?.fileType);
+  const isOffice = ["DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
+  const isEmbeddable = ["PDF", "IMAGE", "DOCX", "PPTX", "XLSX", "DOC", "PPT"].includes(resource?.fileType);
   const [loading, setLoading] = useState(() => isEmbeddable);
   const [error, setError] = useState(false);
 
   if (!resource) return null;
 
   const getPreviewUrl = () => {
-    const url = resource.fileUrl;
-    if (["PDF", "DOCX", "PPTX", "XLSX", "DOC"].includes(resource.fileType)) {
-      return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    // Stream PDFs through our server so the browser renders them natively
+    // (Cloudinary blocks direct PDF delivery). Office docs go through the
+    // Microsoft Office online viewer pointed at the same server-streamed URL.
+    const proxyUrl = resourceService.fileUrl(resource._id);
+    if (isOffice) {
+      const absolute = new URL(proxyUrl, window.location.origin).href;
+      return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absolute)}`;
     }
-    return url;
+    return proxyUrl;
   };
 
   return (
@@ -36,6 +43,7 @@ const ResourcePreview = ({ resource, onClose, onDownload }) => {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <ShareMenu resource={resource} variant="icon" align="right" />
             <button
               onClick={() => onDownload(resource._id, resource.fileUrl, resource.title)}
               className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition text-blue-600"

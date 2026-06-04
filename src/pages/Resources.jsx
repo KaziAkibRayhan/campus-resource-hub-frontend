@@ -1,6 +1,6 @@
 // src/pages/Resources.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
   Upload,
@@ -8,12 +8,16 @@ import {
   Download,
   Eye,
   FileText,
+  FileSpreadsheet,
+  Presentation,
+  File,
   ChevronDown,
 } from "lucide-react";
 import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
 import { toast } from "sonner";
 import ResourcePreview from "../components/resources/ResourcePreview";
+import ShareMenu from "../components/resources/ShareMenu";
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
@@ -24,18 +28,26 @@ const Resources = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
   const [previewResource, setPreviewResource] = useState(null);
-  const [failedPreviews, setFailedPreviews] = useState({});
-
-  const documentPreviewTypes = ["PDF", "DOC", "DOCX", "PPT", "PPTX", "XLSX"];
-
-  const getDocumentPreviewUrl = (fileUrl) =>
-    `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const getDocumentBadgeClass = (fileType) => {
     if (fileType === "PDF") return "bg-red-600/90";
     if (["PPT", "PPTX"].includes(fileType)) return "bg-orange-600/90";
     if (fileType === "XLSX") return "bg-green-600/90";
     return "bg-blue-600/90";
+  };
+
+  // Lightweight, fast document thumbnail styling (no external viewers).
+  const getDocumentThumb = (fileType) => {
+    if (fileType === "PDF")
+      return { Icon: FileText, from: "from-red-500/15", to: "to-rose-500/5", ring: "text-red-500" };
+    if (["PPT", "PPTX"].includes(fileType))
+      return { Icon: Presentation, from: "from-orange-500/15", to: "to-amber-500/5", ring: "text-orange-500" };
+    if (fileType === "XLSX")
+      return { Icon: FileSpreadsheet, from: "from-green-500/15", to: "to-emerald-500/5", ring: "text-green-500" };
+    if (["DOC", "DOCX"].includes(fileType))
+      return { Icon: FileText, from: "from-blue-500/15", to: "to-sky-500/5", ring: "text-blue-500" };
+    return { Icon: File, from: "from-slate-500/15", to: "to-slate-500/5", ring: "text-slate-400" };
   };
 
   const fetchResources = useCallback(async () => {
@@ -61,26 +73,35 @@ const Resources = () => {
     fetchResources();
   }, [fetchResources]);
 
-  const handleDownload = async (id, fileUrl, fileName) => {
+  const handleDownload = async (id, _fileUrl, fileName) => {
     try {
-      await resourceService.incrementDownload(id);
+      resourceService.incrementDownload(id).catch(() => {});
 
-      // Fetch the file as a blob to trigger download
-      const response = await fetch(fileUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Download through the server proxy — Content-Disposition: attachment
+      // forces a save and works even though Cloudinary blocks direct PDF URLs.
       const link = document.createElement("a");
-      link.href = url;
+      link.href = resourceService.fileUrl(id, { download: true });
       link.setAttribute("download", fileName || "resource-file");
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Error downloading file");
     }
   };
+
+  // Open a shared resource directly when arriving via ?resource=<id>.
+  useEffect(() => {
+    const sharedId = searchParams.get("resource");
+    if (!sharedId || loading || !resources.length) return;
+    const match = resources.find((item) => item._id === sharedId);
+    if (match) {
+      setPreviewResource(match);
+      searchParams.delete("resource");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, resources, loading, setSearchParams]);
 
   return (
     <div className="space-y-6">
@@ -258,38 +279,63 @@ const Resources = () => {
                       IMAGE
                     </span>
                   </div>
-                ) : documentPreviewTypes.includes(resource.fileType) &&
-                  !failedPreviews[resource._id] ? (
-                  <div className="relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]">
-                    <div className="absolute inset-0 overflow-hidden">
-                      <iframe
-                        src={getDocumentPreviewUrl(resource.fileUrl)}
-                        title={`${resource.title} ${resource.fileType} preview`}
-                        loading="lazy"
-                        scrolling="no"
-                        onError={() =>
-                          setFailedPreviews((current) => ({
-                            ...current,
-                            [resource._id]: true,
-                          }))
-                        }
-                        className="h-[145%] w-[145%] origin-top-left scale-[0.72] border-0 pointer-events-none"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 to-transparent pointer-events-none" />
-                    <span className={`absolute right-2 top-2 text-xs font-bold px-2 py-1 ${getDocumentBadgeClass(resource.fileType)} text-white rounded-full`}>
-                      {resource.fileType}
+                ) : resource.fileType === "PDF" ? (
+                  <div
+                    onClick={() => setPreviewResource(resource)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setPreviewResource(resource);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="group/thumb relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] cursor-pointer"
+                    title="Click to preview"
+                  >
+                    <iframe
+                      src={`${resourceService.fileUrl(resource._id)}#toolbar=0&navpanes=0&scrollbar=0&page=1&view=FitH`}
+                      title={`${resource.title} preview`}
+                      loading="lazy"
+                      scrolling="no"
+                      className="h-full w-[calc(100%+18px)] border-0 bg-white pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-transparent transition-colors group-hover/thumb:bg-black/10" />
+                    <span className="absolute bottom-2 left-2 text-[11px] font-semibold text-white flex items-center gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity drop-shadow">
+                      <Eye size={13} /> Click to preview
+                    </span>
+                    <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-red-600/90 text-white rounded-full">
+                      PDF
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                      <FileText size={24} />
-                    </div>
-                    <span className="text-xs font-bold px-2 py-1 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded-full">
-                      {resource.fileType}
-                    </span>
-                  </div>
+                  (() => {
+                    const { Icon, from, to, ring } = getDocumentThumb(resource.fileType);
+                    return (
+                      <button
+                        onClick={() => setPreviewResource(resource)}
+                        className={`group/thumb relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border border-[var(--border-color)] bg-gradient-to-br ${from} ${to} flex items-center justify-center`}
+                        title="Click to preview"
+                      >
+                        <Icon
+                          size={52}
+                          className={`${ring} opacity-90 transition-transform duration-300 group-hover/thumb:scale-110`}
+                          strokeWidth={1.5}
+                        />
+                        <div className="absolute inset-0 bg-[var(--text-main)]/0 group-hover/thumb:bg-[var(--text-main)]/[0.03] transition-colors" />
+                        <span className="absolute bottom-2 left-2 text-[11px] font-semibold text-[var(--text-muted)] flex items-center gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                          <Eye size={13} /> Click to preview
+                        </span>
+                        <span
+                          className={`absolute right-2 top-2 text-xs font-bold px-2 py-1 ${getDocumentBadgeClass(
+                            resource.fileType
+                          )} text-white rounded-full`}
+                        >
+                          {resource.fileType}
+                        </span>
+                      </button>
+                    );
+                  })()
                 )}
                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-1 line-clamp-1">
                   {resource.title}
@@ -310,6 +356,7 @@ const Resources = () => {
                       <Eye size={16} />
                       <span>Preview</span>
                     </button>
+                    <ShareMenu resource={resource} variant="icon" align="right" />
                     <button
                       onClick={() =>
                         handleDownload(
