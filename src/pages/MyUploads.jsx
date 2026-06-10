@@ -295,6 +295,13 @@ const MyUploads = () => {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Refresh when a background upload finishes
+  useEffect(() => {
+    const onUploaded = () => fetchAll();
+    window.addEventListener("resource:uploaded", onUploaded);
+    return () => window.removeEventListener("resource:uploaded", onUploaded);
+  }, [fetchAll]);
+
   // ── delete helper ────────────────────────────────────────────
   const askDelete = (label, onConfirm) => setDeleteTarget({ label, onConfirm });
 

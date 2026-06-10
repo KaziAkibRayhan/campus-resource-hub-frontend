@@ -6,17 +6,16 @@ import { uploadResourceSchema } from "../utils/validationSchemas";
 import {
   Upload,
   FileText,
-  CheckCircle,
   ArrowLeft,
   Image,
 } from "lucide-react";
 import { departments, semesters } from "../utils/constants";
-import { resourceService } from "../services/api";
+import { useUpload } from "../context/UploadContext";
 import { toast } from "sonner";
 
 const UploadResource = () => {
   const navigate = useNavigate();
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const { startUpload, isUploading } = useUpload();
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -40,35 +39,26 @@ const UploadResource = () => {
     }
   };
 
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      const formData = new FormData();
-      formData.append("title", values.title);
-      formData.append("course", values.course);
-      formData.append("department", values.department);
-      formData.append("semester", values.semester);
-      formData.append("description", values.description);
-      formData.append("file", values.file);
+  // Upload runs in the background (see UploadContext) — the user is sent
+  // back to the resources list right away and the global progress bar at the
+  // top of the app tracks upload + content safety check.
+  const handleSubmit = (values, { setSubmitting, resetForm }) => {
+    const formData = new FormData();
+    formData.append("title", values.title);
+    formData.append("course", values.course);
+    formData.append("department", values.department);
+    formData.append("semester", values.semester);
+    formData.append("description", values.description);
+    formData.append("file", values.file);
 
-      const response = await resourceService.upload(formData);
-
-      setUploadSuccess(true);
-      toast.success(response.data.message);
+    const started = startUpload(formData);
+    setSubmitting(false);
+    if (started) {
+      toast.info("Upload started — you can keep browsing while we process it.");
       resetForm();
       setFilePreview(null);
-
-      // Redirect after success message
-      setTimeout(() => {
-        navigate("/resources");
-      }, 2000);
-    } catch (error) {
-      const message =
-        error.code === "ECONNABORTED"
-          ? "Upload timed out. Please try again with a smaller file or check your connection."
-          : error.response?.data?.message || "Error uploading resource";
-      toast.error(message);
+      navigate("/resources");
     }
-    setSubmitting(false);
   };
 
   const handleSelectedFile = (file, setFieldValue, setFieldTouched) => {
@@ -94,24 +84,6 @@ const UploadResource = () => {
           </p>
         </div>
       </div>
-
-      {/* Success Message */}
-      {uploadSuccess && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6 flex items-start space-x-3">
-          <CheckCircle
-            className="text-green-500 flex-shrink-0 mt-1"
-            size={24}
-          />
-          <div>
-            <h3 className="text-green-800 dark:text-green-400 font-semibold mb-1">
-              Upload Successful!
-            </h3>
-            <p className="text-green-700 dark:text-green-300 text-sm">
-              Your resource is now live and visible to everyone. Redirecting to resources...
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Upload Form */}
       <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-8 border border-[var(--border-color)]">
@@ -357,13 +329,13 @@ const UploadResource = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-lg disabled:opacity-50 flex items-center justify-center space-x-2"
               >
-                {isSubmitting ? (
+                {isUploading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Uploading...</span>
+                    <span>Another upload in progress...</span>
                   </>
                 ) : (
                   <>

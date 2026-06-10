@@ -32,7 +32,10 @@ export const authService = {
 export const resourceService = {
   getAll: (params) => API.get("/resources", { params }),
   getById: (id) => API.get(`/resources/${id}`),
-  upload: (formData) => API.post("/resources", formData, { timeout: 90000 }),
+  // Long timeout: upload + server-side content safety scan can take a while
+  // for big PDFs. Progress callback drives the global upload bar.
+  upload: (formData, onUploadProgress) =>
+    API.post("/resources", formData, { timeout: 300000, onUploadProgress }),
   getMyUploads: () => API.get("/resources/user/my-uploads"),
   update: (id, data) => API.put(`/resources/${id}`, data),
   delete: (id) => API.delete(`/resources/${id}`),

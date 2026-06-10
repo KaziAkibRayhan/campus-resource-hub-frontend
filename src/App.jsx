@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { UploadProvider } from "./context/UploadContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 
@@ -31,6 +32,7 @@ function App() {
       <AuthProvider>
         <SocketProvider>
           <NotificationProvider>
+            <UploadProvider>
             <BrowserRouter>
               <Routes>
                 {/* Public Routes */}
@@ -73,6 +75,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </BrowserRouter>
+            </UploadProvider>
           </NotificationProvider>
         </SocketProvider>
       </AuthProvider>

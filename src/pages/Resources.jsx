@@ -104,6 +104,13 @@ const Resources = () => {
     fetchResources();
   }, [fetchResources]);
 
+  // Refresh when a background upload finishes
+  useEffect(() => {
+    const onUploaded = () => fetchResources();
+    window.addEventListener("resource:uploaded", onUploaded);
+    return () => window.removeEventListener("resource:uploaded", onUploaded);
+  }, [fetchResources]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedDepartment, selectedSemester, sortBy, order]);
