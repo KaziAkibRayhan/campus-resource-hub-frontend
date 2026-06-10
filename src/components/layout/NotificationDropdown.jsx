@@ -1,12 +1,32 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bell, X, Check, Trash2, ExternalLink, MessageCircle, FileText, Calendar, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
 import { formatDistanceToNow } from "date-fns";
 
+// Notification types that should open the full-page Messages route on click.
+const MESSAGE_TYPES = ["message", "group_message"];
+
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll, loading } = useNotifications();
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.read) markAsRead(notification._id);
+    if (MESSAGE_TYPES.includes(notification.type)) {
+      setIsOpen(false);
+      const conversationId = notification.metadata?.conversationId;
+      // Open the sender's conversation directly; the `t` nonce makes repeat
+      // clicks on the same conversation re-trigger the open.
+      navigate(
+        conversationId
+          ? `/messages?c=${conversationId}&t=${Date.now()}`
+          : "/messages"
+      );
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,9 +93,11 @@ const NotificationDropdown = () => {
                 <div
                   key={notification._id}
                   className={`p-4 border-b border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors relative group ${
+                    MESSAGE_TYPES.includes(notification.type) ? "cursor-pointer" : ""
+                  } ${
                     !notification.read ? "bg-blue-50/30 dark:bg-blue-900/10" : ""
                   }`}
-                  onClick={() => !notification.read && markAsRead(notification._id)}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex space-x-3">
                     <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -97,6 +119,16 @@ const NotificationDropdown = () => {
                     {!notification.read && (
                       <div className="h-2 w-2 rounded-full bg-blue-500 mt-2"></div>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notification._id);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove notification"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               ))
@@ -111,8 +143,12 @@ const NotificationDropdown = () => {
 
           {notifications.length > 0 && (
             <div className="p-3 bg-[var(--bg-secondary)]/50 border-t border-[var(--border-color)] text-center">
-              <button className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                View all activity
+              <button
+                onClick={clearAll}
+                className="text-xs font-bold text-red-600 hover:text-red-700 transition-colors inline-flex items-center gap-1.5"
+              >
+                <Trash2 size={14} />
+                Clear all
               </button>
             </div>
           )}

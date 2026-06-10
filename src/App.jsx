@@ -18,6 +18,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
 import UploadResource from "./pages/UploadResource";
+import Messages from "./pages/Messages";
 import MyUploads from "./pages/MyUploads";
 import Announcements from "./pages/Announcements";
 import Events from "./pages/Events";
@@ -53,6 +54,7 @@ function App() {
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="resources" element={<Resources />} />
                   <Route path="upload-resource" element={<UploadResource />} />
+                  <Route path="messages" element={<Messages />} />
                   <Route path="my-uploads" element={<MyUploads />} />
                   <Route path="announcements" element={<Announcements />} />
                   <Route path="events" element={<Events />} />

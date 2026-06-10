@@ -98,12 +98,39 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const deleteNotification = async (notificationId) => {
+    const removed = notifications.find((n) => n._id === notificationId);
+    try {
+      setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
+      if (removed && !removed.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+      await notificationService.delete(notificationId);
+    } catch (error) {
+      console.error("Delete notification error:", error);
+      fetchNotifications();
+    }
+  };
+
+  const clearAll = async () => {
+    try {
+      setNotifications([]);
+      setUnreadCount(0);
+      await notificationService.clear();
+    } catch (error) {
+      console.error("Clear notifications error:", error);
+      fetchNotifications();
+    }
+  };
+
   const value = {
     notifications,
     unreadCount,
     loading,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    clearAll,
     refreshNotifications: fetchNotifications,
   };
 

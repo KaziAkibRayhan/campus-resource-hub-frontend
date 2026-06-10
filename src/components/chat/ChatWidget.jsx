@@ -58,11 +58,25 @@ const Avatar = ({ src, name, size = 10, online }) => {
   );
 };
 
-const ChatWidget = () => {
+const ChatWidget = ({
+  variant = "widget",
+  openConversationId = null,
+  openTrigger = null,
+}) => {
+  // "widget" = floating popover (default). "page" = full-page embed used by
+  // the Messages route, which is always open and has no floating button.
+  // openConversationId/openTrigger: when arriving from a message notification,
+  // open that conversation directly (trigger nonce allows repeat opens).
+  const isPageMode = variant === "page";
   const { user } = useAuth();
   const { socket, isUserOnline } = useSocket();
 
   const [open, setOpen] = useState(false);
+  // In page mode the panel is always "open" so verification + data loading run.
+  const panelOpen = isPageMode || open;
+  // Tracks the last notification open we've already handled, so background
+  // conversation refreshes don't keep re-opening the chat.
+  const autoOpenedTriggerRef = useRef(null);
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState(null);
@@ -148,7 +162,7 @@ const ChatWidget = () => {
 
   // ── Auto-verify ────────────────────────────────────────────────
   useEffect(() => {
-    if (!open) return;
+    if (!panelOpen) return;
     if (isVerified) {
       refreshConversations();
       fetchUsers();
@@ -172,7 +186,7 @@ const ChatWidget = () => {
         setVerifyError(err.response?.data?.message || "Unable to access chat");
       })
       .finally(() => setVerifying(false));
-  }, [open, isVerified, refreshConversations, fetchUsers]);
+  }, [panelOpen, isVerified, refreshConversations, fetchUsers]);
 
   // ── Socket events ──────────────────────────────────────────────
   useEffect(() => {
@@ -226,6 +240,18 @@ const ChatWidget = () => {
       setLoading(false);
     }
   };
+
+  // ── Open a conversation directly when coming from a message notification ──
+  useEffect(() => {
+    if (!isPageMode || !openConversationId) return;
+    // Each notification click carries a fresh trigger; skip if already handled.
+    if (autoOpenedTriggerRef.current === openTrigger) return;
+    const conversation = conversations.find((c) => c._id === openConversationId);
+    if (!conversation) return; // wait until conversations load
+    autoOpenedTriggerRef.current = openTrigger;
+    openChat(conversation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPageMode, openConversationId, openTrigger, conversations]);
 
   const startDirectChat = async (targetUser) => {
     try {
@@ -640,9 +666,11 @@ const ChatWidget = () => {
             >
               <Settings size={17} />
             </button>
-            <button onClick={() => setOpen(false)} className="p-2 hover:bg-[var(--bg-hover)] rounded-full text-gray-500">
-              <X size={17} />
-            </button>
+            {!isPageMode && (
+              <button onClick={() => setOpen(false)} className="p-2 hover:bg-[var(--bg-hover)] rounded-full text-gray-500">
+                <X size={17} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -1145,6 +1173,28 @@ const ChatWidget = () => {
   };
 
   // ══════════════════════════════════════════════════════════════
+  const panelBody = (
+    <>
+      {verifying && renderLoadingView()}
+      {!verifying && verifyError && renderErrorView()}
+      {!verifying && !verifyError && view === "list" && renderListView()}
+      {!verifying && !verifyError && view === "chat" && activeConversation && renderChatView()}
+      {!verifying && !verifyError && view === "users" && renderUsersView()}
+      {!verifying && !verifyError && view === "create-group" && renderCreateGroupView()}
+      {!verifying && !verifyError && view === "group-info" && activeConversation && renderGroupInfoView()}
+      {!verifying && !verifyError && view === "direct-info" && activeConversation && renderDirectInfoView()}
+    </>
+  );
+
+  // Full-page embed for the Messages route — fills the page, no floating button.
+  if (isPageMode) {
+    return (
+      <div className="bg-[var(--bg-card)] rounded-2xl shadow-md border border-[var(--border-color)] h-[calc(100vh-9rem)] min-h-[480px] flex flex-col overflow-hidden">
+        {panelBody}
+      </div>
+    );
+  }
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
       {/* Chat Window */}
@@ -1153,14 +1203,7 @@ const ChatWidget = () => {
           open ? "scale-100 opacity-100 pointer-events-auto" : "scale-0 opacity-0 pointer-events-none"
         }`}
       >
-        {verifying && renderLoadingView()}
-        {!verifying && verifyError && renderErrorView()}
-        {!verifying && !verifyError && view === "list" && renderListView()}
-        {!verifying && !verifyError && view === "chat" && activeConversation && renderChatView()}
-        {!verifying && !verifyError && view === "users" && renderUsersView()}
-        {!verifying && !verifyError && view === "create-group" && renderCreateGroupView()}
-        {!verifying && !verifyError && view === "group-info" && activeConversation && renderGroupInfoView()}
-        {!verifying && !verifyError && view === "direct-info" && activeConversation && renderDirectInfoView()}
+        {panelBody}
       </div>
 
       {/* Messages entry point */}

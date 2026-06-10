@@ -102,6 +102,9 @@ export const notificationService = {
   markRead: (id) => API.put(`/notifications/${id}/read`),
   markAllRead: () => API.put("/notifications/read-all"),
   delete: (id) => API.delete(`/notifications/${id}`),
+  // readOnly: true clears only already-read notifications, else clears all.
+  clear: ({ readOnly = false } = {}) =>
+    API.delete(`/notifications${readOnly ? "?read=true" : ""}`),
 };
 
 export const chatService = {
