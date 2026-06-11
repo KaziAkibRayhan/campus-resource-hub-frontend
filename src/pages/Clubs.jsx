@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Users, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 import { clubService } from "../services/api";
 
 const Clubs = () => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [clubs, setClubs] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,22 @@ const Clubs = () => {
   useEffect(() => {
     fetchClubs();
   }, [fetchClubs]);
+
+  // Realtime: live member counts when anyone joins/leaves
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleClubUpdated = ({ clubId, memberCount }) => {
+      setClubs((prev) =>
+        prev.map((club) =>
+          club._id === clubId ? { ...club, memberCount } : club
+        )
+      );
+    };
+
+    socket.on("club:updated", handleClubUpdated);
+    return () => socket.off("club:updated", handleClubUpdated);
+  }, [socket]);
 
   const handleCreate = async (event) => {
     event.preventDefault();

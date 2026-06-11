@@ -12,8 +12,10 @@ import {
 import { toast } from "sonner";
 import { lostFoundService } from "../services/api";
 import { lostFoundSchema } from "../utils/validationSchemas";
+import { useSocket } from "../context/SocketContext";
 
 const LostFound = () => {
+  const { socket } = useSocket();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -41,6 +43,20 @@ const LostFound = () => {
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // Realtime: status changes (open/claimed/resolved) update cards live
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleItemUpdated = (updatedItem) => {
+      setItems((prev) =>
+        prev.map((item) => (item._id === updatedItem._id ? updatedItem : item))
+      );
+    };
+
+    socket.on("lostfound:updated", handleItemUpdated);
+    return () => socket.off("lostfound:updated", handleItemUpdated);
+  }, [socket]);
 
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     try {

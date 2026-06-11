@@ -4,9 +4,11 @@ import { Calendar, Users, MapPin, Clock, Plus, X } from "lucide-react";
 import { eventService } from "../services/api";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 
 const Events = () => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -35,6 +37,31 @@ const Events = () => {
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Realtime: live registration counts + new events without refresh
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleEventUpdated = ({ eventId, registrationCount }) => {
+      setEvents((prev) =>
+        prev.map((item) =>
+          item._id === eventId ? { ...item, registrationCount } : item
+        )
+      );
+    };
+
+    const handleEventNew = () => {
+      fetchEvents();
+    };
+
+    socket.on("event:updated", handleEventUpdated);
+    socket.on("event:new", handleEventNew);
+
+    return () => {
+      socket.off("event:updated", handleEventUpdated);
+      socket.off("event:new", handleEventNew);
+    };
+  }, [socket, fetchEvents]);
 
   const handleRegister = async (eventId) => {
     try {

@@ -13,11 +13,12 @@ const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const [aiQuery, setAiQuery] = useState("");
-  const [aiAnswer, setAiAnswer] = useState("");
-  const [aiSources, setAiSources] = useState([]);
+  // Conversation thread: [{ role: "user"|"assistant", content, sources? }]
+  const [aiThread, setAiThread] = useState([]);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiError, setAiError] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const threadEndRef = useRef(null);
 
   const typeLabels = {
     resource: "Resource",
@@ -57,6 +58,10 @@ const Header = ({ toggleSidebar }) => {
     };
   }, []);
 
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [aiThread, aiSearching]);
+
   const handleAiSearch = async (event) => {
     event.preventDefault();
     const question = aiQuery.trim();
@@ -67,16 +72,26 @@ const Header = ({ toggleSidebar }) => {
       return;
     }
 
+    // History for the RAG backend: prior turns, role + content only
+    const history = aiThread.map(({ role, content }) => ({ role, content }));
+
+    setAiThread((prev) => [...prev, { role: "user", content: question }]);
+    setAiQuery("");
+
     try {
       setAiSearching(true);
       setAiError("");
       setSearchOpen(true);
-      const res = await chatService.askAssistant(question);
-      setAiAnswer(res.data.answer || "");
-      setAiSources(res.data.sources || []);
+      const res = await chatService.askAssistant(question, history);
+      setAiThread((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: res.data.answer || "",
+          sources: res.data.sources || [],
+        },
+      ]);
     } catch (error) {
-      setAiAnswer("");
-      setAiSources([]);
       setAiError(error.response?.data?.message || "AI search failed");
     } finally {
       setAiSearching(false);
@@ -91,8 +106,7 @@ const Header = ({ toggleSidebar }) => {
 
   const clearSearch = () => {
     setAiQuery("");
-    setAiAnswer("");
-    setAiSources([]);
+    setAiThread([]);
     setAiError("");
   };
 
@@ -158,64 +172,82 @@ const Header = ({ toggleSidebar }) => {
                 </div>
 
                 <div className="max-h-[58vh] overflow-y-auto p-3 space-y-3">
-                  {aiSearching ? (
-                    <div className="h-40 flex flex-col items-center justify-center text-blue-500">
-                      <Loader2 size={28} className="animate-spin mb-2" />
-                      <p className="text-sm font-medium">Thinking with campus data...</p>
-                    </div>
-                  ) : aiError ? (
-                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                      {aiError}
-                    </div>
-                  ) : aiAnswer || aiSources.length > 0 ? (
-                    <>
-                      {aiAnswer && (
-                        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                          <p className="text-[10px] font-bold uppercase text-blue-500 mb-1">AI Answer</p>
-                          <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap leading-relaxed">
-                            {aiAnswer}
-                          </p>
-                        </div>
-                      )}
-
-                      {aiSources.length > 0 && (
-                        <p className="text-[10px] font-bold uppercase text-[var(--text-muted)] px-1">
-                          Sources
-                        </p>
-                      )}
-
-                      {aiSources.map((source) => (
-                        <button
-                          key={`${source.type}-${source.id}`}
-                          type="button"
-                          onClick={() => openSource(source)}
-                          disabled={!source.href}
-                          className="w-full p-3 text-left rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] transition disabled:cursor-default"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-[var(--text-main)] truncate">{source.title}</p>
-                              <p className="text-[11px] text-[var(--text-muted)] mt-0.5 truncate">{source.subtitle}</p>
-                            </div>
-                            <span className={`text-[9px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${typeColors[source.type]}`}>
-                              {typeLabels[source.type] || source.type}
-                            </span>
-                          </div>
-                          {source.description && (
-                            <p className="text-xs text-[var(--text-muted)] mt-2 line-clamp-2">
-                              {source.description}
-                            </p>
-                          )}
-                        </button>
-                      ))}
-                    </>
-                  ) : (
+                  {aiThread.length === 0 && !aiSearching && !aiError && (
                     <div className="p-5 text-center text-[var(--text-muted)]">
                       <Bot size={34} className="mx-auto mb-3 opacity-40" />
                       <p className="text-sm font-semibold text-[var(--text-main)]">Ask campus AI</p>
-                      <p className="text-xs mt-1">Try “CSE er kon resources ache?” or “Upcoming event ache?”</p>
+                      <p className="text-xs mt-1">Try “What CSE resources are available?” or “Any upcoming events?”</p>
+                      <p className="text-[10px] mt-2 opacity-70">You can ask follow-up questions — I remember the context. Bangla and Banglish work too.</p>
                     </div>
                   )}
+
+                  {aiThread.map((turn, index) =>
+                    turn.role === "user" ? (
+                      <div key={index} className="flex justify-end">
+                        <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-blue-600 text-white text-sm whitespace-pre-wrap">
+                          {turn.content}
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={index} className="space-y-2">
+                        <div className="p-4 rounded-2xl rounded-bl-md bg-blue-500/10 border border-blue-500/20">
+                          <p className="text-[10px] font-bold uppercase text-blue-500 mb-1">AI Answer</p>
+                          <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap leading-relaxed">
+                            {turn.content}
+                          </p>
+                        </div>
+
+                        {turn.sources?.length > 0 && (
+                          <details className="group">
+                            <summary className="cursor-pointer list-none text-[10px] font-bold uppercase text-[var(--text-muted)] px-1 hover:text-blue-500">
+                              Sources ({turn.sources.length}) — click to expand
+                            </summary>
+                            <div className="mt-2 space-y-2">
+                              {turn.sources.map((source) => (
+                                <button
+                                  key={`${index}-${source.type}-${source.id}`}
+                                  type="button"
+                                  onClick={() => openSource(source)}
+                                  disabled={!source.href}
+                                  className="w-full p-3 text-left rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] transition disabled:cursor-default"
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold text-[var(--text-main)] truncate">{source.title}</p>
+                                      <p className="text-[11px] text-[var(--text-muted)] mt-0.5 truncate">{source.subtitle}</p>
+                                    </div>
+                                    <span className={`text-[9px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${typeColors[source.type]}`}>
+                                      {typeLabels[source.type] || source.type}
+                                    </span>
+                                  </div>
+                                  {source.description && (
+                                    <p className="text-xs text-[var(--text-muted)] mt-2 line-clamp-2">
+                                      {source.description}
+                                    </p>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    )
+                  )}
+
+                  {aiSearching && (
+                    <div className="flex items-center gap-2 text-blue-500 px-2 py-1">
+                      <Loader2 size={18} className="animate-spin" />
+                      <p className="text-sm font-medium">Searching hub data & thinking...</p>
+                    </div>
+                  )}
+
+                  {aiError && (
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                      {aiError}
+                    </div>
+                  )}
+
+                  <div ref={threadEndRef} />
                 </div>
               </div>
             )}

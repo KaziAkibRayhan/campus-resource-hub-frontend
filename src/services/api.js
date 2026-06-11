@@ -52,8 +52,12 @@ export const resourceService = {
 export const announcementService = {
   getAll: (params) => API.get("/announcements", { params }),
   getMine: () => API.get("/announcements", { params: { mine: true } }),
-  create: (data) => API.post("/announcements", data),
-  update: (id, data) => API.put(`/announcements/${id}`, data),
+  // FormData (title/content/department + attachments[]); long timeout for file uploads
+  create: (data) => API.post("/announcements", data, { timeout: 120000 }),
+  update: (id, data) => API.put(`/announcements/${id}`, data, { timeout: 120000 }),
+  // Server-streamed attachment URL — works even when Cloudinary blocks raw/PDF delivery
+  attachmentUrl: (id, index, { download = false } = {}) =>
+    `${API_BASE_URL}/announcements/${id}/attachments/${index}/file${download ? "?download=1" : ""}`,
   approve: (id) => API.put(`/announcements/${id}/approve`),
   reject: (id, reason) => API.put(`/announcements/${id}/reject`, { reason }),
   delete: (id) => API.delete(`/announcements/${id}`),
@@ -110,7 +114,8 @@ export const notificationService = {
 export const chatService = {
   verifyAccess: () => API.post("/chat/verify"),
   searchHub: (params) => API.get("/chat/search", { params }),
-  askAssistant: (question) => API.post("/chat/assistant", { question }),
+  askAssistant: (question, history = []) =>
+    API.post("/chat/assistant", { question, history }),
   getUsers: () => API.get("/chat/users"),
   getConversations: () => API.get("/chat/conversations"),
   createDirect: (userId) => API.post("/chat/conversations/direct", { userId }),
