@@ -6,6 +6,7 @@ import { Bell, FileText, ImagePlus, Loader2, Paperclip, Plus, X } from "lucide-r
 import { announcementService } from "../services/api";
 import { toast } from "sonner";
 import { departments } from "../utils/constants";
+import useHighlight from "../hooks/useHighlight";
 
 const MAX_ATTACHMENTS = 5;
 
@@ -33,6 +34,7 @@ const Announcements = () => {
   const fileInputRef = useRef(null);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  useHighlight(!loading);
   const [showCreate, setShowCreate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState([]);
@@ -225,6 +227,7 @@ const Announcements = () => {
         <div className="space-y-4">
           {announcements.map((announcement) => (
             <div
+              id={`hl-${announcement._id}`}
               key={announcement._id}
               className="bg-[var(--bg-card)] rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition border border-[var(--border-color)]"
             >

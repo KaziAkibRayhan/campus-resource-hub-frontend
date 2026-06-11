@@ -5,12 +5,14 @@ import { eventService } from "../services/api";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
+import useHighlight from "../hooks/useHighlight";
 
 const Events = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  useHighlight(!loading);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -125,6 +127,7 @@ const Events = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
             <div
+              id={`hl-${event._id}`}
               key={event._id}
               className="bg-[var(--bg-card)] rounded-xl shadow-md overflow-hidden hover:shadow-lg transition border border-[var(--border-color)]"
             >

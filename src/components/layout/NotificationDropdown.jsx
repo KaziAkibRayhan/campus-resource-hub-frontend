@@ -25,6 +25,12 @@ const NotificationDropdown = () => {
           ? `/messages?c=${conversationId}&t=${Date.now()}`
           : "/messages"
       );
+    } else if (notification.link) {
+      setIsOpen(false);
+      // `t` nonce so re-clicking the same notification re-triggers the
+      // highlight scroll even when the target page is already open.
+      const separator = notification.link.includes("?") ? "&" : "?";
+      navigate(`${notification.link}${separator}t=${Date.now()}`);
     }
   };
 
@@ -93,7 +99,7 @@ const NotificationDropdown = () => {
                 <div
                   key={notification._id}
                   className={`p-4 border-b border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors relative group ${
-                    MESSAGE_TYPES.includes(notification.type) ? "cursor-pointer" : ""
+                    MESSAGE_TYPES.includes(notification.type) || notification.link ? "cursor-pointer" : ""
                   } ${
                     !notification.read ? "bg-blue-50/30 dark:bg-blue-900/10" : ""
                   }`}

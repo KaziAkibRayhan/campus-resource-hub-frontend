@@ -13,6 +13,7 @@ import Layout from "./components/layout/Layout";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import Legal from "./pages/Legal";
 
 // Main Pages
 import Dashboard from "./pages/Dashboard";
@@ -40,6 +41,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/terms" element={<Legal />} />
+                <Route path="/privacy" element={<Legal />} />
 
                 {/* Protected Routes */}
                 <Route

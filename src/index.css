@@ -266,3 +266,22 @@ textarea:focus {
 main > div {
   animation: fade-in-up 220ms ease-out;
 }
+
+/* Notification deep-link highlight: card flash when arriving via ?highlight=<id> */
+.highlight-flash {
+  animation: highlight-pulse 2.6s ease-out;
+  scroll-margin-top: 96px;
+  border-radius: 0.75rem;
+}
+
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 4px rgb(59 130 246 / 0.95);
+  }
+  60% {
+    box-shadow: 0 0 0 4px rgb(59 130 246 / 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(59 130 246 / 0);
+  }
+}

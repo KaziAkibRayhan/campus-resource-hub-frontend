@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { lostFoundService } from "../services/api";
 import { lostFoundSchema } from "../utils/validationSchemas";
 import { useSocket } from "../context/SocketContext";
+import useHighlight from "../hooks/useHighlight";
 
 const LostFound = () => {
   const { socket } = useSocket();
@@ -20,6 +21,7 @@ const LostFound = () => {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  useHighlight(!loading);
   const [showForm, setShowForm] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -54,9 +56,15 @@ const LostFound = () => {
       );
     };
 
+    const handleItemNew = () => fetchItems();
+
     socket.on("lostfound:updated", handleItemUpdated);
-    return () => socket.off("lostfound:updated", handleItemUpdated);
-  }, [socket]);
+    socket.on("lostfound:new", handleItemNew);
+    return () => {
+      socket.off("lostfound:updated", handleItemUpdated);
+      socket.off("lostfound:new", handleItemNew);
+    };
+  }, [socket, fetchItems]);
 
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     try {
@@ -145,6 +153,7 @@ const LostFound = () => {
         <div className="grid md:grid-cols-2 gap-6">
           {items.map((item) => (
             <div
+              id={`hl-${item._id}`}
               key={item._id}
               className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
             >

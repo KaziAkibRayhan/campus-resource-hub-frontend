@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { clubService } from "../services/api";
+import useHighlight from "../hooks/useHighlight";
 
 const Clubs = () => {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ const Clubs = () => {
   const [clubs, setClubs] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  useHighlight(!loading);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -51,9 +53,15 @@ const Clubs = () => {
       );
     };
 
+    const handleClubNew = () => fetchClubs();
+
     socket.on("club:updated", handleClubUpdated);
-    return () => socket.off("club:updated", handleClubUpdated);
-  }, [socket]);
+    socket.on("club:new", handleClubNew);
+    return () => {
+      socket.off("club:updated", handleClubUpdated);
+      socket.off("club:new", handleClubNew);
+    };
+  }, [socket, fetchClubs]);
 
   const handleCreate = async (event) => {
     event.preventDefault();
@@ -185,6 +193,7 @@ const Clubs = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {clubs.map((club) => (
             <div
+              id={`hl-${club._id}`}
               key={club._id}
               className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
             >

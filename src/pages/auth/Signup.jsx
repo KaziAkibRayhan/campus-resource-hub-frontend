@@ -448,11 +448,15 @@ const Signup = () => {
                 {/* Terms & Conditions */}
                 <div className="flex items-start">
                   <input
+                    id="agree-terms"
                     type="checkbox"
-                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-slate-700 rounded focus:ring-blue-500 mt-1 bg-white dark:bg-slate-950"
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-slate-700 rounded focus:ring-blue-500 mt-1 bg-white dark:bg-slate-950 cursor-pointer"
                     required
                   />
-                  <span className="ml-2 text-sm text-gray-600 dark:text-slate-400">
+                  <label
+                    htmlFor="agree-terms"
+                    className="ml-2 text-sm text-gray-600 dark:text-slate-400 cursor-pointer select-none"
+                  >
                     I agree to the{" "}
                     <Link
                       to="/terms"
@@ -467,7 +471,7 @@ const Signup = () => {
                     >
                       Privacy Policy
                     </Link>
-                  </span>
+                  </label>
                 </div>
 
                 {/* Submit Button */}

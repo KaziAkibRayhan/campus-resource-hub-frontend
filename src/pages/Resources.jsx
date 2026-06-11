@@ -22,10 +22,14 @@ import ResourcePreview from "../components/resources/ResourcePreview";
 import ShareMenu from "../components/resources/ShareMenu";
 import PdfPreview from "../components/resources/PdfPreview";
 import PptxPreview from "../components/resources/PptxPreview";
+import useHighlight from "../hooks/useHighlight";
+import { useSocket } from "../context/SocketContext";
 
 const Resources = () => {
+  const { socket } = useSocket();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  useHighlight(!loading);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedSemester, setSelectedSemester] = useState("all");
@@ -110,6 +114,14 @@ const Resources = () => {
     window.addEventListener("resource:uploaded", onUploaded);
     return () => window.removeEventListener("resource:uploaded", onUploaded);
   }, [fetchResources]);
+
+  // Realtime: refresh list when anyone uploads a new resource
+  useEffect(() => {
+    if (!socket) return;
+    const onResourceNew = () => fetchResources();
+    socket.on("resource:new", onResourceNew);
+    return () => socket.off("resource:new", onResourceNew);
+  }, [socket, fetchResources]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -314,6 +326,7 @@ const Resources = () => {
             ))
           : resources.map((resource) => (
               <div
+                id={`hl-${resource._id}`}
                 key={resource._id}
                 className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg transition p-5 flex flex-col border border-[var(--border-color)] overflow-hidden"
               >
