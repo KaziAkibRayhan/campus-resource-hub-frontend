@@ -80,6 +80,7 @@ export const adminService = {
   setUserBlocked: (id, isBlocked) =>
     API.put(`/admin/users/${id}/block`, { isBlocked }),
   updateUserRole: (id, role) => API.put(`/admin/users/${id}/role`, { role }),
+  deleteUser: (id) => API.delete(`/admin/users/${id}`),
   getAllResources: (params) => API.get("/resources", { params: { ...params, all: true } }),
 };
 

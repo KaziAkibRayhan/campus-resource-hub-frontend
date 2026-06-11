@@ -24,28 +24,48 @@ const Badge = ({ children, color = "blue" }) => (
 );
 
 // ── Confirm-delete modal ─────────────────────────────────────────
-const DeleteModal = ({ label, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div className="bg-[var(--bg-card)] rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-[var(--border-color)]">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
-          <Trash2 size={22} className="text-red-600" />
+const DeleteModal = ({ label, onConfirm, onCancel }) => {
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-[var(--bg-card)] rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-[var(--border-color)]">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <Trash2 size={22} className="text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-[var(--text-main)]">Delete?</h3>
+            <p className="text-xs text-[var(--text-muted)]">This cannot be undone.</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-bold text-[var(--text-main)]">Delete?</h3>
-          <p className="text-xs text-[var(--text-muted)]">This cannot be undone.</p>
+        <p className="text-sm text-[var(--text-main)] mb-5">
+          Delete <strong>{label}</strong>?
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className="flex-1 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm font-medium hover:bg-[var(--bg-hover)] transition disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              setBusy(true);
+              try { await onConfirm(); } finally { setBusy(false); }
+            }}
+            disabled={busy}
+            className="flex-1 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition disabled:opacity-70 flex items-center justify-center gap-2"
+          >
+            {busy && <RefreshCw size={14} className="animate-spin" />}
+            {busy ? "Deleting..." : "Delete"}
+          </button>
         </div>
-      </div>
-      <p className="text-sm text-[var(--text-main)] mb-5">
-        Delete <strong>{label}</strong>?
-      </p>
-      <div className="flex gap-3">
-        <button onClick={onCancel} className="flex-1 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm font-medium hover:bg-[var(--bg-hover)] transition">Cancel</button>
-        <button onClick={onConfirm} className="flex-1 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition">Delete</button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Field components ─────────────────────────────────────────────
 const Field = ({ label, children }) => (

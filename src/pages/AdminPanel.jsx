@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Users, FileText, HardDrive, Download, Trash2, BarChart2,
   Megaphone, Calendar, Search as SearchIcon, RefreshCw, Shield,
-  Package, TrendingUp, Eye,
+  Package, TrendingUp, Eye, Loader2, UserX,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -73,6 +73,7 @@ const AdminPanel = () => {
   const [resourceSearch, setResourceSearch] = useState("");
   const [userSearch, setUserSearch]         = useState("");
   const [confirmDelete, setConfirmDelete]   = useState(null);
+  const [deleting, setDeleting]             = useState(false);
 
   const fmt  = (v = 0) => Intl.NumberFormat().format(v);
   const fmtB = (b = 0) => {
@@ -139,6 +140,13 @@ const AdminPanel = () => {
     confirmAndDelete(`lost & found item "${title}"`, async () => {
       await lostFoundService.delete(id);
       toast.success("Item deleted");
+      fetchData();
+    });
+
+  const handleDeleteUser = (targetUser) =>
+    confirmAndDelete(`user "${targetUser.name}" and their notifications`, async () => {
+      await adminService.deleteUser(targetUser._id);
+      toast.success("User deleted");
       fetchData();
     });
 
@@ -598,16 +606,27 @@ const AdminPanel = () => {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button
-                      onClick={() => handleToggleBlock(u)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                        u.isBlocked
-                          ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400"
-                          : "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400"
-                      }`}
-                    >
-                      {u.isBlocked ? "Unblock" : "Block"}
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleToggleBlock(u)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                          u.isBlocked
+                            ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400"
+                            : "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400"
+                        }`}
+                      >
+                        {u.isBlocked ? "Unblock" : "Block"}
+                      </button>
+                      {user?.role === "admin" && u._id !== user._id && u.role !== "admin" && (
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-2 rounded-lg text-red-600 hover:bg-red-500/10 transition"
+                          title="Delete user"
+                        >
+                          <UserX size={18} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -683,18 +702,28 @@ const AdminPanel = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-2.5 bg-[var(--bg-secondary)] text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] transition font-medium"
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-[var(--bg-secondary)] text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] transition font-medium disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={async () => {
-                  try { await confirmDelete.onConfirm(); } catch { toast.error("Delete failed"); }
-                  setConfirmDelete(null);
+                  setDeleting(true);
+                  try {
+                    await confirmDelete.onConfirm();
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || "Delete failed");
+                  } finally {
+                    setDeleting(false);
+                    setConfirmDelete(null);
+                  }
                 }}
-                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-bold"
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-bold disabled:opacity-70 flex items-center justify-center gap-2"
               >
-                Delete
+                {deleting && <Loader2 size={16} className="animate-spin" />}
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
