@@ -1,9 +1,11 @@
 // src/pages/AdminPanel.jsx
 import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Users, FileText, HardDrive, Download, Trash2, BarChart2,
   Megaphone, Calendar, Search as SearchIcon, RefreshCw, Shield,
   Package, TrendingUp, Eye, Loader2, UserX,
+  ShieldAlert, CheckCircle, XCircle, Clock,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -17,6 +19,7 @@ import { toast } from "sonner";
 
 const TABS = [
   { id: "overview",     label: "Overview",      icon: BarChart2  },
+  { id: "review",       label: "Review",         icon: ShieldAlert },
   { id: "resources",    label: "Resources",      icon: FileText   },
   { id: "content",      label: "Content",        icon: Megaphone  },
   { id: "users",        label: "Users",          icon: Users      },
@@ -62,8 +65,15 @@ const adminColors = {
 
 const AdminPanel = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab]         = useState("overview");
+  const [searchParams, setSearchParams]   = useSearchParams();
+  const [activeTab, setActiveTab]         = useState(searchParams.get("tab") || "overview");
   const [allResources, setAllResources]   = useState([]);
+  const [pendingResources, setPendingResources] = useState([]);
+  const [pendingLostFound, setPendingLostFound] = useState([]);
+  const [reviewing, setReviewing]         = useState(null); // item id being approved/rejected
+  const [rejectTarget, setRejectTarget]   = useState(null); // item pending rejection
+  const [rejectKind, setRejectKind]       = useState("resource"); // "resource" | "lostfound"
+  const [rejectReason, setRejectReason]   = useState("");
   const [announcements, setAnnouncements] = useState([]);
   const [events, setEvents]               = useState([]);
   const [lostFound, setLostFound]         = useState([]);
@@ -87,15 +97,19 @@ const AdminPanel = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [allRes, annRes, evtRes, lfRes, usrRes, stRes] = await Promise.all([
+      const [allRes, pendRes, pendLf, annRes, evtRes, lfRes, usrRes, stRes] = await Promise.all([
         adminService.getAllResources({ limit: 100, sortBy: "createdAt", order: "desc" }),
-        announcementService.getAll(),          // admin sees all
-        eventService.getAll(),                 // admin sees all
-        lostFoundService.getAll(),             // admin sees all
+        resourceService.getAll({ isPending: true, limit: 100 }), // flagged, awaiting review
+        lostFoundService.getPending(),         // flagged L&F, awaiting review
+        announcementService.getAll({ limit: 100 }),  // admin sees all
+        eventService.getAll({ limit: 100 }),          // admin sees all
+        lostFoundService.getAll({ limit: 100 }),      // admin sees all
         adminService.getUsers(),
         adminService.getStats(),
       ]);
       setAllResources(allRes.data.resources     || []);
+      setPendingResources(pendRes.data.resources || []);
+      setPendingLostFound(pendLf.data.items      || []);
       setAnnouncements(annRes.data.announcements || []);
       setEvents(evtRes.data.events               || []);
       setLostFound(lfRes.data.items              || []);
@@ -149,6 +163,60 @@ const AdminPanel = () => {
       toast.success("User deleted");
       fetchData();
     });
+
+  // ── Moderation review actions ───────────────────────────────────
+  const handleApproveResource = async (resource) => {
+    setReviewing(resource._id);
+    try {
+      await resourceService.approve(resource._id);
+      toast.success(`"${resource.title}" approved and published`);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to approve resource");
+    } finally {
+      setReviewing(null);
+    }
+  };
+
+  const handleApproveLostFound = async (item) => {
+    setReviewing(item._id);
+    try {
+      await lostFoundService.approve(item._id);
+      toast.success(`"${item.item}" approved and published`);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to approve item");
+    } finally {
+      setReviewing(null);
+    }
+  };
+
+  const openReject = (target, kind) => {
+    setRejectTarget(target);
+    setRejectKind(kind);
+    setRejectReason("");
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectTarget) return;
+    const label = rejectTarget.title || rejectTarget.item;
+    setReviewing(rejectTarget._id);
+    try {
+      if (rejectKind === "lostfound") {
+        await lostFoundService.reject(rejectTarget._id, rejectReason.trim());
+      } else {
+        await resourceService.reject(rejectTarget._id, rejectReason.trim());
+      }
+      toast.success(`"${label}" rejected`);
+      setRejectTarget(null);
+      setRejectReason("");
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to reject");
+    } finally {
+      setReviewing(null);
+    }
+  };
 
   // ── User actions ────────────────────────────────────────────────
   const handleToggleBlock = async (targetUser) => {
@@ -338,6 +406,208 @@ const AdminPanel = () => {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  );
+
+  // ────────────────────────────────────────────────────────────────
+  // REVIEW — AI-flagged uploads awaiting a publish/reject decision
+  // ────────────────────────────────────────────────────────────────
+  const renderReview = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
+            <ShieldAlert size={20} className="text-amber-500" />
+            Flagged for Review ({pendingResources.length})
+          </h3>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
+            These uploads were flagged by the content safety check and are hidden
+            until you approve or reject them.
+          </p>
+        </div>
+        <button
+          onClick={fetchData}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-hover)] transition flex-shrink-0"
+        >
+          <RefreshCw size={16} /> Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" /></div>
+      ) : pendingResources.length === 0 ? (
+        <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] p-12 text-center">
+          <CheckCircle size={40} className="text-green-500 mx-auto mb-3" />
+          <p className="font-semibold text-[var(--text-main)]">All clear</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Nothing is waiting for review right now.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {pendingResources.map((r) => {
+            const busy = reviewing === r._id;
+            const categories = r.moderation?.categories || [];
+            return (
+              <div
+                key={r._id}
+                className="bg-[var(--bg-card)] rounded-xl border border-amber-200 dark:border-amber-900/50 p-5 shadow-sm"
+              >
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-[var(--text-main)] truncate">{r.title}</p>
+                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-full">
+                        {r.fileType}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      {r.course} · {r.department} · {r.uploadedBy?.name || "Unknown"} · {new Date(r.createdAt).toLocaleDateString()}
+                    </p>
+                    {r.description && (
+                      <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2">{r.description}</p>
+                    )}
+                    {categories.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap mt-3">
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                          <ShieldAlert size={14} /> Flagged for:
+                        </span>
+                        {categories.map((c) => (
+                          <span
+                            key={c}
+                            className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[11px] font-medium rounded-full capitalize"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <a
+                      href={resourceService.fileUrl(r._id)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-hover)] transition"
+                    >
+                      <Eye size={16} /> View
+                    </a>
+                    <button
+                      onClick={() => handleApproveResource(r)}
+                      disabled={busy}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+                    >
+                      {busy ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                      Publish
+                    </button>
+                    <button
+                      onClick={() => openReject(r, "resource")}
+                      disabled={busy}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition disabled:opacity-60"
+                    >
+                      <XCircle size={16} /> Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Lost & Found awaiting review */}
+      <div className="pt-2">
+        <h3 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
+          <Package size={20} className="text-amber-500" />
+          Lost &amp; Found awaiting review ({pendingLostFound.length})
+        </h3>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5 mb-3">
+          Student posts flagged by the safety check or that couldn't be auto-checked.
+        </p>
+
+        {pendingLostFound.length === 0 ? (
+          <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] p-8 text-center">
+            <CheckCircle size={32} className="text-green-500 mx-auto mb-2" />
+            <p className="text-sm text-[var(--text-muted)]">No Lost &amp; Found posts waiting.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pendingLostFound.map((it) => {
+              const busy = reviewing === it._id;
+              const categories = it.moderation?.categories || [];
+              return (
+                <div
+                  key={it._id}
+                  className="bg-[var(--bg-card)] rounded-xl border border-amber-200 dark:border-amber-900/50 p-5 shadow-sm"
+                >
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-[var(--text-main)] truncate">{it.item}</p>
+                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-full uppercase">
+                          {it.type}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">
+                        {it.location} · {it.postedBy?.name || "Unknown"} · {new Date(it.createdAt).toLocaleDateString()}
+                      </p>
+                      {it.description && (
+                        <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2">{it.description}</p>
+                      )}
+                      {categories.length > 0 ? (
+                        <div className="flex items-center gap-2 flex-wrap mt-3">
+                          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                            <ShieldAlert size={14} /> Flagged for:
+                          </span>
+                          {categories.map((c) => (
+                            <span
+                              key={c}
+                              className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[11px] font-medium rounded-full capitalize"
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-amber-700 dark:text-amber-400 mt-3 flex items-center gap-1">
+                          <Clock size={13} /> Could not be auto-checked — manual review needed.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {it.imageUrl && (
+                        <a
+                          href={it.imageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-hover)] transition"
+                        >
+                          <Eye size={16} /> View
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleApproveLostFound(it)}
+                        disabled={busy}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+                      >
+                        {busy ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => openReject(it, "lostfound")}
+                        disabled={busy}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition disabled:opacity-60"
+                      >
+                        <XCircle size={16} /> Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -664,7 +934,7 @@ const AdminPanel = () => {
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id)}
+            onClick={() => { setActiveTab(id); setSearchParams(id === "overview" ? {} : { tab: id }); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
               activeTab === id
                 ? "bg-blue-600 text-white shadow-md"
@@ -673,15 +943,69 @@ const AdminPanel = () => {
           >
             {React.createElement(Icon, { size: 16 })}
             {label}
+            {id === "review" && pendingResources.length + pendingLostFound.length > 0 && (
+              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === id ? "bg-white text-red-600" : "bg-red-500 text-white"
+              }`}>
+                {pendingResources.length + pendingLostFound.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
       {/* Tab content */}
       {activeTab === "overview"  && renderOverview()}
+      {activeTab === "review"    && renderReview()}
       {activeTab === "resources" && renderResources()}
       {activeTab === "content"   && renderContent()}
       {activeTab === "users"     && renderUsers()}
+
+      {/* Reject Resource Modal */}
+      {rejectTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[var(--bg-card)] rounded-2xl shadow-2xl p-6 max-w-md w-full border border-[var(--border-color)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <XCircle size={24} className="text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[var(--text-main)] text-lg">
+                  Reject {rejectKind === "lostfound" ? "Item" : "Resource"}
+                </h3>
+                <p className="text-sm text-[var(--text-muted)] truncate max-w-[260px]">{rejectTarget.title || rejectTarget.item}</p>
+              </div>
+            </div>
+            <label className="block text-sm font-medium text-[var(--text-main)] mb-1.5">
+              Reason (shown to the uploader)
+            </label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              placeholder="e.g. Contains content that violates community guidelines."
+              className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => { setRejectTarget(null); setRejectReason(""); }}
+                disabled={reviewing === rejectTarget._id}
+                className="flex-1 py-2.5 bg-[var(--bg-secondary)] text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] transition font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectConfirm}
+                disabled={reviewing === rejectTarget._id}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-bold disabled:opacity-70 flex items-center justify-center gap-2"
+              >
+                {reviewing === rejectTarget._id && <Loader2 size={16} className="animate-spin" />}
+                {reviewing === rejectTarget._id ? "Rejecting..." : "Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirm Modal */}
       {confirmDelete && (

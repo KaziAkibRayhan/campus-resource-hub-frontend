@@ -1,65 +1,92 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Users, Plus, Search } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Search,
+  X,
+  Crown,
+  Shield,
+  UserMinus,
+  Check,
+  Calendar,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { clubService } from "../services/api";
 import useHighlight from "../hooks/useHighlight";
 
+const PAGE_SIZE = 12;
+
 const Clubs = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
   const [clubs, setClubs] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
   useHighlight(!loading);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
     name: "",
     category: "",
     description: "",
+    joinPolicy: "open",
   });
+  const [busyId, setBusyId] = useState(null);
+  const [detail, setDetail] = useState(null); // { club, events }
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const canManage = user?.role === "admin" || user?.role === "moderator";
 
-  const fetchClubs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = {};
-      if (search) params.search = search;
-      const response = await clubService.getAll(params);
-      setClubs(response.data.clubs);
-    } catch (error) {
-      console.error("Clubs fetch error:", error);
-      toast.error(error.response?.data?.message || "Failed to fetch clubs");
-    } finally {
-      setLoading(false);
-    }
-  }, [search]);
+  const fetchClubs = useCallback(
+    async (targetPage = 1, append = false) => {
+      try {
+        append ? setLoadingMore(true) : setLoading(true);
+        const params = { page: targetPage, limit: PAGE_SIZE };
+        if (search) params.search = search;
+        if (categoryFilter !== "all") params.category = categoryFilter;
+        const response = await clubService.getAll(params);
+        const fetched = response.data.clubs || [];
+        setCategories(response.data.categories || []);
+        setTotalPages(response.data.totalPages || 1);
+        setPage(response.data.currentPage || targetPage);
+        setClubs((prev) => (append ? [...prev, ...fetched] : fetched));
+      } catch (error) {
+        console.error("Clubs fetch error:", error);
+        toast.error(error.response?.data?.message || "Failed to fetch clubs");
+      } finally {
+        append ? setLoadingMore(false) : setLoading(false);
+      }
+    },
+    [search, categoryFilter]
+  );
 
   useEffect(() => {
-    fetchClubs();
+    fetchClubs(1, false);
   }, [fetchClubs]);
 
-  // Realtime: live member counts when anyone joins/leaves
   useEffect(() => {
     if (!socket) return;
-
-    const handleClubUpdated = ({ clubId, memberCount }) => {
-      setClubs((prev) =>
-        prev.map((club) =>
-          club._id === clubId ? { ...club, memberCount } : club
-        )
-      );
+    const patch = (payload) => {
+      const id = payload.clubId || payload._id;
+      setClubs((prev) => prev.map((c) => (c._id === id ? { ...c, ...payload, _id: c._id } : c)));
     };
-
-    const handleClubNew = () => fetchClubs();
-
-    socket.on("club:updated", handleClubUpdated);
-    socket.on("club:new", handleClubNew);
+    const refresh = () => fetchClubs(1, false);
+    const remove = ({ _id }) => setClubs((prev) => prev.filter((c) => c._id !== _id));
+    socket.on("club:updated", patch);
+    socket.on("club:new", refresh);
+    socket.on("club:deleted", remove);
     return () => {
-      socket.off("club:updated", handleClubUpdated);
-      socket.off("club:new", handleClubNew);
+      socket.off("club:updated", patch);
+      socket.off("club:new", refresh);
+      socket.off("club:deleted", remove);
     };
   }, [socket, fetchClubs]);
 
@@ -68,29 +95,62 @@ const Clubs = () => {
     try {
       await clubService.create(form);
       toast.success("Club created");
-      setForm({ name: "", category: "", description: "" });
+      setForm({ name: "", category: "", description: "", joinPolicy: "open" });
       setShowCreate(false);
-      fetchClubs();
+      fetchClubs(1, false);
     } catch (error) {
-      console.error("Club create error:", error);
-      toast.error(error.response?.data?.message || "Failed to create club");
+      const data = error.response?.data;
+      toast.error(data?.code === "CONTENT_REJECTED" ? data.message : data?.message || "Failed to create club");
     }
   };
 
+  const replaceClub = (updated) =>
+    setClubs((prev) => prev.map((c) => (c._id === updated._id ? { ...c, ...updated } : c)));
+
   const handleMembership = async (club) => {
     try {
+      setBusyId(club._id);
       if (club.isMember) {
-        await clubService.leave(club._id);
+        const res = await clubService.leave(club._id);
         toast.success("Left club");
+        replaceClub(res.data.club);
+      } else if (club.hasRequested) {
+        toast.info("Your join request is already pending");
       } else {
-        await clubService.join(club._id);
-        toast.success("Joined club");
+        const res = await clubService.join(club._id);
+        toast.success(res.data.message);
+        replaceClub(res.data.club);
       }
-      fetchClubs();
     } catch (error) {
-      console.error("Club membership error:", error);
       toast.error(error.response?.data?.message || "Failed to update membership");
+    } finally {
+      setBusyId(null);
     }
+  };
+
+  const openDetail = async (clubId) => {
+    try {
+      setDetailLoading(true);
+      setDetail({ club: { _id: clubId }, events: [] });
+      const res = await clubService.getById(clubId);
+      setDetail({ club: res.data.club, events: res.data.events || [] });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to load club");
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const refreshDetail = (updatedClub) => {
+    setDetail((prev) => (prev ? { ...prev, club: updatedClub } : prev));
+    replaceClub(updatedClub);
+  };
+
+  const membershipLabel = (club) => {
+    if (club.isMember) return "Leave Club";
+    if (club.hasRequested) return "Requested";
+    return club.joinPolicy === "request" ? "Request to Join" : "Join Club";
   };
 
   return (
@@ -98,9 +158,7 @@ const Clubs = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-[var(--text-main)]">Campus Clubs</h2>
-          <p className="text-[var(--text-muted)] mt-1">
-            Explore and join student organizations
-          </p>
+          <p className="text-[var(--text-muted)] mt-1">Explore and join student organizations</p>
         </div>
         {canManage && (
           <button
@@ -113,8 +171,29 @@ const Clubs = () => {
         )}
       </div>
 
-      <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-4 border border-[var(--border-color)]">
-        <div className="relative max-w-md">
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-4 border border-[var(--border-color)] flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2 lg:flex-1 lg:min-w-0">
+          <button
+            onClick={() => setCategoryFilter("all")}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+              categoryFilter === "all" ? "bg-blue-600 text-white" : "bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                categoryFilter === cat ? "bg-blue-600 text-white" : "bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full lg:w-72 lg:flex-shrink-0">
           <Search className="absolute left-3 top-3 text-[var(--text-muted)]" size={18} />
           <input
             value={search}
@@ -140,23 +219,32 @@ const Clubs = () => {
             />
             <input
               value={form.category}
-              onChange={(event) =>
-                setForm({ ...form, category: event.target.value })
-              }
-              placeholder="Category"
+              onChange={(event) => setForm({ ...form, category: event.target.value })}
+              placeholder="Category (e.g. Sports, Tech)"
               className="px-4 py-3"
             />
           </div>
           <textarea
             value={form.description}
-            onChange={(event) =>
-              setForm({ ...form, description: event.target.value })
-            }
+            onChange={(event) => setForm({ ...form, description: event.target.value })}
             placeholder="Description"
             rows="3"
             className="w-full px-4 py-3"
             required
           />
+          <div>
+            <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
+              Join policy
+            </label>
+            <select
+              value={form.joinPolicy}
+              onChange={(event) => setForm({ ...form, joinPolicy: event.target.value })}
+              className="w-full px-4 py-3"
+            >
+              <option value="open">Open — anyone can join instantly</option>
+              <option value="request">Request — officers approve each member</option>
+            </select>
+          </div>
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -182,53 +270,298 @@ const Clubs = () => {
       ) : clubs.length === 0 ? (
         <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-12 text-center border border-[var(--border-color)]">
           <Users className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" size={64} />
-          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
-            No clubs found
-          </h3>
+          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">No clubs found</h3>
           <p className="text-[var(--text-muted)]">
             Clubs created by admins or moderators will appear here.
           </p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {clubs.map((club) => (
-            <div
-              id={`hl-${club._id}`}
-              key={club._id}
-              className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
-            >
-              <div className="w-16 h-16 bg-blue-600/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <Users size={32} className="text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-xl font-bold text-[var(--text-main)] text-center mb-2">
-                {club.name}
-              </h3>
-              <p className="text-[var(--text-muted)] text-center text-xs uppercase tracking-wide mb-2">
-                {club.category || "General"}
-              </p>
-              <p className="text-[var(--text-muted)] text-center text-sm mb-4 min-h-12">
-                {club.description}
-              </p>
-              <div className="text-center pt-4 border-t border-[var(--border-color)]">
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {club.memberCount}
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">Members</p>
-              </div>
-              <button
-                onClick={() => handleMembership(club)}
-                className={`mt-4 w-full py-2 rounded-lg transition font-medium ${
-                  club.isMember
-                    ? "bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]"
-                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
-                }`}
+        <>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {clubs.map((club) => (
+              <div
+                id={`hl-${club._id}`}
+                key={club._id}
+                className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)] flex flex-col"
               >
-                {club.isMember ? "Leave Club" : "Join Club"}
+                <div className="w-16 h-16 bg-blue-600/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 mx-auto relative">
+                  <Users size={32} className="text-blue-600 dark:text-blue-400" />
+                  {club.isOfficer && club.pendingRequestCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {club.pendingRequestCount}
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text-main)] text-center mb-1">
+                  {club.name}
+                </h3>
+                <p className="text-[var(--text-muted)] text-center text-xs uppercase tracking-wide mb-2">
+                  {club.category || "General"}
+                  {club.joinPolicy === "request" && " · approval"}
+                </p>
+                <p className="text-[var(--text-muted)] text-center text-sm mb-4 min-h-12 line-clamp-3">
+                  {club.description}
+                </p>
+                <div className="text-center pt-4 border-t border-[var(--border-color)] mt-auto">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {club.memberCount}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">Members</p>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => handleMembership(club)}
+                    disabled={busyId === club._id || (club.hasRequested && !club.isMember)}
+                    className={`flex-1 py-2 rounded-lg transition font-medium text-sm disabled:opacity-60 ${
+                      club.isMember
+                        ? "bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                    }`}
+                  >
+                    {membershipLabel(club)}
+                  </button>
+                  <button
+                    onClick={() => openDetail(club._id)}
+                    className="px-3 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)]"
+                    title="View club"
+                  >
+                    <Settings size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {page < totalPages && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => fetchClubs(page + 1, true)}
+                disabled={loadingMore}
+                className="px-6 py-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition disabled:opacity-50"
+              >
+                {loadingMore ? "Loading..." : "Load more"}
               </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
+
+      {detail && (
+        <ClubDetailModal
+          detail={detail}
+          loading={detailLoading}
+          onClose={() => setDetail(null)}
+          onChanged={refreshDetail}
+        />
+      )}
+    </div>
+  );
+};
+
+// ── Club detail / management modal ────────────────────────────────
+const ClubDetailModal = ({ detail, loading, onClose, onChanged }) => {
+  const { club, events } = detail;
+  const [busy, setBusy] = useState(false);
+
+  const act = async (fn, okMsg) => {
+    try {
+      setBusy(true);
+      const res = await fn();
+      if (res.data.club) onChanged(res.data.club);
+      if (okMsg) toast.success(okMsg);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[var(--border-color)]">
+        <div className="p-6 border-b border-[var(--border-color)] flex items-start justify-between sticky top-0 bg-[var(--bg-card)] z-10">
+          <div>
+            <h3 className="text-xl font-bold text-[var(--text-main)]">{club.name}</h3>
+            <p className="text-sm text-[var(--text-muted)]">
+              {club.category || "General"} · {club.memberCount ?? club.members?.length ?? 0} members
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-[var(--bg-hover)] rounded-lg text-[var(--text-muted)]"
+          >
+            <X size={22} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+          </div>
+        ) : (
+          <div className="p-6 space-y-6">
+            <p className="text-[var(--text-muted)] text-sm">{club.description}</p>
+
+            {/* Join requests (officers) */}
+            {club.isOfficer && club.joinRequests?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-[var(--text-main)] mb-2">
+                  Join requests ({club.joinRequests.length})
+                </h4>
+                <div className="space-y-2">
+                  {club.joinRequests.map((r) => (
+                    <div
+                      key={r.user?._id || r.user}
+                      className="flex items-center justify-between gap-2 bg-[var(--bg-secondary)] rounded-lg px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[var(--text-main)]">
+                          {r.user?.name || "Student"}
+                        </p>
+                        {r.note && <p className="text-xs text-[var(--text-muted)] truncate">“{r.note}”</p>}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            act(
+                              () => clubService.decideRequest(club._id, r.user?._id || r.user, "approve"),
+                              "Member added"
+                            )
+                          }
+                          className="p-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          <Check size={15} />
+                        </button>
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            act(
+                              () => clubService.decideRequest(club._id, r.user?._id || r.user, "reject"),
+                              "Request declined"
+                            )
+                          }
+                          className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-300 disabled:opacity-50"
+                        >
+                          <X size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Members */}
+            {club.members && (
+              <div>
+                <h4 className="font-semibold text-[var(--text-main)] mb-2">Members</h4>
+                <div className="space-y-2">
+                  {club.members.map((m) => {
+                    const memberId = m.user?._id || m.user;
+                    const isCreator = (club.createdBy?._id || club.createdBy) === memberId;
+                    return (
+                      <div
+                        key={memberId}
+                        className="flex items-center justify-between gap-2 bg-[var(--bg-secondary)] rounded-lg px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isCreator ? (
+                            <Crown size={15} className="text-amber-500 flex-shrink-0" />
+                          ) : m.role === "officer" ? (
+                            <Shield size={15} className="text-blue-500 flex-shrink-0" />
+                          ) : null}
+                          <span className="text-sm text-[var(--text-main)] truncate">
+                            {m.user?.name || "Student"}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
+                            {isCreator ? "creator" : m.role}
+                          </span>
+                        </div>
+                        {club.isOfficer && !isCreator && (
+                          <div className="flex gap-1">
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                act(
+                                  () =>
+                                    clubService.setRole(
+                                      club._id,
+                                      memberId,
+                                      m.role === "officer" ? "member" : "officer"
+                                    ),
+                                  "Role updated"
+                                )
+                              }
+                              className="px-2 py-1 rounded-md text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 disabled:opacity-50"
+                            >
+                              {m.role === "officer" ? "Demote" : "Make officer"}
+                            </button>
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                act(() => clubService.removeMember(club._id, memberId), "Member removed")
+                              }
+                              className="p-1.5 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 disabled:opacity-50"
+                            >
+                              <UserMinus size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Upcoming events */}
+            <div>
+              <h4 className="font-semibold text-[var(--text-main)] mb-2 flex items-center gap-1.5">
+                <Calendar size={16} /> Upcoming events
+              </h4>
+              {events.length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">No upcoming events for this club.</p>
+              ) : (
+                <div className="space-y-2">
+                  {events.map((e) => (
+                    <div key={e._id} className="bg-[var(--bg-secondary)] rounded-lg px-3 py-2">
+                      <p className="text-sm font-medium text-[var(--text-main)]">{e.title}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {new Date(e.date).toLocaleDateString()} · {e.time} · {e.location}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {club.isOwner && (
+              <div className="pt-2 border-t border-[var(--border-color)]">
+                <button
+                  disabled={busy}
+                  onClick={async () => {
+                    if (!window.confirm(`Delete "${club.name}"? This can't be undone.`)) return;
+                    try {
+                      setBusy(true);
+                      await clubService.delete(club._id);
+                      toast.success("Club deleted");
+                      onClose();
+                    } catch (error) {
+                      toast.error(error.response?.data?.message || "Failed to delete");
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 text-sm font-medium disabled:opacity-50"
+                >
+                  <Trash2 size={15} /> Delete club
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

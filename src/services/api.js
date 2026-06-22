@@ -60,6 +60,8 @@ export const announcementService = {
     `${API_BASE_URL}/announcements/${id}/attachments/${index}/file${download ? "?download=1" : ""}`,
   approve: (id) => API.put(`/announcements/${id}/approve`),
   reject: (id, reason) => API.put(`/announcements/${id}/reject`, { reason }),
+  markRead: (id) => API.put(`/announcements/${id}/read`),
+  togglePin: (id) => API.put(`/announcements/${id}/pin`),
   delete: (id) => API.delete(`/announcements/${id}`),
 };
 
@@ -69,6 +71,8 @@ export const eventService = {
   create: (data) => API.post("/events", data),
   update: (id, data) => API.put(`/events/${id}`, data),
   register: (id) => API.post(`/events/${id}/register`),
+  rsvp: (id, status) => API.put(`/events/${id}/rsvp`, { status }),
+  cancel: (id) => API.put(`/events/${id}/cancel`),
   approve: (id) => API.put(`/events/${id}/approve`),
   reject: (id, reason) => API.put(`/events/${id}/reject`, { reason }),
   delete: (id) => API.delete(`/events/${id}`),
@@ -87,18 +91,31 @@ export const adminService = {
 export const lostFoundService = {
   getAll: (params) => API.get("/lost-found", { params }),
   getMine: () => API.get("/lost-found", { params: { mine: true } }),
+  getPending: () => API.get("/lost-found", { params: { pending: true } }),
   create: (formData) => API.post("/lost-found", formData),
   update: (id, formData) => API.put(`/lost-found/${id}`, formData),
   delete: (id) => API.delete(`/lost-found/${id}`),
+  claim: (id, note) => API.post(`/lost-found/${id}/claims`, { note }),
+  decideClaim: (id, claimId, decision) =>
+    API.put(`/lost-found/${id}/claims/${claimId}`, { decision }),
+  resolve: (id) => API.put(`/lost-found/${id}/resolve`),
+  reopen: (id) => API.put(`/lost-found/${id}/reopen`),
   approve: (id) => API.put(`/lost-found/${id}/approve`),
   reject: (id, reason) => API.put(`/lost-found/${id}/reject`, { reason }),
 };
 
 export const clubService = {
   getAll: (params) => API.get("/clubs", { params }),
+  getById: (id) => API.get(`/clubs/${id}`),
   create: (data) => API.post("/clubs", data),
-  join: (id) => API.post(`/clubs/${id}/join`),
+  update: (id, data) => API.put(`/clubs/${id}`, data),
+  join: (id, note) => API.post(`/clubs/${id}/join`, { note }),
   leave: (id) => API.delete(`/clubs/${id}/leave`),
+  decideRequest: (id, userId, decision) =>
+    API.put(`/clubs/${id}/requests/${userId}`, { decision }),
+  setRole: (id, userId, role) =>
+    API.put(`/clubs/${id}/members/${userId}/role`, { role }),
+  removeMember: (id, userId) => API.delete(`/clubs/${id}/members/${userId}`),
   delete: (id) => API.delete(`/clubs/${id}`),
 };
 

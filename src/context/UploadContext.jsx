@@ -60,18 +60,36 @@ export const UploadProvider = ({ children }) => {
           );
         });
 
+        // Flagged uploads come back published-pending: stored but held for
+        // an admin to review. Show a distinct "under review" state instead of
+        // a plain success so the user knows it isn't public yet.
+        const underReview = response.data.code === "UNDER_REVIEW";
         setUpload((current) =>
-          current ? { ...current, phase: "success", progress: 100 } : current
+          current
+            ? {
+                ...current,
+                phase: underReview ? "review" : "success",
+                progress: 100,
+                message: underReview ? response.data.message : "",
+              }
+            : current
         );
-        toast.success(response.data.message || "Resource uploaded successfully!");
+        if (underReview) {
+          toast.info("Your resource is under review by a moderator.");
+        } else {
+          toast.success(response.data.message || "Resource uploaded successfully!");
+        }
         window.dispatchEvent(
           new CustomEvent("resource:uploaded", { detail: response.data.resource })
         );
-        hideTimerRef.current = setTimeout(() => {
-          setUpload((current) =>
-            current?.phase === "success" ? null : current
-          );
-        }, 6000);
+        if (!underReview) {
+          // "review" stays on screen until dismissed; success auto-hides.
+          hideTimerRef.current = setTimeout(() => {
+            setUpload((current) =>
+              current?.phase === "success" ? null : current
+            );
+          }, 6000);
+        }
       } catch (error) {
         const data = error.response?.data;
         if (data?.code === "CONTENT_REJECTED") {

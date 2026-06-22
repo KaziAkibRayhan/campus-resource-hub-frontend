@@ -382,6 +382,11 @@ const MyUploads = () => {
         title={r.title}
         meta={r.description}
         badges={[
+          r.rejectionReason
+            ? { label: "Rejected", color: "red" }
+            : !r.approved
+            ? { label: "Under review", color: "orange" }
+            : { label: "Published", color: "green" },
           { label: r.course,      color: "blue"   },
           { label: r.department,  color: "green"  },
           { label: r.semester ? `${r.semester} Sem` : null, color: "purple" },

@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   CheckCircle,
   AlertTriangle,
+  Clock,
   X,
 } from "lucide-react";
 import { useUpload } from "../../context/UploadContext";
@@ -19,6 +20,31 @@ const UploadProgressBar = () => {
   if (!upload) return null;
 
   const { phase, progress, fileName, message } = upload;
+
+  // Flagged uploads are stored but held for a moderator to review.
+  if (phase === "review") {
+    return (
+      <div className="px-4 py-3 border-b flex items-start gap-3 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800">
+        <Clock className="text-indigo-500 flex-shrink-0 mt-0.5" size={20} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-300">
+            Under review — {fileName}
+          </p>
+          <p className="text-sm mt-0.5 text-indigo-700 dark:text-indigo-400">
+            {message ||
+              "Your resource was uploaded and is awaiting moderator approval before it becomes visible."}
+          </p>
+        </div>
+        <button
+          onClick={dismissUpload}
+          className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition flex-shrink-0"
+          aria-label="Dismiss"
+        >
+          <X size={18} className="text-[var(--text-muted)]" />
+        </button>
+      </div>
+    );
+  }
 
   if (phase === "rejected" || phase === "error") {
     const isRejected = phase === "rejected";
