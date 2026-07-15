@@ -40,6 +40,11 @@ const Header = ({ toggleSidebar }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const threadEndRef = useRef(null);
   const abortRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const resetInputHeight = () => {
+    if (inputRef.current) inputRef.current.style.height = "auto";
+  };
 
   // Abort any in-flight stream when the header unmounts.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -124,6 +129,7 @@ const Header = ({ toggleSidebar }) => {
       { role: "assistant", content: "", sources: [], streaming: true },
     ]);
     setAiQuery("");
+    resetInputHeight();
     setAiSearching(true);
     setAiError("");
     setSearchOpen(true);
@@ -181,6 +187,7 @@ const Header = ({ toggleSidebar }) => {
     setAiThread([]);
     setAiError("");
     setAiSearching(false);
+    resetInputHeight();
   };
 
   return (
@@ -195,20 +202,34 @@ const Header = ({ toggleSidebar }) => {
           </button>
         </div>
 
-        {/* AI Search Bar */}
-        <div ref={searchRef} className="order-3 w-full md:order-none md:w-[28rem] md:max-w-[28rem] relative">
+        {/* AI Search Bar — the wrapper keeps a fixed one-line footprint so the
+            header never grows; the inner column is absolutely positioned and
+            floats OVER the header border when the textarea expands. */}
+        <div ref={searchRef} className="order-3 w-full md:order-none md:w-[28rem] md:max-w-[28rem] relative h-[42px]">
+          <div className="absolute inset-x-0 top-0 z-50">
             <form onSubmit={handleAiSearch} className="relative group">
               <Bot className="absolute left-3 top-3 text-blue-500 transition-colors" size={18} />
-              <input
-                type="text"
+              <textarea
+                ref={inputRef}
+                rows={1}
                 value={aiQuery}
                 onFocus={() => setSearchOpen(true)}
                 onChange={(event) => {
                   setAiQuery(event.target.value);
                   if (aiError) setAiError("");
+                  // Auto-grow up to ~4 lines; floats over the header border.
+                  event.target.style.height = "auto";
+                  event.target.style.height = `${Math.min(event.target.scrollHeight, 110)}px`;
+                }}
+                onKeyDown={(event) => {
+                  // Enter submits; Shift+Enter inserts a newline.
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    askAi(aiQuery);
+                  }
                 }}
                 placeholder="Ask AI about resources..."
-                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)]"
+                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm leading-relaxed transition-[border,box-shadow] outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)] resize-none overflow-y-auto shadow-sm focus:shadow-xl"
               />
               <div className="absolute right-2 top-1.5 flex items-center gap-1">
                 {aiQuery && (
@@ -233,7 +254,7 @@ const Header = ({ toggleSidebar }) => {
             </form>
 
             {searchOpen && (
-              <div className="absolute left-0 right-0 top-full mt-2 w-full md:left-auto md:w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
+              <div className="mt-2 w-full max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl">
                 <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
                     <Bot size={18} />
@@ -353,6 +374,7 @@ const Header = ({ toggleSidebar }) => {
                 </div>
               </div>
             )}
+          </div>
         </div>
 
         <div className="ml-auto flex items-center space-x-2 lg:space-x-5">
