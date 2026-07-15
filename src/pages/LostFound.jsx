@@ -2,13 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import useDebounce from "../hooks/useDebounce";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import {
-  AlertCircle,
   Check,
   CheckCircle,
   Clock,
   Image,
   Lock,
   MapPin,
+  Package,
   Plus,
   RotateCcw,
   Search,
@@ -21,18 +21,22 @@ import { lostFoundSchema } from "../utils/validationSchemas";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../context/AuthContext";
 import useHighlight from "../hooks/useHighlight";
+import { useConfirm } from "../components/common/ConfirmDialog";
+import { SkeletonGrid } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
 
 const PAGE_SIZE = 12;
 
 const statusStyles = {
-  open: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-  claimed: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-  resolved: "bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300",
+  open: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+  claimed: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  resolved: "bg-gray-500/10 text-gray-500 border border-gray-500/20",
 };
 
 const LostFound = () => {
   const { socket } = useSocket();
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("all");
   const [mineOnly, setMineOnly] = useState(false);
@@ -143,7 +147,7 @@ const LostFound = () => {
     try {
       setBusyId(claimTarget._id);
       const res = await lostFoundService.claim(claimTarget._id, claimNote.trim());
-      toast.success(res.data.message);
+      toast.success(res.data.message || "Claim submitted", { description: claimTarget.item });
       replaceItem(res.data.item);
       setClaimTarget(null);
       setClaimNote("");
@@ -154,12 +158,15 @@ const LostFound = () => {
     }
   };
 
-  const runAction = async (id, fn, label) => {
+  const runAction = async (id, fn, label, itemName) => {
     try {
       setBusyId(id);
       const res = await fn();
       if (res.data.item) replaceItem(res.data.item);
-      toast.success(res.data.message || `${label} done`);
+      toast.success(
+        res.data.message || `${label} done`,
+        itemName ? { description: itemName } : undefined
+      );
     } catch (error) {
       toast.error(error.response?.data?.message || `Failed to ${label.toLowerCase()}`);
     } finally {
@@ -167,18 +174,54 @@ const LostFound = () => {
     }
   };
 
+  const handleResolve = async (item) => {
+    const ok = await confirm({
+      title: "Mark item as returned?",
+      message: `"${item.item}" will be marked resolved and closed to new claims.`,
+      confirmText: "Mark returned",
+      variant: "success",
+    });
+    if (!ok) return;
+    runAction(item._id, () => lostFoundService.resolve(item._id), "Resolve", item.item);
+  };
+
+  const handleDecideClaim = async (item, claim, decision) => {
+    const approve = decision === "approve";
+    const claimant = claim.user?.name || "This student";
+    const ok = await confirm({
+      title: approve ? "Approve claim?" : "Decline claim?",
+      message: approve
+        ? `${claimant}'s claim on "${item.item}" will be approved and your contact details shared with them.`
+        : `${claimant}'s claim on "${item.item}" will be declined.`,
+      confirmText: approve ? "Approve" : "Decline",
+      variant: approve ? "success" : "danger",
+    });
+    if (!ok) return;
+    runAction(
+      item._id,
+      () => lostFoundService.decideClaim(item._id, claim._id, decision),
+      approve ? "Approve claim" : "Decline claim",
+      item.item
+    );
+  };
+
   const isOwner = (item) => user && item.postedBy?._id === user._id;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-[var(--text-main)]">Lost & Found</h2>
-          <p className="text-[var(--text-muted)] mt-1">Help find or return lost items</p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20">
+            <Package size={24} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-[var(--text-main)]">Lost & Found</h2>
+            <p className="text-[var(--text-muted)] mt-1">Help find or return lost items</p>
+          </div>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2 shadow-md"
+          className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition flex items-center space-x-2 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40"
         >
           <Plus size={20} />
           <span>Report Item</span>
@@ -192,10 +235,10 @@ const LostFound = () => {
               <button
                 key={type}
                 onClick={() => setFilter(type)}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-lg font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
                   filter === type
                     ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                    : "bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-main)] border border-[var(--border-color)]"
                 }`}
               >
                 {type === "all" ? "All Items" : type.toUpperCase()}
@@ -204,10 +247,10 @@ const LostFound = () => {
             {user && (
               <button
                 onClick={() => setMineOnly((v) => !v)}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-lg font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
                   mineOnly
                     ? "bg-orange-600 text-white shadow-md"
-                    : "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                    : "bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-main)] border border-[var(--border-color)]"
                 }`}
               >
                 My Posts
@@ -227,17 +270,19 @@ const LostFound = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <SkeletonGrid count={6} media lines={2} className="grid md:grid-cols-2 gap-6" />
       ) : items.length === 0 ? (
-        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-12 text-center border border-[var(--border-color)]">
-          <AlertCircle className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" size={64} />
-          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">No items found</h3>
-          <p className="text-[var(--text-muted)]">
-            There are no matching lost or found items at the moment.
-          </p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title="No items found"
+          hint={
+            search || filter !== "all" || mineOnly
+              ? "Try adjusting your search or filters."
+              : "There are no lost or found items at the moment. Be the first to report one."
+          }
+          actionLabel={user ? "Report an item" : undefined}
+          onAction={user ? () => setShowForm(true) : undefined}
+        />
       ) : (
         <>
           <div className="grid md:grid-cols-2 gap-6">
@@ -255,15 +300,15 @@ const LostFound = () => {
                 <div
                   id={`hl-${item._id}`}
                   key={item._id}
-                  className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)]"
+                  className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 transition hover:shadow-lg hover:-translate-y-0.5 border border-[var(--border-color)]"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${
                           item.type === "lost"
-                            ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                            : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                            : "bg-green-500/10 text-green-500 border border-green-500/20"
                         }`}
                       >
                         {item.type.toUpperCase()}
@@ -276,7 +321,7 @@ const LostFound = () => {
                         {item.status}
                       </span>
                       {!item.approved && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1">
                           <Clock size={12} />
                           {item.rejectionReason ? "Rejected" : "Under review"}
                         </span>
@@ -375,28 +420,16 @@ const LostFound = () => {
                           <div className="flex gap-1 flex-shrink-0">
                             <button
                               disabled={busy}
-                              onClick={() =>
-                                runAction(
-                                  item._id,
-                                  () => lostFoundService.decideClaim(item._id, claim._id, "approve"),
-                                  "Approve claim"
-                                )
-                              }
-                              className="p-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                              onClick={() => handleDecideClaim(item, claim, "approve")}
+                              className="p-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
                               title="Approve claim"
                             >
                               <Check size={15} />
                             </button>
                             <button
                               disabled={busy}
-                              onClick={() =>
-                                runAction(
-                                  item._id,
-                                  () => lostFoundService.decideClaim(item._id, claim._id, "reject"),
-                                  "Decline claim"
-                                )
-                              }
-                              className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-300 disabled:opacity-50"
+                              onClick={() => handleDecideClaim(item, claim, "reject")}
+                              className="p-1.5 rounded-md bg-[var(--bg-secondary)] text-[var(--text-main)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
                               title="Decline claim"
                             >
                               <X size={15} />
@@ -416,7 +449,7 @@ const LostFound = () => {
                           setClaimTarget(item);
                           setClaimNote("");
                         }}
-                        className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5"
+                        className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                       >
                         <UserCheck size={16} />
                         {item.type === "lost" ? "I found this" : "This is mine"}
@@ -425,22 +458,20 @@ const LostFound = () => {
                     {(owner || canManage) && item.status !== "resolved" && (
                       <button
                         disabled={busy}
-                        onClick={() =>
-                          runAction(item._id, () => lostFoundService.resolve(item._id), "Resolve")
-                        }
-                        className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5"
+                        onClick={() => handleResolve(item)}
+                        className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
                       >
                         <CheckCircle size={16} />
-                        Mark resolved
+                        Mark returned
                       </button>
                     )}
                     {(owner || canManage) && item.status !== "open" && (
                       <button
                         disabled={busy}
                         onClick={() =>
-                          runAction(item._id, () => lostFoundService.reopen(item._id), "Reopen")
+                          runAction(item._id, () => lostFoundService.reopen(item._id), "Reopen", item.item)
                         }
-                        className="px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-main)] text-sm font-medium hover:bg-[var(--bg-hover)] border border-[var(--border-color)] disabled:opacity-50 flex items-center gap-1.5"
+                        className="px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-main)] text-sm font-medium hover:bg-[var(--bg-hover)] border border-[var(--border-color)] disabled:opacity-50 flex items-center gap-1.5 transition"
                       >
                         <RotateCcw size={16} />
                         Reopen
@@ -457,7 +488,7 @@ const LostFound = () => {
               <button
                 onClick={() => fetchItems(page + 1, true)}
                 disabled={loadingMore}
-                className="px-6 py-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition disabled:opacity-50"
+                className="px-6 py-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
               >
                 {loadingMore ? "Loading..." : "Load more"}
               </button>
@@ -504,7 +535,7 @@ const LostFound = () => {
                 <button
                   onClick={submitClaim}
                   disabled={busyId === claimTarget._id}
-                  className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-50"
+                  className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
                   Submit claim
                 </button>
@@ -650,7 +681,7 @@ const LostFound = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-5 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 shadow-md transition disabled:opacity-50"
+                      className="px-5 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 shadow-md transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40"
                     >
                       {isSubmitting ? "Submitting..." : "Submit Report"}
                     </button>

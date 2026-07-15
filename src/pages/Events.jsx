@@ -21,6 +21,9 @@ import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import useHighlight from "../hooks/useHighlight";
+import { useConfirm } from "../components/common/ConfirmDialog";
+import { SkeletonGrid } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
 
 const PAGE_SIZE = 12;
 const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
@@ -33,6 +36,7 @@ const sameDay = (a, b) =>
 const Events = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const confirm = useConfirm();
   const canManage = user?.role === "admin" || user?.role === "moderator";
 
   const [events, setEvents] = useState([]);
@@ -162,11 +166,21 @@ const Events = () => {
   };
 
   const handleCancel = async (event) => {
+    const ok = await confirm({
+      title: "Cancel event?",
+      message: `"${event.title}" will be marked as cancelled and attendees will see it as called off.`,
+      confirmText: "Cancel event",
+      cancelText: "Keep event",
+      variant: "warning",
+    });
+    if (!ok) return;
     try {
       setBusyId(event._id);
       await eventService.cancel(event._id);
       updateEventLocal(event._id, { status: "cancelled" });
-      toast.success("Event cancelled");
+      toast.success("Event cancelled", {
+        description: `"${event.title}" has been marked as cancelled.`,
+      });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to cancel");
     } finally {
@@ -175,12 +189,20 @@ const Events = () => {
   };
 
   const handleDelete = async (event) => {
-    if (!window.confirm(`Delete "${event.title}"?`)) return;
+    const ok = await confirm({
+      title: "Delete event?",
+      message: `"${event.title}" will be permanently removed. This cannot be undone.`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       setBusyId(event._id);
       await eventService.delete(event._id);
       setEvents((prev) => prev.filter((e) => e._id !== event._id));
-      toast.success("Event deleted");
+      toast.success("Event deleted", {
+        description: `"${event.title}" has been removed.`,
+      });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete");
     } finally {
@@ -206,7 +228,9 @@ const Events = () => {
         payload.club = form.clubOther;
       }
       await eventService.create(payload);
-      toast.success("Event created");
+      toast.success("Event created", {
+        description: `"${form.title}" is now on the calendar.`,
+      });
       setForm(emptyForm);
       setShowCreate(false);
       view === "calendar" ? fetchMonth() : fetchList(1, false);
@@ -268,7 +292,7 @@ const Events = () => {
     <div
       id={`hl-${event._id}`}
       key={event._id}
-      className={`bg-[var(--bg-card)] rounded-xl shadow-md overflow-hidden hover:shadow-lg transition border ${
+      className={`bg-[var(--bg-card)] rounded-xl shadow-sm overflow-hidden transition hover:shadow-lg hover:-translate-y-0.5 border ${
         event.status === "cancelled"
           ? "border-red-300 dark:border-red-900/50 opacity-80"
           : "border-[var(--border-color)]"
@@ -442,16 +466,21 @@ const Events = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Events</h2>
-          <p className="text-gray-600 dark:text-slate-400 mt-1">
-            Don't miss out on exciting campus events
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
+            <CalendarDays size={24} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-[var(--text-main)]">Events</h2>
+            <p className="text-[var(--text-muted)] mt-1">
+              Don't miss out on exciting campus events
+            </p>
+          </div>
         </div>
         {canManage && (
           <button
             onClick={() => setShowCreate(true)}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2 shadow-md"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40"
           >
             <Plus size={20} />
             Create Event
@@ -497,7 +526,7 @@ const Events = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events..."
-              className="px-4 py-2 rounded-lg w-full sm:w-56"
+              className="px-4 py-2 rounded-lg w-full sm:w-56 focus:ring-2 focus:ring-purple-500"
             />
           </div>
         )}
@@ -507,19 +536,26 @@ const Events = () => {
 
       {/* Events */}
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <SkeletonGrid
+          count={6}
+          media
+          lines={3}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+        />
       ) : visibleEvents.length === 0 ? (
-        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-12 text-center border border-[var(--border-color)]">
-          <Calendar className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" size={64} />
-          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">No events found</h3>
-          <p className="text-[var(--text-muted)]">
-            {view === "calendar" && selectedDay
-              ? "No events on this day."
-              : "Check back later for new events!"}
-          </p>
-        </div>
+        <EmptyState
+          icon={CalendarDays}
+          title="No events found"
+          hint={
+            view === "calendar" && selectedDay
+              ? "No events on this day — pick another date on the calendar."
+              : debouncedSearch
+              ? "Try a different search or switch the scope filter."
+              : "Check back later for new events!"
+          }
+          actionLabel={canManage ? "Create event" : undefined}
+          onAction={canManage ? () => setShowCreate(true) : undefined}
+        />
       ) : (
         <>
           {view === "calendar" && selectedDay && (
@@ -641,7 +677,7 @@ const Events = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 shadow-lg transition"
+                  className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 shadow-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40"
                 >
                   Create Event
                 </button>

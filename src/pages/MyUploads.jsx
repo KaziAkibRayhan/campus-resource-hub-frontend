@@ -1,9 +1,10 @@
 // src/pages/MyUploads.jsx
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText, Megaphone, Calendar, Package,
-  Edit3, Trash2, RefreshCw, X, Save,
-  ChevronDown, ChevronUp,
+  Edit3, Trash2, RefreshCw, Save,
+  ChevronUp, FolderOpen, Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -13,59 +14,28 @@ import {
   lostFoundService,
 } from "../services/api";
 import { departments, semesters } from "../utils/constants";
+import { useConfirm } from "../components/common/ConfirmDialog";
+import { SkeletonRow } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
 
 // ── tiny helpers ────────────────────────────────────────────────
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString() : "—";
 
+const BADGE_STYLES = {
+  blue:   "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  green:  "bg-green-500/10 text-green-500 border border-green-500/20",
+  purple: "bg-purple-500/10 text-purple-500 border border-purple-500/20",
+  orange: "bg-orange-500/10 text-orange-500 border border-orange-500/20",
+  amber:  "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  red:    "bg-red-500/10 text-red-500 border border-red-500/20",
+  gray:   "bg-gray-500/10 text-gray-500 border border-gray-500/20",
+};
+
 const Badge = ({ children, color = "blue" }) => (
-  <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold bg-${color}-100 dark:bg-${color}-900/30 text-${color}-700 dark:text-${color}-300`}>
+  <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${BADGE_STYLES[color] || BADGE_STYLES.blue}`}>
     {children}
   </span>
 );
-
-// ── Confirm-delete modal ─────────────────────────────────────────
-const DeleteModal = ({ label, onConfirm, onCancel }) => {
-  const [busy, setBusy] = useState(false);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-[var(--bg-card)] rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-[var(--border-color)]">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
-            <Trash2 size={22} className="text-red-600" />
-          </div>
-          <div>
-            <h3 className="font-bold text-[var(--text-main)]">Delete?</h3>
-            <p className="text-xs text-[var(--text-muted)]">This cannot be undone.</p>
-          </div>
-        </div>
-        <p className="text-sm text-[var(--text-main)] mb-5">
-          Delete <strong>{label}</strong>?
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            disabled={busy}
-            className="flex-1 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm font-medium hover:bg-[var(--bg-hover)] transition disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              setBusy(true);
-              try { await onConfirm(); } finally { setBusy(false); }
-            }}
-            disabled={busy}
-            className="flex-1 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition disabled:opacity-70 flex items-center justify-center gap-2"
-          >
-            {busy && <RefreshCw size={14} className="animate-spin" />}
-            {busy ? "Deleting..." : "Delete"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // ── Field components ─────────────────────────────────────────────
 const Field = ({ label, children }) => (
@@ -120,7 +90,7 @@ const ResourceEditForm = ({ item, onSave, onCancel, saving }) => {
       <Field label="Description"><Textarea rows={3} value={form.description} onChange={set("description")} /></Field>
       <div className="flex justify-end gap-2 pt-1">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition">Cancel</button>
-        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1">
+        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
           <Save size={14} />{saving ? "Saving..." : "Save"}
         </button>
       </div>
@@ -147,7 +117,7 @@ const AnnouncementEditForm = ({ item, onSave, onCancel, saving }) => {
       <Field label="Content"><Textarea rows={4} value={form.content} onChange={set("content")} /></Field>
       <div className="flex justify-end gap-2 pt-1">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition">Cancel</button>
-        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1">
+        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
           <Save size={14} />{saving ? "Saving..." : "Save"}
         </button>
       </div>
@@ -178,7 +148,7 @@ const EventEditForm = ({ item, onSave, onCancel, saving }) => {
       <Field label="Description"><Textarea rows={3} value={form.description} onChange={set("description")} /></Field>
       <div className="flex justify-end gap-2 pt-1">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition">Cancel</button>
-        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1">
+        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
           <Save size={14} />{saving ? "Saving..." : "Save"}
         </button>
       </div>
@@ -220,7 +190,7 @@ const LostFoundEditForm = ({ item, onSave, onCancel, saving }) => {
       <Field label="Description"><Textarea rows={3} value={form.description} onChange={set("description")} /></Field>
       <div className="flex justify-end gap-2 pt-1">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition">Cancel</button>
-        <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1">
+        <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
           <Save size={14} />{saving ? "Saving..." : "Save"}
         </button>
       </div>
@@ -232,7 +202,7 @@ const LostFoundEditForm = ({ item, onSave, onCancel, saving }) => {
 // ITEM CARD — generic wrapper
 // ═══════════════════════════════════════════════════════════════
 const ItemCard = ({ title, meta, badges, date, onDelete, editForm, expanded, onToggle }) => (
-  <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] shadow-sm overflow-hidden">
+  <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] shadow-sm overflow-hidden transition hover:shadow-lg hover:-translate-y-0.5">
     <div className="p-5">
       <div className="flex items-start justify-between gap-4">
         {/* Left */}
@@ -282,6 +252,8 @@ const TABS = [
 ];
 
 const MyUploads = () => {
+  const navigate = useNavigate();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab]     = useState("resources");
   const [resources, setResources]     = useState([]);
   const [announcements, setAnn]       = useState([]);
@@ -291,7 +263,6 @@ const MyUploads = () => {
 
   const [editingId, setEditingId]     = useState(null);
   const [saving, setSaving]           = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // { id, label, onConfirm }
 
   const fetchAll = useCallback(async () => {
     try {
@@ -323,17 +294,30 @@ const MyUploads = () => {
   }, [fetchAll]);
 
   // ── delete helper ────────────────────────────────────────────
-  const askDelete = (label, onConfirm) => setDeleteTarget({ label, onConfirm });
+  const askDelete = async ({ kind, title, onConfirm }) => {
+    const ok = await confirm({
+      title: `Delete ${kind}?`,
+      message: `"${title}" will be permanently removed. This cannot be undone.`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
+    try {
+      await onConfirm();
+    } catch (error) {
+      toast.error(error.response?.data?.message || `Failed to delete ${kind}`);
+    }
+  };
 
   // ── save helpers ─────────────────────────────────────────────
   const saveResource = async (id, data) => {
     setSaving(true);
     try {
       await resourceService.update(id, data);
-      toast.success("Resource updated");
+      toast.success("Resource updated", { description: data.title });
       setEditingId(null);
       fetchAll();
-    } catch { toast.error("Failed to update"); }
+    } catch (error) { toast.error(error.response?.data?.message || "Failed to update resource"); }
     finally { setSaving(false); }
   };
 
@@ -341,10 +325,10 @@ const MyUploads = () => {
     setSaving(true);
     try {
       await announcementService.update(id, data);
-      toast.success("Announcement updated");
+      toast.success("Announcement updated", { description: data.title });
       setEditingId(null);
       fetchAll();
-    } catch { toast.error("Failed to update"); }
+    } catch (error) { toast.error(error.response?.data?.message || "Failed to update announcement"); }
     finally { setSaving(false); }
   };
 
@@ -352,10 +336,10 @@ const MyUploads = () => {
     setSaving(true);
     try {
       await eventService.update(id, data);
-      toast.success("Event updated");
+      toast.success("Event updated", { description: data.title });
       setEditingId(null);
       fetchAll();
-    } catch { toast.error("Failed to update"); }
+    } catch (error) { toast.error(error.response?.data?.message || "Failed to update event"); }
     finally { setSaving(false); }
   };
 
@@ -363,10 +347,10 @@ const MyUploads = () => {
     setSaving(true);
     try {
       await lostFoundService.update(id, formData);
-      toast.success("Item updated");
+      toast.success("Item updated", { description: formData.get?.("item") || undefined });
       setEditingId(null);
       fetchAll();
-    } catch { toast.error("Failed to update"); }
+    } catch (error) { toast.error(error.response?.data?.message || "Failed to update item"); }
     finally { setSaving(false); }
   };
 
@@ -375,7 +359,15 @@ const MyUploads = () => {
 
   // ── render tabs ──────────────────────────────────────────────
   const renderResources = () =>
-    resources.length === 0 ? <Empty label="resources" /> :
+    resources.length === 0 ? (
+      <EmptyState
+        icon={Upload}
+        title="No uploads yet"
+        hint="Share your notes, past papers and study materials with the campus."
+        actionLabel="Upload a resource"
+        onAction={() => navigate("/upload-resource")}
+      />
+    ) :
     resources.map((r) => (
       <ItemCard
         key={r._id}
@@ -385,7 +377,7 @@ const MyUploads = () => {
           r.rejectionReason
             ? { label: "Rejected", color: "red" }
             : !r.approved
-            ? { label: "Under review", color: "orange" }
+            ? { label: "Under review", color: "amber" }
             : { label: "Published", color: "green" },
           { label: r.course,      color: "blue"   },
           { label: r.department,  color: "green"  },
@@ -396,10 +388,14 @@ const MyUploads = () => {
         expanded={editingId === r._id}
         onToggle={() => setEditingId(editingId === r._id ? null : r._id)}
         onDelete={() =>
-          askDelete(`"${r.title}"`, async () => {
-            await resourceService.delete(r._id);
-            toast.success("Resource deleted");
-            fetchAll();
+          askDelete({
+            kind: "upload",
+            title: r.title,
+            onConfirm: async () => {
+              await resourceService.delete(r._id);
+              toast.success("Resource deleted", { description: r.title });
+              fetchAll();
+            },
           })
         }
         editForm={
@@ -414,7 +410,13 @@ const MyUploads = () => {
     ));
 
   const renderAnnouncements = () =>
-    announcements.length === 0 ? <Empty label="announcements" /> :
+    announcements.length === 0 ? (
+      <EmptyState
+        icon={Megaphone}
+        title="No announcements yet"
+        hint="Announcements you post will show up here so you can edit or remove them."
+      />
+    ) :
     announcements.map((a) => (
       <ItemCard
         key={a._id}
@@ -425,10 +427,14 @@ const MyUploads = () => {
         expanded={editingId === a._id}
         onToggle={() => setEditingId(editingId === a._id ? null : a._id)}
         onDelete={() =>
-          askDelete(`"${a.title}"`, async () => {
-            await announcementService.delete(a._id);
-            toast.success("Announcement deleted");
-            fetchAll();
+          askDelete({
+            kind: "announcement",
+            title: a.title,
+            onConfirm: async () => {
+              await announcementService.delete(a._id);
+              toast.success("Announcement deleted", { description: a.title });
+              fetchAll();
+            },
           })
         }
         editForm={
@@ -443,7 +449,13 @@ const MyUploads = () => {
     ));
 
   const renderEvents = () =>
-    events.length === 0 ? <Empty label="events" /> :
+    events.length === 0 ? (
+      <EmptyState
+        icon={Calendar}
+        title="No events yet"
+        hint="Events you create will show up here so you can edit or remove them."
+      />
+    ) :
     events.map((e) => (
       <ItemCard
         key={e._id}
@@ -458,10 +470,14 @@ const MyUploads = () => {
         expanded={editingId === e._id}
         onToggle={() => setEditingId(editingId === e._id ? null : e._id)}
         onDelete={() =>
-          askDelete(`"${e.title}"`, async () => {
-            await eventService.delete(e._id);
-            toast.success("Event deleted");
-            fetchAll();
+          askDelete({
+            kind: "event",
+            title: e.title,
+            onConfirm: async () => {
+              await eventService.delete(e._id);
+              toast.success("Event deleted", { description: e.title });
+              fetchAll();
+            },
           })
         }
         editForm={
@@ -476,7 +492,13 @@ const MyUploads = () => {
     ));
 
   const renderLostFound = () =>
-    lostFound.length === 0 ? <Empty label="lost & found items" /> :
+    lostFound.length === 0 ? (
+      <EmptyState
+        icon={Package}
+        title="No lost & found posts yet"
+        hint="Items you report on the Lost & Found board will show up here."
+      />
+    ) :
     lostFound.map((lf) => (
       <ItemCard
         key={lf._id}
@@ -491,10 +513,14 @@ const MyUploads = () => {
         expanded={editingId === lf._id}
         onToggle={() => setEditingId(editingId === lf._id ? null : lf._id)}
         onDelete={() =>
-          askDelete(`"${lf.item}"`, async () => {
-            await lostFoundService.delete(lf._id);
-            toast.success("Item deleted");
-            fetchAll();
+          askDelete({
+            kind: "item",
+            title: lf.item,
+            onConfirm: async () => {
+              await lostFoundService.delete(lf._id);
+              toast.success("Item deleted", { description: lf.item });
+              fetchAll();
+            },
           })
         }
         editForm={
@@ -513,14 +539,19 @@ const MyUploads = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-[var(--text-main)]">My Uploads</h2>
-          <p className="text-[var(--text-muted)] mt-1">Manage everything you've posted</p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <FolderOpen size={24} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-[var(--text-main)]">My Uploads</h2>
+            <p className="text-[var(--text-muted)] mt-1">Manage everything you've posted</p>
+          </div>
         </div>
         <button
           onClick={fetchAll}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-hover)] transition disabled:opacity-50 shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -533,7 +564,7 @@ const MyUploads = () => {
           <button
             key={id}
             onClick={() => { setActiveTab(id); setEditingId(null); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
               activeTab === id
                 ? "bg-blue-600 text-white shadow-md"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
@@ -543,7 +574,7 @@ const MyUploads = () => {
             {label}
             {counts[id] > 0 && (
               <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === id ? "bg-white/25 text-white" : `bg-${color}-100 dark:bg-${color}-900/30 text-${color}-600`
+                activeTab === id ? "bg-white/25 text-white" : BADGE_STYLES[color] || BADGE_STYLES.blue
               }`}>
                 {counts[id]}
               </span>
@@ -554,9 +585,7 @@ const MyUploads = () => {
 
       {/* Content */}
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
-        </div>
+        <SkeletonRow count={5} />
       ) : (
         <div className="space-y-3">
           {activeTab === "resources"     && renderResources()}
@@ -565,30 +594,8 @@ const MyUploads = () => {
           {activeTab === "lostfound"     && renderLostFound()}
         </div>
       )}
-
-      {/* Delete confirm modal */}
-      {deleteTarget && (
-        <DeleteModal
-          label={deleteTarget.label}
-          onConfirm={async () => {
-            try { await deleteTarget.onConfirm(); }
-            catch { toast.error("Delete failed"); }
-            setDeleteTarget(null);
-          }}
-          onCancel={() => setDeleteTarget(null)}
-        />
-      )}
     </div>
   );
 };
-
-// empty state
-const Empty = ({ label }) => (
-  <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] p-12 text-center">
-    <p className="text-4xl mb-3">📭</p>
-    <h3 className="text-lg font-bold text-[var(--text-main)] mb-1">Nothing here yet</h3>
-    <p className="text-sm text-[var(--text-muted)]">You haven't posted any {label} yet.</p>
-  </div>
-);
 
 export default MyUploads;

@@ -9,6 +9,9 @@ import {
   AlertCircle,
   Download,
   TrendingUp,
+  Sunrise,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   announcementService,
@@ -18,6 +21,16 @@ import {
   resourceService,
 } from "../services/api";
 import { toast } from "sonner";
+import { SkeletonGrid, SkeletonRow } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
+
+// Time-of-day greeting: morning (<12), afternoon (<17), evening.
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return { text: "Good morning", Icon: Sunrise };
+  if (hour < 17) return { text: "Good afternoon", Icon: Sun };
+  return { text: "Good evening", Icon: Moon };
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -68,85 +81,110 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  const greeting = getGreeting();
+  const firstName = user?.name?.split(" ")[0] || "there";
+  const todayLine = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   const stats = [
     {
       title: "Total Resources",
       value: counts.resources,
       icon: BookOpen,
-      color: "from-blue-500 to-blue-600",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      textColor: "text-blue-600 dark:text-blue-400",
+      chip: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
       link: "/resources",
     },
     {
       title: "Announcements",
       value: counts.announcements,
       icon: Bell,
-      color: "from-green-500 to-green-600",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
-      textColor: "text-green-600 dark:text-green-400",
+      chip: "bg-green-500/10 text-green-500 border border-green-500/20",
       link: "/announcements",
     },
     {
       title: "Upcoming Events",
       value: counts.events,
       icon: Calendar,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      textColor: "text-purple-600 dark:text-purple-400",
+      chip: "bg-purple-500/10 text-purple-500 border border-purple-500/20",
       link: "/events",
     },
     {
       title: "Lost Items",
       value: counts.lostFound,
       icon: AlertCircle,
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
-      textColor: "text-orange-600 dark:text-orange-400",
+      chip: "bg-orange-500/10 text-orange-500 border border-orange-500/20",
       link: "/lost-found",
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg p-8 text-white">
-        <h2 className="text-3xl font-bold mb-2">
-          Welcome back, {user?.name}! 👋
-        </h2>
-        <p className="text-blue-100">
-          Here's what's happening in your campus today
-        </p>
+      {/* Greeting Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+          <greeting.Icon size={24} />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-[var(--text-main)]">
+            {greeting.text}, {firstName}
+          </h2>
+          <p className="text-[var(--text-muted)] mt-1">
+            {todayLine} — here's what's happening on campus
+          </p>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Link
-            key={index}
-            to={stat.link}
-            className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg transition p-6 group border border-[var(--border-color)]"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.bgColor} p-3 rounded-lg transition-colors`}>
-                <stat.icon className={stat.textColor} size={24} />
+      {loading ? (
+        <SkeletonGrid
+          count={4}
+          lines={1}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <Link
+              key={index}
+              to={stat.link}
+              className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 group border border-[var(--border-color)] transition hover:shadow-lg hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div
+                  className={`flex h-11 w-11 items-center justify-center rounded-xl ${stat.chip}`}
+                >
+                  <stat.icon size={22} />
+                </div>
+                <TrendingUp className="text-green-500" size={20} />
               </div>
-              <TrendingUp className="text-green-500" size={20} />
-            </div>
-            <p className="text-[var(--text-muted)] text-sm mb-1">{stat.title}</p>
-            <p className="text-3xl font-bold text-[var(--text-main)]">{stat.value}</p>
-          </Link>
-        ))}
-      </div>
+              <p className="text-[var(--text-muted)] text-sm mb-1">
+                {stat.title}
+              </p>
+              <p className="text-3xl font-bold text-[var(--text-main)]">
+                {stat.value}
+              </p>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Recent Resources & Announcements */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Resources */}
-        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-[var(--text-main)]">
-              Recent Resources
-            </h3>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                <BookOpen size={18} />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--text-main)]">
+                Recent Resources
+              </h3>
+            </div>
             <Link
               to="/resources"
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
@@ -154,38 +192,58 @@ const Dashboard = () => {
               View All →
             </Link>
           </div>
-          <div className="space-y-3">
-            {resources.slice(0, 4).map((resource) => (
-              <div
-                key={resource._id}
-                className="flex items-center justify-between p-3 bg-[var(--bg-main)] rounded-lg hover:bg-[var(--bg-hover)] transition"
-              >
-                <div className="flex-1">
-                  <p className="font-semibold text-[var(--text-main)] text-sm">
-                    {resource.title}
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">
-                    {resource.course} • {resource.department}
-                  </p>
+          {loading ? (
+            <SkeletonRow count={4} />
+          ) : resources.length === 0 ? (
+            <EmptyState
+              compact
+              icon={BookOpen}
+              title="No recent resources"
+              hint="Uploaded study materials will show up here."
+            />
+          ) : (
+            <div className="space-y-3">
+              {resources.slice(0, 4).map((resource) => (
+                <div
+                  key={resource._id}
+                  className="flex items-center justify-between gap-3 p-3 bg-[var(--bg-main)] rounded-lg hover:bg-[var(--bg-hover)] transition"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[var(--text-main)] text-sm truncate">
+                      {resource.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {resource.course && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                          {resource.course}
+                        </span>
+                      )}
+                      <span className="text-xs text-[var(--text-muted)] truncate">
+                        {resource.department}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-[var(--text-muted)] flex-shrink-0">
+                    <Download size={16} />
+                    <span>{resource.downloads}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-[var(--text-muted)]">
-                  <Download size={16} />
-                  <span>{resource.downloads}</span>
-                </div>
-              </div>
-            ))}
-            {!loading && resources.length === 0 && (
-              <p className="text-sm text-[var(--text-muted)] text-center py-4">No recent resources</p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Latest Announcements */}
-        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-[var(--text-main)]">
-              Latest Announcements
-            </h3>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-500 border border-green-500/20">
+                <Bell size={18} />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--text-main)]">
+                Latest Announcements
+              </h3>
+            </div>
             <Link
               to="/announcements"
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
@@ -193,37 +251,52 @@ const Dashboard = () => {
               View All →
             </Link>
           </div>
-          <div className="space-y-3">
-            {announcements.slice(0, 4).map((announcement) => (
-              <div
-                key={announcement._id}
-                className="p-3 bg-[var(--bg-main)] rounded-lg hover:bg-[var(--bg-hover)] transition"
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg flex-shrink-0">
-                    <Bell size={16} className="text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[var(--text-main)] text-sm truncate">
-                      {announcement.title}
-                    </p>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">
-                      {announcement.department} • {new Date(announcement.createdAt).toLocaleDateString()}
-                    </p>
+          {loading ? (
+            <SkeletonRow count={4} />
+          ) : announcements.length === 0 ? (
+            <EmptyState
+              compact
+              icon={Bell}
+              title="No recent announcements"
+              hint="Campus announcements will show up here."
+            />
+          ) : (
+            <div className="space-y-3">
+              {announcements.slice(0, 4).map((announcement) => (
+                <div
+                  key={announcement._id}
+                  className="p-3 bg-[var(--bg-main)] rounded-lg hover:bg-[var(--bg-hover)] transition"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                      <Bell size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[var(--text-main)] text-sm truncate">
+                        {announcement.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                          {announcement.department}
+                        </span>
+                        <span className="text-xs text-[var(--text-muted)]">
+                          {new Date(announcement.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {!loading && announcements.length === 0 && (
-              <p className="text-sm text-[var(--text-muted)] text-center py-4">No recent announcements</p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
-        <h3 className="text-xl font-bold text-[var(--text-main)] mb-4">Quick Actions</h3>
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-color)]">
+        <h3 className="text-xl font-bold text-[var(--text-main)] mb-4">
+          Quick Actions
+        </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/upload-resource"

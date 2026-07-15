@@ -16,6 +16,8 @@ import {
   resourceService,
 } from "../services/api";
 import { toast } from "sonner";
+import { useConfirm } from "../components/common/ConfirmDialog";
+import { SkeletonRow } from "../components/common/Skeleton";
 
 const TABS = [
   { id: "overview",     label: "Overview",      icon: BarChart2  },
@@ -65,12 +67,15 @@ const adminColors = {
 
 const AdminPanel = () => {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [searchParams, setSearchParams]   = useSearchParams();
   const [activeTab, setActiveTab]         = useState(searchParams.get("tab") || "overview");
   const [allResources, setAllResources]   = useState([]);
   const [pendingResources, setPendingResources] = useState([]);
   const [pendingLostFound, setPendingLostFound] = useState([]);
   const [reviewing, setReviewing]         = useState(null); // item id being approved/rejected
+  const [confirmDelete, setConfirmDelete] = useState(null); // { label, onConfirm }
+  const [deleting, setDeleting]           = useState(false);
   const [rejectTarget, setRejectTarget]   = useState(null); // item pending rejection
   const [rejectKind, setRejectKind]       = useState("resource"); // "resource" | "lostfound"
   const [rejectReason, setRejectReason]   = useState("");
@@ -82,8 +87,6 @@ const AdminPanel = () => {
   const [loading, setLoading]             = useState(true);
   const [resourceSearch, setResourceSearch] = useState("");
   const [userSearch, setUserSearch]         = useState("");
-  const [confirmDelete, setConfirmDelete]   = useState(null);
-  const [deleting, setDeleting]             = useState(false);
 
   const fmt  = (v = 0) => Intl.NumberFormat().format(v);
   const fmtB = (b = 0) => {
@@ -166,10 +169,19 @@ const AdminPanel = () => {
 
   // ── Moderation review actions ───────────────────────────────────
   const handleApproveResource = async (resource) => {
+    const ok = await confirm({
+      title: "Publish this resource?",
+      message: `"${resource.title}" was flagged by the safety check. Publishing will make it visible to all students.`,
+      confirmText: "Publish",
+      variant: "success",
+    });
+    if (!ok) return;
     setReviewing(resource._id);
     try {
       await resourceService.approve(resource._id);
-      toast.success(`"${resource.title}" approved and published`);
+      toast.success("Resource published", {
+        description: `"${resource.title}" is now visible to all students.`,
+      });
       fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to approve resource");
@@ -179,10 +191,19 @@ const AdminPanel = () => {
   };
 
   const handleApproveLostFound = async (item) => {
+    const ok = await confirm({
+      title: "Publish this item?",
+      message: `"${item.item}" was flagged by the safety check. Publishing will make it visible to all students.`,
+      confirmText: "Publish",
+      variant: "success",
+    });
+    if (!ok) return;
     setReviewing(item._id);
     try {
       await lostFoundService.approve(item._id);
-      toast.success(`"${item.item}" approved and published`);
+      toast.success("Item published", {
+        description: `"${item.item}" is now visible on Lost & Found.`,
+      });
       fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to approve item");
@@ -220,17 +241,42 @@ const AdminPanel = () => {
 
   // ── User actions ────────────────────────────────────────────────
   const handleToggleBlock = async (targetUser) => {
+    const blocking = !targetUser.isBlocked;
+    const ok = await confirm({
+      title: blocking ? "Block this user?" : "Unblock this user?",
+      message: blocking
+        ? `${targetUser.name} will immediately lose access to the platform until unblocked.`
+        : `${targetUser.name} will regain full access to the platform.`,
+      confirmText: blocking ? "Block" : "Unblock",
+      variant: blocking ? "warning" : "success",
+    });
+    if (!ok) return;
     try {
-      await adminService.setUserBlocked(targetUser._id, !targetUser.isBlocked);
-      toast.success(targetUser.isBlocked ? "User unblocked" : "User blocked");
+      await adminService.setUserBlocked(targetUser._id, blocking);
+      toast.success(blocking ? "User blocked" : "User unblocked", {
+        description: `${targetUser.name} ${blocking ? "can no longer access" : "can access"} the platform.`,
+      });
       fetchData();
     } catch { toast.error("Failed to update user status"); }
   };
 
   const handleRoleChange = async (targetUser, role) => {
+    const ok = await confirm({
+      title: `Change role to ${role}?`,
+      message: `${targetUser.name} (${targetUser.role}) will get the permissions of a ${role}.`,
+      confirmText: "Change role",
+      variant: "warning",
+    });
+    if (!ok) {
+      // Controlled <select> — force a re-render so it snaps back to the real role.
+      setUsers((prev) => [...prev]);
+      return;
+    }
     try {
       await adminService.updateUserRole(targetUser._id, role);
-      toast.success("Role updated");
+      toast.success("Role updated", {
+        description: `${targetUser.name} is now a ${role}.`,
+      });
       fetchData();
     } catch { toast.error("Failed to update role"); }
   };
@@ -263,7 +309,7 @@ const AdminPanel = () => {
           { label: "Active Clubs",     value: stats?.clubs?.total,              icon: Package,    color: "orange" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label}
-            className={`${adminColors[color].card} border rounded-xl p-5 shadow-sm`}
+            className={`${adminColors[color].card} border rounded-xl p-5 shadow-sm transition hover:shadow-lg hover:-translate-y-0.5`}
           >
             <div className="flex items-center justify-between mb-2">
               <p className={`${adminColors[color].muted} text-sm font-medium`}>{label}</p>
@@ -378,7 +424,7 @@ const AdminPanel = () => {
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
               {loading ? (
-                <tr><td colSpan={5} className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" /></td></tr>
+                <tr><td colSpan={5} className="p-4"><SkeletonRow count={4} /></td></tr>
               ) : allResources.slice(0, 8).length === 0 ? (
                 <tr><td colSpan={5} className="p-8 text-center text-[var(--text-muted)]">No resources yet</td></tr>
               ) : (
@@ -435,7 +481,7 @@ const AdminPanel = () => {
       </div>
 
       {loading ? (
-        <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" /></div>
+        <SkeletonRow count={3} />
       ) : pendingResources.length === 0 ? (
         <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] p-12 text-center">
           <CheckCircle size={40} className="text-green-500 mx-auto mb-3" />
@@ -654,7 +700,7 @@ const AdminPanel = () => {
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
               {loading ? (
-                <tr><td colSpan={6} className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" /></td></tr>
+                <tr><td colSpan={6} className="p-4"><SkeletonRow count={5} /></td></tr>
               ) : filteredResources.length === 0 ? (
                 <tr><td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">No resources found</td></tr>
               ) : (

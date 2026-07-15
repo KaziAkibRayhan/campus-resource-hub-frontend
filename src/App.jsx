@@ -27,6 +27,7 @@ import LostFound from "./pages/LostFound";
 import Clubs from "./pages/Clubs";
 import AdminPanel from "./pages/AdminPanel";
 import Profile from "./pages/Profile";
+import { ConfirmProvider } from "./components/common/ConfirmDialog";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
         <SocketProvider>
           <NotificationProvider>
             <UploadProvider>
+            <ConfirmProvider>
             <BrowserRouter>
               <Routes>
                 {/* Public Routes */}
@@ -80,6 +82,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </BrowserRouter>
+            </ConfirmProvider>
             </UploadProvider>
           </NotificationProvider>
         </SocketProvider>

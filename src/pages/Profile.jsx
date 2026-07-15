@@ -3,18 +3,22 @@ import {
   Camera,
   CheckCircle,
   ImageUp,
+  Loader2,
   Lock,
   Mail,
   Save,
   User,
+  UserCircle,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
+import { useConfirm } from "../components/common/ConfirmDialog";
 import { departments } from "../utils/constants";
 
 const Profile = () => {
   const { user, updateProfile } = useAuth();
+  const confirm = useConfirm();
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -45,13 +49,18 @@ const Profile = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
+      toast.error("Invalid image file", {
+        description: "Please choose a JPG, PNG or WEBP image.",
+      });
       return;
     }
 
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setSelectedImage(file);
     setPreviewUrl(URL.createObjectURL(file));
+    toast.success("Photo selected", {
+      description: "Preview updated — click Save Changes to apply it.",
+    });
   };
 
   const resetForm = () => {
@@ -70,6 +79,27 @@ const Profile = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    const changingPassword = Boolean(form.newPassword || form.currentPassword);
+
+    if (changingPassword) {
+      if (!form.currentPassword || !form.newPassword) {
+        toast.error("Password change incomplete", {
+          description:
+            "Fill in both your current and new password, or clear both fields.",
+        });
+        return;
+      }
+      const ok = await confirm({
+        title: "Change your password?",
+        message:
+          "You'll need to use the new password the next time you sign in.",
+        confirmText: "Change Password",
+        variant: "warning",
+      });
+      if (!ok) return;
+    }
+
     setSaving(true);
 
     const formData = new FormData();
@@ -84,7 +114,19 @@ const Profile = () => {
     setSaving(false);
 
     if (result.success) {
-      toast.success("Profile updated");
+      if (changingPassword) {
+        toast.success("Password changed", {
+          description: "Your profile details were saved too.",
+        });
+      } else if (selectedImage) {
+        toast.success("Profile updated", {
+          description: "Your new photo and details are live.",
+        });
+      } else {
+        toast.success("Profile updated", {
+          description: "Your account details have been saved.",
+        });
+      }
       setEditMode(false);
       setSelectedImage(null);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -99,24 +141,30 @@ const Profile = () => {
       return;
     }
 
-    toast.error(result.error);
+    toast.error(result.error || "Failed to update profile", {
+      description: "Please review your details and try again.",
+    });
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 text-slate-900 dark:text-white">
-      <div>
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-          Profile
-        </h2>
-        <p className="text-slate-600 dark:text-slate-300 mt-1">
-          Manage your account details and profile picture.
-        </p>
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+          <UserCircle size={24} />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-[var(--text-main)]">Profile</h2>
+          <p className="text-[var(--text-muted)] mt-1">
+            Manage your account details and profile picture.
+          </p>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-[320px_1fr] gap-6">
-        <section className="bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)] p-6">
+        <section className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-color)] p-6">
           <div className="flex flex-col items-center text-center">
-            <div className="relative h-32 w-32 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 overflow-hidden flex items-center justify-center shadow-inner">
+            <div className="group relative h-32 w-32 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 overflow-hidden flex items-center justify-center shadow-inner ring-2 ring-blue-500/30 ring-offset-2 ring-offset-[var(--bg-card)]">
               {imageSrc ? (
                 <img
                   src={imageSrc}
@@ -127,9 +175,9 @@ const Profile = () => {
                 <User size={48} />
               )}
               {editMode && (
-                <label className="absolute inset-x-0 bottom-0 bg-black/60 text-white py-2 text-xs font-semibold cursor-pointer flex items-center justify-center gap-1">
-                  <Camera size={14} />
-                  Change
+                <label className="absolute inset-0 bg-black/60 text-white text-xs font-semibold cursor-pointer flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                  <Camera size={18} />
+                  Change photo
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
@@ -145,12 +193,12 @@ const Profile = () => {
             <p className="text-sm text-[var(--text-muted)]">
               {user?.studentId}
             </p>
-            <span className="mt-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-sm font-semibold capitalize">
+            <span className="mt-3 inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold capitalize bg-blue-500/10 text-blue-500 border border-blue-500/20">
               {user?.role}
             </span>
           </div>
 
-            <div className="mt-6 space-y-3 text-sm">
+          <div className="mt-6 space-y-3 text-sm">
             <div className="flex items-center gap-3 text-[var(--text-muted)]">
               <Mail size={17} />
               <span className="truncate">{user?.email}</span>
@@ -162,20 +210,25 @@ const Profile = () => {
           </div>
         </section>
 
-        <section className="bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)] p-6">
+        <section className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-color)] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-[var(--text-main)]">
-                Account Information
-              </h3>
-              <p className="text-sm text-[var(--text-muted)]">
-                Changes sync immediately across the app.
-              </p>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                <User size={18} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[var(--text-main)]">
+                  Account Information
+                </h3>
+                <p className="text-sm text-[var(--text-muted)]">
+                  Changes sync immediately across the app.
+                </p>
+              </div>
             </div>
             {!editMode && (
               <button
                 onClick={startEdit}
-                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold transition shadow-md"
+                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold transition shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
               >
                 Edit Profile
               </button>
@@ -185,14 +238,16 @@ const Profile = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {editMode && (
               <div className="rounded-xl border border-[var(--border-color)] p-5 bg-[var(--bg-main)]">
-                <div className="flex items-center gap-2 mb-4">
-                  <ImageUp size={18} className="text-[var(--text-muted)]" />
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                    <ImageUp size={18} />
+                  </div>
                   <h4 className="font-bold text-[var(--text-main)]">
                     Profile Picture
                   </h4>
                 </div>
                 <div className="flex flex-col md:flex-row gap-5 items-start">
-                  <div className="h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-secondary)] flex items-center justify-center">
+                  <div className="h-28 w-28 rounded-full overflow-hidden bg-[var(--bg-secondary)] flex items-center justify-center ring-2 ring-blue-500/30">
                     {imageSrc ? (
                       <img
                         src={imageSrc}
@@ -200,11 +255,11 @@ const Profile = () => {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User size={36} className="text-slate-500" />
+                      <User size={36} className="text-[var(--text-muted)]" />
                     )}
                   </div>
                   <div className="flex-1 space-y-3">
-                    <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold cursor-pointer">
+                    <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold cursor-pointer transition focus-within:ring-2 focus-within:ring-blue-500/40">
                       <Camera size={16} />
                       Choose Image
                       <input
@@ -214,11 +269,11 @@ const Profile = () => {
                         className="hidden"
                       />
                     </label>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-[var(--text-muted)]">
                       JPG, PNG or WEBP. Preview updates immediately before save.
                     </p>
                     {selectedImage && (
-                      <p className="text-sm text-slate-700 dark:text-slate-300">
+                      <p className="text-sm text-[var(--text-main)]">
                         Selected: {selectedImage.name}
                       </p>
                     )}
@@ -229,27 +284,35 @@ const Profile = () => {
 
             <div className="grid md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
-                  Name
+                <label
+                  htmlFor="profile-name"
+                  className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                >
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="profile-name"
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   disabled={!editMode}
-                  className="w-full px-4 py-3"
+                  className="w-full px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
-                  Email
+                <label
+                  htmlFor="profile-email"
+                  className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                >
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="profile-email"
                   type="email"
                   value={form.email}
                   onChange={(event) => setForm({ ...form, email: event.target.value })}
                   disabled={!editMode}
-                  className="w-full px-4 py-3"
+                  className="w-full px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                   required
                 />
               </div>
@@ -257,16 +320,20 @@ const Profile = () => {
 
             <div className="grid md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
+                <label
+                  htmlFor="profile-department"
+                  className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                >
                   Department
                 </label>
                 <select
+                  id="profile-department"
                   value={form.department}
                   onChange={(event) =>
                     setForm({ ...form, department: event.target.value })
                   }
                   disabled={!editMode}
-                  className="w-full px-4 py-3"
+                  className="w-full px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
                   {departments.map((department) => (
                     <option key={department} value={department}>
@@ -276,10 +343,14 @@ const Profile = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
+                <label
+                  htmlFor="profile-student-id"
+                  className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                >
                   Student ID
                 </label>
                 <input
+                  id="profile-student-id"
                   value={user?.studentId || ""}
                   disabled
                   className="w-full px-4 py-3"
@@ -289,31 +360,54 @@ const Profile = () => {
 
             {editMode && (
               <div className="rounded-xl border border-[var(--border-color)] p-5 bg-[var(--bg-main)]">
-                <div className="flex items-center gap-2 mb-4">
-                  <Lock size={18} className="text-[var(--text-muted)]" />
+                <div className="flex items-center gap-2.5 mb-1">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    <Lock size={18} />
+                  </div>
                   <h4 className="font-bold text-[var(--text-main)]">
                     Change Password
                   </h4>
                 </div>
+                <p className="text-sm text-[var(--text-muted)] mb-4 ml-[46px]">
+                  Optional — leave both fields empty to keep your current password.
+                </p>
                 <div className="grid md:grid-cols-2 gap-5">
-                  <input
-                    type="password"
-                    value={form.currentPassword}
-                    onChange={(event) =>
-                      setForm({ ...form, currentPassword: event.target.value })
-                    }
-                    placeholder="Current password"
-                    className="w-full px-4 py-3"
-                  />
-                  <input
-                    type="password"
-                    value={form.newPassword}
-                    onChange={(event) =>
-                      setForm({ ...form, newPassword: event.target.value })
-                    }
-                    placeholder="New password"
-                    className="w-full px-4 py-3"
-                  />
+                  <div>
+                    <label
+                      htmlFor="profile-current-password"
+                      className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                    >
+                      Current Password
+                    </label>
+                    <input
+                      id="profile-current-password"
+                      type="password"
+                      value={form.currentPassword}
+                      onChange={(event) =>
+                        setForm({ ...form, currentPassword: event.target.value })
+                      }
+                      placeholder="Current password"
+                      className="w-full px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="profile-new-password"
+                      className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                    >
+                      New Password
+                    </label>
+                    <input
+                      id="profile-new-password"
+                      type="password"
+                      value={form.newPassword}
+                      onChange={(event) =>
+                        setForm({ ...form, newPassword: event.target.value })
+                      }
+                      placeholder="New password"
+                      className="w-full px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -323,7 +417,8 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-5 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold flex items-center justify-center gap-2 transition"
+                  disabled={saving}
+                  className="px-5 py-3 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)] font-semibold flex items-center justify-center gap-2 transition disabled:opacity-60"
                 >
                   <XCircle size={18} />
                   Cancel
@@ -331,9 +426,13 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 font-semibold flex items-center justify-center gap-2"
+                  className="px-5 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 font-semibold flex items-center justify-center gap-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
-                  <Save size={18} />
+                  {saving ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Save size={18} />
+                  )}
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
               </div>

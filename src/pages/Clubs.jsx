@@ -18,12 +18,16 @@ import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { clubService } from "../services/api";
 import useHighlight from "../hooks/useHighlight";
+import { useConfirm } from "../components/common/ConfirmDialog";
+import { SkeletonGrid } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
 
 const PAGE_SIZE = 12;
 
 const Clubs = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const confirm = useConfirm();
   const [clubs, setClubs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
@@ -110,17 +114,30 @@ const Clubs = () => {
     setClubs((prev) => prev.map((c) => (c._id === updated._id ? { ...c, ...updated } : c)));
 
   const handleMembership = async (club) => {
+    if (club.isMember) {
+      const ok = await confirm({
+        title: "Leave club?",
+        message: `You'll no longer be a member of "${club.name}". You can rejoin later${
+          club.joinPolicy === "request" ? ", but officers will need to approve you again" : ""
+        }.`,
+        confirmText: "Leave club",
+        variant: "warning",
+      });
+      if (!ok) return;
+    }
     try {
       setBusyId(club._id);
       if (club.isMember) {
         const res = await clubService.leave(club._id);
-        toast.success("Left club");
+        toast.success("Left club", {
+          description: `You are no longer a member of "${club.name}".`,
+        });
         replaceClub(res.data.club);
       } else if (club.hasRequested) {
         toast.info("Your join request is already pending");
       } else {
         const res = await clubService.join(club._id);
-        toast.success(res.data.message);
+        toast.success(res.data.message || "Membership updated");
         replaceClub(res.data.club);
       }
     } catch (error) {
@@ -158,14 +175,19 @@ const Clubs = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-[var(--text-main)]">Campus Clubs</h2>
-          <p className="text-[var(--text-muted)] mt-1">Explore and join student organizations</p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <Users size={24} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-[var(--text-main)]">Campus Clubs</h2>
+            <p className="text-[var(--text-muted)] mt-1">Explore and join student organizations</p>
+          </div>
         </div>
         {canManage && (
           <button
             onClick={() => setShowCreate((value) => !value)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
           >
             <Plus size={20} />
             Create Club
@@ -266,17 +288,23 @@ const Clubs = () => {
       )}
 
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <SkeletonGrid
+          count={8}
+          lines={3}
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+        />
       ) : clubs.length === 0 ? (
-        <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-12 text-center border border-[var(--border-color)]">
-          <Users className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" size={64} />
-          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">No clubs found</h3>
-          <p className="text-[var(--text-muted)]">
-            Clubs created by admins or moderators will appear here.
-          </p>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No clubs found"
+          hint={
+            debouncedSearch || categoryFilter !== "all"
+              ? "Try a different search or category filter."
+              : "Clubs created by admins or moderators will appear here."
+          }
+          actionLabel={canManage ? "Create club" : undefined}
+          onAction={canManage ? () => setShowCreate(true) : undefined}
+        />
       ) : (
         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -284,7 +312,7 @@ const Clubs = () => {
               <div
                 id={`hl-${club._id}`}
                 key={club._id}
-                className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 hover:shadow-lg transition border border-[var(--border-color)] flex flex-col"
+                className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 transition hover:shadow-lg hover:-translate-y-0.5 border border-[var(--border-color)] flex flex-col"
               >
                 <div className="w-16 h-16 bg-blue-600/10 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 mx-auto relative">
                   <Users size={32} className="text-blue-600 dark:text-blue-400" />
@@ -363,6 +391,7 @@ const Clubs = () => {
 // ── Club detail / management modal ────────────────────────────────
 const ClubDetailModal = ({ detail, loading, onClose, onChanged }) => {
   const { club, events } = detail;
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   const act = async (fn, okMsg) => {
@@ -437,12 +466,19 @@ const ClubDetailModal = ({ detail, loading, onClose, onChanged }) => {
                         </button>
                         <button
                           disabled={busy}
-                          onClick={() =>
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: "Reject join request?",
+                              message: `${r.user?.name || "This student"}'s request to join "${club.name}" will be declined.`,
+                              confirmText: "Reject",
+                              variant: "danger",
+                            });
+                            if (!ok) return;
                             act(
                               () => clubService.decideRequest(club._id, r.user?._id || r.user, "reject"),
                               "Request declined"
-                            )
-                          }
+                            );
+                          }}
                           className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-300 disabled:opacity-50"
                         >
                           <X size={15} />
@@ -501,9 +537,16 @@ const ClubDetailModal = ({ detail, loading, onClose, onChanged }) => {
                             </button>
                             <button
                               disabled={busy}
-                              onClick={() =>
-                                act(() => clubService.removeMember(club._id, memberId), "Member removed")
-                              }
+                              onClick={async () => {
+                                const ok = await confirm({
+                                  title: "Remove member?",
+                                  message: `${m.user?.name || "This student"} will be removed from "${club.name}".`,
+                                  confirmText: "Remove",
+                                  variant: "danger",
+                                });
+                                if (!ok) return;
+                                act(() => clubService.removeMember(club._id, memberId), "Member removed");
+                              }}
                               className="p-1.5 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 disabled:opacity-50"
                             >
                               <UserMinus size={14} />
@@ -543,11 +586,19 @@ const ClubDetailModal = ({ detail, loading, onClose, onChanged }) => {
                 <button
                   disabled={busy}
                   onClick={async () => {
-                    if (!window.confirm(`Delete "${club.name}"? This can't be undone.`)) return;
+                    const ok = await confirm({
+                      title: "Delete club?",
+                      message: `"${club.name}" and its membership list will be permanently removed. This cannot be undone.`,
+                      confirmText: "Delete",
+                      variant: "danger",
+                    });
+                    if (!ok) return;
                     try {
                       setBusy(true);
                       await clubService.delete(club._id);
-                      toast.success("Club deleted");
+                      toast.success("Club deleted", {
+                        description: `"${club.name}" has been removed.`,
+                      });
                       onClose();
                     } catch (error) {
                       toast.error(error.response?.data?.message || "Failed to delete");

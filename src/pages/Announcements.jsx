@@ -8,6 +8,7 @@ import {
   FileText,
   ImagePlus,
   Loader2,
+  Megaphone,
   Paperclip,
   Pin,
   PinOff,
@@ -23,6 +24,9 @@ import { announcementService } from "../services/api";
 import { toast } from "sonner";
 import { departments } from "../utils/constants";
 import useHighlight from "../hooks/useHighlight";
+import { useConfirm } from "../components/common/ConfirmDialog";
+import { SkeletonRow } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
 
 const MAX_ATTACHMENTS = 5;
 const PAGE_SIZE = 20;
@@ -54,6 +58,7 @@ const formatFileSize = (bytes = 0) => {
 const Announcements = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const confirm = useConfirm();
   const fileInputRef = useRef(null);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -196,7 +201,10 @@ const Announcements = () => {
       setAnnouncements((prev) =>
         prev.map((a) => (a._id === announcement._id ? { ...a, pinned: res.data.announcement.pinned } : a))
       );
-      toast.success(res.data.message);
+      toast.success(
+        res.data.message ||
+          (res.data.announcement.pinned ? "Announcement pinned" : "Announcement unpinned")
+      );
       fetchAnnouncements(1, false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update pin");
@@ -206,12 +214,20 @@ const Announcements = () => {
   };
 
   const handleDelete = async (announcement) => {
-    if (!window.confirm(`Delete "${announcement.title}"?`)) return;
+    const ok = await confirm({
+      title: "Delete announcement?",
+      message: `"${announcement.title}" will be permanently removed. This cannot be undone.`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       setBusyId(announcement._id);
       await announcementService.delete(announcement._id);
       setAnnouncements((prev) => prev.filter((a) => a._id !== announcement._id));
-      toast.success("Announcement deleted");
+      toast.success("Announcement deleted", {
+        description: `"${announcement.title}" has been removed.`,
+      });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete");
     } finally {
@@ -266,14 +282,19 @@ const Announcements = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] break-words">Announcements</h2>
-          <p className="text-[var(--text-muted)] mt-1">Stay updated with campus news</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <Megaphone size={24} />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] break-words">Announcements</h2>
+            <p className="text-[var(--text-muted)] mt-1">Stay updated with campus news</p>
+          </div>
         </div>
         {canManage && (
           <button
             onClick={() => setShowCreate(true)}
-            className="w-full sm:w-auto bg-blue-600 text-white px-4 sm:px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md text-sm sm:text-base"
+            className="w-full sm:w-auto bg-blue-600 text-white px-4 sm:px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md text-sm sm:text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
           >
             <Plus size={20} className="flex-shrink-0" />
             <span>Create Announcement</span>
@@ -307,21 +328,27 @@ const Announcements = () => {
         </div>
         <div className="relative w-full lg:w-64">
           <Search className="absolute left-3 top-3 text-[var(--text-muted)]" size={18} />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search announcements..." className="w-full pl-10 pr-4 py-2.5 rounded-lg" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search announcements..." className="w-full pl-10 pr-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <SkeletonRow count={5} />
       ) : announcements.length === 0 ? (
-        <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)]">
-          <Bell size={48} className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" />
-          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">No announcements</h3>
-          <p className="text-[var(--text-muted)]">Check back later for campus updates.</p>
-        </div>
+        <EmptyState
+          icon={Megaphone}
+          title={archived ? "No archived announcements" : "No announcements"}
+          hint={
+            debouncedSearch || deptFilter !== "All" || priorityFilter !== "all"
+              ? "Try a different search or clear the filters."
+              : archived
+              ? "Expired announcements will show up here."
+              : "Check back later for campus updates."
+          }
+          actionLabel={canManage && !archived ? "Create announcement" : undefined}
+          onAction={canManage && !archived ? () => setShowCreate(true) : undefined}
+        />
       ) : (
         <>
           <div className="space-y-4">
@@ -333,7 +360,7 @@ const Announcements = () => {
                   id={`hl-${announcement._id}`}
                   key={announcement._id}
                   onClick={() => markRead(announcement)}
-                  className={`bg-[var(--bg-card)] rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition border border-[var(--border-color)] ${pr.border} ${
+                  className={`bg-[var(--bg-card)] rounded-xl shadow-sm p-4 sm:p-6 transition hover:shadow-lg hover:-translate-y-0.5 border border-[var(--border-color)] ${pr.border} ${
                     unread ? "ring-1 ring-blue-500/30" : ""
                   }`}
                 >
@@ -521,7 +548,7 @@ const Announcements = () => {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={submitting} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md disabled:opacity-60 flex items-center justify-center gap-2">
+                <button type="submit" disabled={submitting} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md disabled:opacity-60 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                   {submitting && <Loader2 size={18} className="animate-spin" />}
                   {submitting ? "Saving..." : "Create"}
                 </button>

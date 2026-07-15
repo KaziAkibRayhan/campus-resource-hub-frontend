@@ -1,12 +1,13 @@
 // src/pages/Resources.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
   Upload,
   Filter,
   Download,
   Eye,
+  BookOpen,
   FileText,
   FileSpreadsheet,
   Presentation,
@@ -23,12 +24,15 @@ import ResourcePreview from "../components/resources/ResourcePreview";
 import ShareMenu from "../components/resources/ShareMenu";
 import PdfPreview from "../components/resources/PdfPreview";
 import PptxPreview from "../components/resources/PptxPreview";
+import { SkeletonGrid } from "../components/common/Skeleton";
+import EmptyState from "../components/common/EmptyState";
 import useHighlight from "../hooks/useHighlight";
 import useDebounce from "../hooks/useDebounce";
 import { useSocket } from "../context/SocketContext";
 
 const Resources = () => {
   const { socket } = useSocket();
+  const navigate = useNavigate();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   useHighlight(!loading);
@@ -144,9 +148,12 @@ const Resources = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      toast.info("Download started", {
+        description: fileName || "Your file is being downloaded.",
+      });
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("Error downloading file");
+      toast.error(error.response?.data?.message || "Error downloading file");
     }
   };
 
@@ -166,17 +173,22 @@ const Resources = () => {
     <div className="space-y-6 pb-28">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
-            Academic Resources
-          </h2>
-          <p className="text-gray-600 dark:text-slate-400 mt-1">
-            Browse and download study materials
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <BookOpen size={24} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-[var(--text-main)]">
+              Academic Resources
+            </h2>
+            <p className="text-[var(--text-muted)] mt-1">
+              Browse and download study materials
+            </p>
+          </div>
         </div>
         <Link
           to="/upload-resource"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition shadow-md"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
         >
           <Upload size={20} />
           <span>Upload Resource</span>
@@ -319,26 +331,20 @@ const Resources = () => {
       </div>
 
       {/* Resources List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {loading
-          ? Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 animate-pulse border border-[var(--border-color)]"
-              >
-                <div className="h-4 bg-[var(--bg-secondary)] rounded w-3/4 mb-4"></div>
-                <div className="h-3 bg-[var(--bg-secondary)] rounded w-1/2 mb-6"></div>
-                <div className="flex justify-between items-center">
-                  <div className="h-8 bg-[var(--bg-secondary)] rounded w-20"></div>
-                  <div className="h-8 bg-[var(--bg-secondary)] rounded w-8"></div>
-                </div>
-              </div>
-            ))
-          : resources.map((resource) => (
+      {loading ? (
+        <SkeletonGrid
+          count={8}
+          media
+          lines={2}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {resources.map((resource) => (
               <div
                 id={`hl-${resource._id}`}
                 key={resource._id}
-                className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg transition p-5 flex flex-col border border-[var(--border-color)] overflow-hidden"
+                className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition p-5 flex flex-col border border-[var(--border-color)] overflow-hidden"
               >
                 {resource.fileType === "IMAGE" ? (
                   <div className="relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]">
@@ -498,18 +504,23 @@ const Resources = () => {
                 </div>
               </div>
             ))}
-      </div>
+        </div>
+      )}
 
       {!loading && resources.length === 0 && (
-        <div className="text-center py-12 bg-[var(--bg-card)] rounded-xl shadow-md border border-[var(--border-color)]">
-          <FileText size={48} className="mx-auto text-[var(--text-muted)] mb-4 opacity-50" />
-          <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">
-            No resources found
-          </h3>
-          <p className="text-[var(--text-muted)]">
-            Try adjusting your search or filters to find what you're looking for.
-          </p>
-        </div>
+        <EmptyState
+          icon={BookOpen}
+          title="No resources found"
+          hint={
+            debouncedSearch ||
+            selectedDepartment !== "all" ||
+            selectedSemester !== "all"
+              ? "Try adjusting your search or filters to find what you're looking for."
+              : "Be the first to share study materials with your campus."
+          }
+          actionLabel="Upload a resource"
+          onAction={() => navigate("/upload-resource")}
+        />
       )}
 
       {!loading && totalPages > 1 && (
