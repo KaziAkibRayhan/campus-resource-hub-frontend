@@ -191,7 +191,7 @@ const Header = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex min-h-20 lg:h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 py-3 lg:px-8 lg:py-0">
+    <header className="sticky top-0 z-40 flex min-h-20 w-full items-center bg-[var(--header-bg)] backdrop-blur-xl border-b border-[var(--border-color)] px-4 py-3 lg:px-8">
       <div className="flex w-full flex-wrap items-center gap-3">
         <div className="flex items-center space-x-4 lg:hidden">
           <button
@@ -252,7 +252,7 @@ const Header = ({ toggleSidebar }) => {
             </form>
 
             {searchOpen && (
-              <div className="absolute left-0 right-0 top-14 w-full md:left-auto md:w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
+              <div className="absolute left-0 right-0 top-full mt-2 w-full md:left-auto md:w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
                 <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
                     <Bot size={18} />
