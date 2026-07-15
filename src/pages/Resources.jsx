@@ -347,13 +347,29 @@ const Resources = () => {
                 className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition p-5 flex flex-col border border-[var(--border-color)] overflow-hidden"
               >
                 {resource.fileType === "IMAGE" ? (
-                  <div className="relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                  <div
+                    onClick={() => setPreviewResource(resource)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setPreviewResource(resource);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="group/thumb relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] cursor-pointer"
+                    title="Click to preview"
+                  >
                     <img
                       src={resource.fileUrl}
                       alt={resource.title}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover/thumb:scale-[1.03]"
                     />
+                    <div className="absolute inset-0 bg-transparent transition-colors group-hover/thumb:bg-black/10" />
+                    <span className="absolute bottom-2 left-2 text-[11px] font-semibold text-white flex items-center gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity drop-shadow">
+                      <Eye size={13} /> Click to preview
+                    </span>
                     <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-slate-950/70 text-white rounded-full">
                       IMAGE
                     </span>

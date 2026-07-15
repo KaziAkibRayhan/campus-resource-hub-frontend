@@ -1,7 +1,18 @@
 // src/components/layout/Header.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bot, Loader2, Menu, Search, Moon, Sparkles, Sun, User, X } from "lucide-react";
+import {
+  Bot,
+  Loader2,
+  Menu,
+  MessageSquarePlus,
+  Search,
+  Moon,
+  Sparkles,
+  Sun,
+  User,
+  X,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { chatService } from "../../services/api";
@@ -29,6 +40,11 @@ const Header = ({ toggleSidebar }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const threadEndRef = useRef(null);
   const abortRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const resetInputHeight = () => {
+    if (inputRef.current) inputRef.current.style.height = "auto";
+  };
 
   // Abort any in-flight stream when the header unmounts.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -113,6 +129,7 @@ const Header = ({ toggleSidebar }) => {
       { role: "assistant", content: "", sources: [], streaming: true },
     ]);
     setAiQuery("");
+    resetInputHeight();
     setAiSearching(true);
     setAiError("");
     setSearchOpen(true);
@@ -170,6 +187,7 @@ const Header = ({ toggleSidebar }) => {
     setAiThread([]);
     setAiError("");
     setAiSearching(false);
+    resetInputHeight();
   };
 
   return (
@@ -188,16 +206,28 @@ const Header = ({ toggleSidebar }) => {
         <div ref={searchRef} className="order-3 w-full md:order-none md:w-[28rem] md:max-w-[28rem] relative">
             <form onSubmit={handleAiSearch} className="relative group">
               <Bot className="absolute left-3 top-3 text-blue-500 transition-colors" size={18} />
-              <input
-                type="text"
+              <textarea
+                ref={inputRef}
+                rows={1}
                 value={aiQuery}
                 onFocus={() => setSearchOpen(true)}
                 onChange={(event) => {
                   setAiQuery(event.target.value);
                   if (aiError) setAiError("");
+                  // Auto-grow up to ~4 lines, then scroll.
+                  event.target.style.height = "auto";
+                  event.target.style.height = `${Math.min(event.target.scrollHeight, 110)}px`;
+                }}
+                onKeyDown={(event) => {
+                  // Enter submits; Shift+Enter inserts a newline.
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    event.target.style.height = "auto";
+                    askAi(aiQuery);
+                  }
                 }}
                 placeholder="Ask AI about resources..."
-                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)]"
+                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm leading-relaxed transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)] resize-none overflow-y-auto"
               />
               <div className="absolute right-2 top-1.5 flex items-center gap-1">
                 {aiQuery && (
@@ -224,13 +254,25 @@ const Header = ({ toggleSidebar }) => {
             {searchOpen && (
               <div className="absolute left-0 right-0 top-14 w-full md:left-auto md:w-[28rem] max-h-[70vh] overflow-hidden rounded-2xl border border-blue-500/20 bg-[var(--bg-card)] shadow-2xl z-50">
                 <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
                     <Bot size={18} />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-bold text-[var(--text-main)]">AI Search</p>
-                    <p className="text-[11px] text-blue-500">Answers from your campus hub data</p>
+                    <p className="text-[11px] text-blue-500 flex items-center gap-1">
+                      <Sparkles size={10} /> Semantic search over your campus hub data
+                    </p>
                   </div>
+                  {aiThread.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-muted)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-main)] transition flex-shrink-0"
+                      title="Clear conversation and start over"
+                    >
+                      <MessageSquarePlus size={14} /> New chat
+                    </button>
+                  )}
                 </div>
 
                 <div className="max-h-[58vh] overflow-y-auto p-3 space-y-3">
@@ -252,7 +294,11 @@ const Header = ({ toggleSidebar }) => {
                       </div>
                       <p className="text-[10px] mt-3 opacity-70 flex items-center justify-center gap-1">
                         <Sparkles size={11} className="text-blue-500" />
-                        Semantic search — Bangla, Banglish &amp; English bujhi. Follow-up questions o kora jay.
+                        Semantic search — Bangla, Banglish &amp; English bujhi. File er bhitorer content niye o jiggesh korte paro.
+                      </p>
+                      <p className="text-[10px] mt-1.5 opacity-60">
+                        <kbd className="px-1 py-0.5 rounded border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[9px]">Enter</kbd> send ·{" "}
+                        <kbd className="px-1 py-0.5 rounded border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[9px]">Shift+Enter</kbd> new line
                       </p>
                     </div>
                   )}
