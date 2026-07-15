@@ -40,11 +40,6 @@ const Header = ({ toggleSidebar }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const threadEndRef = useRef(null);
   const abortRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const resetInputHeight = () => {
-    if (inputRef.current) inputRef.current.style.height = "auto";
-  };
 
   // Abort any in-flight stream when the header unmounts.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -129,7 +124,6 @@ const Header = ({ toggleSidebar }) => {
       { role: "assistant", content: "", sources: [], streaming: true },
     ]);
     setAiQuery("");
-    resetInputHeight();
     setAiSearching(true);
     setAiError("");
     setSearchOpen(true);
@@ -187,7 +181,6 @@ const Header = ({ toggleSidebar }) => {
     setAiThread([]);
     setAiError("");
     setAiSearching(false);
-    resetInputHeight();
   };
 
   return (
@@ -206,28 +199,16 @@ const Header = ({ toggleSidebar }) => {
         <div ref={searchRef} className="order-3 w-full md:order-none md:w-[28rem] md:max-w-[28rem] relative">
             <form onSubmit={handleAiSearch} className="relative group">
               <Bot className="absolute left-3 top-3 text-blue-500 transition-colors" size={18} />
-              <textarea
-                ref={inputRef}
-                rows={1}
+              <input
+                type="text"
                 value={aiQuery}
                 onFocus={() => setSearchOpen(true)}
                 onChange={(event) => {
                   setAiQuery(event.target.value);
                   if (aiError) setAiError("");
-                  // Auto-grow up to ~4 lines, then scroll.
-                  event.target.style.height = "auto";
-                  event.target.style.height = `${Math.min(event.target.scrollHeight, 110)}px`;
-                }}
-                onKeyDown={(event) => {
-                  // Enter submits; Shift+Enter inserts a newline.
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    event.target.style.height = "auto";
-                    askAi(aiQuery);
-                  }
                 }}
                 placeholder="Ask AI about resources..."
-                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm leading-relaxed transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)] resize-none overflow-y-auto"
+                className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm transition-all outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)]"
               />
               <div className="absolute right-2 top-1.5 flex items-center gap-1">
                 {aiQuery && (
@@ -295,10 +276,6 @@ const Header = ({ toggleSidebar }) => {
                       <p className="text-[10px] mt-3 opacity-70 flex items-center justify-center gap-1">
                         <Sparkles size={11} className="text-blue-500" />
                         Semantic search — Bangla, Banglish &amp; English bujhi. File er bhitorer content niye o jiggesh korte paro.
-                      </p>
-                      <p className="text-[10px] mt-1.5 opacity-60">
-                        <kbd className="px-1 py-0.5 rounded border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[9px]">Enter</kbd> send ·{" "}
-                        <kbd className="px-1 py-0.5 rounded border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[9px]">Shift+Enter</kbd> new line
                       </p>
                     </div>
                   )}
