@@ -461,7 +461,7 @@ const AdminPanel = () => {
                       </span>
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-1">
-                      {r.course} · {r.department} · {r.uploadedBy?.name || "Unknown"} · {new Date(r.createdAt).toLocaleDateString()}
+                      {r.course} · {r.department} · {r.uploadedBy?.name || "Unknown"} · {new Date(r.createdAt).toLocaleDateString()} · {new Date(r.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
                     </p>
                     {r.description && (
                       <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2">{r.description}</p>
@@ -549,7 +549,7 @@ const AdminPanel = () => {
                         </span>
                       </div>
                       <p className="text-xs text-[var(--text-muted)] mt-1">
-                        {it.location} · {it.postedBy?.name || "Unknown"} · {new Date(it.createdAt).toLocaleDateString()}
+                        {it.location} · {it.postedBy?.name || "Unknown"} · {new Date(it.createdAt).toLocaleDateString()} · {new Date(it.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
                       </p>
                       {it.description && (
                         <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2">{it.description}</p>
