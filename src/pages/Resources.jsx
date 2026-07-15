@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { departments, semesters } from "../utils/constants";
 import { resourceService } from "../services/api";
@@ -23,6 +24,7 @@ import ShareMenu from "../components/resources/ShareMenu";
 import PdfPreview from "../components/resources/PdfPreview";
 import PptxPreview from "../components/resources/PptxPreview";
 import useHighlight from "../hooks/useHighlight";
+import useDebounce from "../hooks/useDebounce";
 import { useSocket } from "../context/SocketContext";
 
 const Resources = () => {
@@ -31,6 +33,8 @@ const Resources = () => {
   const [loading, setLoading] = useState(true);
   useHighlight(!loading);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const [isSemantic, setIsSemantic] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedSemester, setSelectedSemester] = useState("all");
   const [sortBy, setSortBy] = useState("createdAt");
@@ -81,7 +85,7 @@ const Resources = () => {
     try {
       setLoading(true);
       const params = {};
-      if (searchQuery) params.search = searchQuery;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (selectedDepartment !== "all") params.department = selectedDepartment;
       if (selectedSemester !== "all") params.semester = selectedSemester;
       params.sortBy = sortBy;
@@ -91,6 +95,7 @@ const Resources = () => {
 
       const response = await resourceService.getAll(params);
       setResources(response.data.resources);
+      setIsSemantic(Boolean(response.data.semantic));
       const nextTotalPages = response.data.totalPages || 1;
       setTotalPages(nextTotalPages);
       setTotalResources(response.data.total || 0);
@@ -102,7 +107,7 @@ const Resources = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedDepartment, selectedSemester, sortBy, order, currentPage]);
+  }, [debouncedSearch, selectedDepartment, selectedSemester, sortBy, order, currentPage]);
 
   useEffect(() => {
     fetchResources();
@@ -125,7 +130,7 @@ const Resources = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedDepartment, selectedSemester, sortBy, order]);
+  }, [debouncedSearch, selectedDepartment, selectedSemester, sortBy, order]);
 
   const handleDownload = async (id, _fileUrl, fileName) => {
     try {
@@ -285,6 +290,11 @@ const Resources = () => {
             {totalResources}
           </span>{" "}
           resources
+          {isSemantic && debouncedSearch && (
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20 align-middle">
+              <Sparkles size={11} /> Semantic search
+            </span>
+          )}
         </p>
         <div className="relative w-full sm:w-auto">
           <select

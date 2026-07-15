@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import useDebounce from "../hooks/useDebounce";
 import {
   Users,
   Plus,
@@ -26,6 +27,7 @@ const Clubs = () => {
   const [clubs, setClubs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -50,7 +52,7 @@ const Clubs = () => {
       try {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE };
-        if (search) params.search = search;
+        if (debouncedSearch) params.search = debouncedSearch;
         if (categoryFilter !== "all") params.category = categoryFilter;
         const response = await clubService.getAll(params);
         const fetched = response.data.clubs || [];
@@ -65,7 +67,7 @@ const Clubs = () => {
         append ? setLoadingMore(false) : setLoading(false);
       }
     },
-    [search, categoryFilter]
+    [debouncedSearch, categoryFilter]
   );
 
   useEffect(() => {

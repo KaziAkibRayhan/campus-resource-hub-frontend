@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import useDebounce from "../hooks/useDebounce";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import {
   AlertCircle,
@@ -36,6 +37,7 @@ const LostFound = () => {
   const [filter, setFilter] = useState("all");
   const [mineOnly, setMineOnly] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -55,7 +57,7 @@ const LostFound = () => {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE };
         if (filter !== "all") params.type = filter;
-        if (search) params.search = search;
+        if (debouncedSearch) params.search = debouncedSearch;
         if (mineOnly) params.mine = true;
 
         const response = await lostFoundService.getAll(params);
@@ -70,7 +72,7 @@ const LostFound = () => {
         append ? setLoadingMore(false) : setLoading(false);
       }
     },
-    [filter, search, mineOnly]
+    [filter, debouncedSearch, mineOnly]
   );
 
   useEffect(() => {

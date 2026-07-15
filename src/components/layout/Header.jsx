@@ -1,11 +1,20 @@
 // src/components/layout/Header.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bot, Loader2, Menu, Search, Moon, Sun, User, X } from "lucide-react";
+import { Bot, Loader2, Menu, Search, Moon, Sparkles, Sun, User, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { chatService } from "../../services/api";
+import { streamAssistant } from "../../services/assistantStream";
+import Markdown from "../common/Markdown";
 import NotificationDropdown from "./NotificationDropdown";
+
+const SUGGESTED_PROMPTS = [
+  "What CSE resources are available?",
+  "Any upcoming events?",
+  "হারানো জিনিস দেখাও",
+  "Kon club e join korte pari?",
+];
 
 const Header = ({ toggleSidebar }) => {
   const { user } = useAuth();
@@ -19,6 +28,10 @@ const Header = ({ toggleSidebar }) => {
   const [aiError, setAiError] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const threadEndRef = useRef(null);
+  const abortRef = useRef(null);
+
+  // Abort any in-flight stream when the header unmounts.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const typeLabels = {
     resource: "Resource",
@@ -62,9 +75,21 @@ const Header = ({ toggleSidebar }) => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [aiThread, aiSearching]);
 
-  const handleAiSearch = async (event) => {
-    event.preventDefault();
-    const question = aiQuery.trim();
+  // Update the last (streaming) assistant turn in place.
+  const patchLastTurn = (patch) => {
+    setAiThread((prev) => {
+      if (!prev.length || prev[prev.length - 1].role !== "assistant") return prev;
+      const next = [...prev];
+      next[next.length - 1] = {
+        ...next[next.length - 1],
+        ...(typeof patch === "function" ? patch(next[next.length - 1]) : patch),
+      };
+      return next;
+    });
+  };
+
+  const askAi = async (rawQuestion) => {
+    const question = (rawQuestion || "").trim();
 
     if (question.length < 2) {
       setAiError("Type at least 2 characters");
@@ -73,29 +98,64 @@ const Header = ({ toggleSidebar }) => {
     }
 
     // History for the RAG backend: prior turns, role + content only
-    const history = aiThread.map(({ role, content }) => ({ role, content }));
+    const history = aiThread
+      .filter((turn) => turn.content)
+      .map(({ role, content }) => ({ role, content }));
 
-    setAiThread((prev) => [...prev, { role: "user", content: question }]);
+    // Asking a new question aborts any still-running stream.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setAiThread((prev) => [
+      ...prev,
+      { role: "user", content: question },
+      { role: "assistant", content: "", sources: [], streaming: true },
+    ]);
     setAiQuery("");
+    setAiSearching(true);
+    setAiError("");
+    setSearchOpen(true);
 
     try {
-      setAiSearching(true);
-      setAiError("");
-      setSearchOpen(true);
-      const res = await chatService.askAssistant(question, history);
-      setAiThread((prev) => [
-        ...prev,
-        {
-          role: "assistant",
+      await streamAssistant({
+        question,
+        history,
+        signal: controller.signal,
+        onSources: (sources) => {
+          setAiSearching(false);
+          patchLastTurn({ sources });
+        },
+        onToken: (t) => {
+          setAiSearching(false);
+          patchLastTurn((turn) => ({ content: turn.content + t }));
+        },
+        onDone: (data) => {
+          patchLastTurn({ content: data.answer || "", streaming: false });
+        },
+      });
+    } catch (error) {
+      if (controller.signal.aborted) return; // superseded by a newer question
+      // Streaming failed — silently fall back to the non-streaming endpoint.
+      try {
+        const res = await chatService.askAssistant(question, history);
+        patchLastTurn({
           content: res.data.answer || "",
           sources: res.data.sources || [],
-        },
-      ]);
-    } catch (error) {
-      setAiError(error.response?.data?.message || "AI search failed");
+          streaming: false,
+        });
+      } catch (fallbackError) {
+        patchLastTurn({ streaming: false });
+        setAiError(fallbackError.response?.data?.message || "AI search failed");
+      }
     } finally {
-      setAiSearching(false);
+      if (!controller.signal.aborted) setAiSearching(false);
     }
+  };
+
+  const handleAiSearch = (event) => {
+    event.preventDefault();
+    askAi(aiQuery);
   };
 
   const openSource = (source) => {
@@ -105,9 +165,11 @@ const Header = ({ toggleSidebar }) => {
   };
 
   const clearSearch = () => {
+    abortRef.current?.abort();
     setAiQuery("");
     setAiThread([]);
     setAiError("");
+    setAiSearching(false);
   };
 
   return (
@@ -176,8 +238,22 @@ const Header = ({ toggleSidebar }) => {
                     <div className="p-5 text-center text-[var(--text-muted)]">
                       <Bot size={34} className="mx-auto mb-3 opacity-40" />
                       <p className="text-sm font-semibold text-[var(--text-main)]">Ask campus AI</p>
-                      <p className="text-xs mt-1">Try “What CSE resources are available?” or “Any upcoming events?”</p>
-                      <p className="text-[10px] mt-2 opacity-70">You can ask follow-up questions — I remember the context. Bangla and Banglish work too.</p>
+                      <div className="mt-3 flex flex-wrap justify-center gap-2">
+                        {SUGGESTED_PROMPTS.map((prompt) => (
+                          <button
+                            key={prompt}
+                            type="button"
+                            onClick={() => askAi(prompt)}
+                            className="px-3 py-1.5 rounded-full text-xs border border-blue-500/30 text-blue-500 hover:bg-blue-500/10 hover:border-blue-500 transition"
+                          >
+                            {prompt}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] mt-3 opacity-70 flex items-center justify-center gap-1">
+                        <Sparkles size={11} className="text-blue-500" />
+                        Semantic search — Bangla, Banglish &amp; English bujhi. Follow-up questions o kora jay.
+                      </p>
                     </div>
                   )}
 
@@ -188,13 +264,16 @@ const Header = ({ toggleSidebar }) => {
                           {turn.content}
                         </div>
                       </div>
-                    ) : (
+                    ) : turn.content || turn.sources?.length ? (
                       <div key={index} className="space-y-2">
                         <div className="p-4 rounded-2xl rounded-bl-md bg-blue-500/10 border border-blue-500/20">
                           <p className="text-[10px] font-bold uppercase text-blue-500 mb-1">AI Answer</p>
-                          <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap leading-relaxed">
-                            {turn.content}
-                          </p>
+                          <div className="text-sm text-[var(--text-main)] leading-relaxed">
+                            <Markdown>{turn.content}</Markdown>
+                            {turn.streaming && (
+                              <span className="inline-block w-2 text-blue-500 animate-pulse">▍</span>
+                            )}
+                          </div>
                         </div>
 
                         {turn.sources?.length > 0 && (
@@ -231,7 +310,7 @@ const Header = ({ toggleSidebar }) => {
                           </details>
                         )}
                       </div>
-                    )
+                    ) : null
                   )}
 
                   {aiSearching && (

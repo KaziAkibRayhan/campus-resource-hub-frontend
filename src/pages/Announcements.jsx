@@ -1,5 +1,6 @@
 // src/pages/Announcements.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import useDebounce from "../hooks/useDebounce";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import {
@@ -65,6 +66,7 @@ const Announcements = () => {
   const [deptFilter, setDeptFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [archived, setArchived] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -90,7 +92,7 @@ const Announcements = () => {
         const params = { page: targetPage, limit: PAGE_SIZE };
         if (deptFilter !== "All") params.department = deptFilter;
         if (priorityFilter !== "all") params.priority = priorityFilter;
-        if (search) params.search = search;
+        if (debouncedSearch) params.search = debouncedSearch;
         if (archived) params.scope = "archived";
         const response = await announcementService.getAll(params);
         const fetched = response.data.announcements || [];
@@ -103,7 +105,7 @@ const Announcements = () => {
         append ? setLoadingMore(false) : setLoading(false);
       }
     },
-    [deptFilter, priorityFilter, search, archived]
+    [deptFilter, priorityFilter, debouncedSearch, archived]
   );
 
   useEffect(() => {

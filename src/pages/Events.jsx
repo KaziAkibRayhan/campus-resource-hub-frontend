@@ -1,5 +1,6 @@
 // src/pages/Events.jsx
 import React, { useState, useEffect, useCallback } from "react";
+import useDebounce from "../hooks/useDebounce";
 import {
   Calendar,
   CalendarDays,
@@ -40,6 +41,7 @@ const Events = () => {
   const [view, setView] = useState("list"); // "list" | "calendar"
   const [scope, setScope] = useState("upcoming"); // upcoming | past | all
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -66,7 +68,7 @@ const Events = () => {
       try {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE, scope };
-        if (search) params.search = search;
+        if (debouncedSearch) params.search = debouncedSearch;
         const res = await eventService.getAll(params);
         const fetched = res.data.events || [];
         setTotalPages(res.data.totalPages || 1);
@@ -79,7 +81,7 @@ const Events = () => {
         append ? setLoadingMore(false) : setLoading(false);
       }
     },
-    [scope, search]
+    [scope, debouncedSearch]
   );
 
   const fetchMonth = useCallback(async () => {
