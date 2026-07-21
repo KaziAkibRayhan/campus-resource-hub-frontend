@@ -37,10 +37,15 @@ export const SocketProvider = ({ children }) => {
     if (!socketRef.current) {
       const newSocket = io(SOCKET_URL, {
         auth: { token },
-        transports: ["polling", "websocket"],
+        // Vercel WebSocket Functions require a direct WebSocket connection;
+        // HTTP long-polling is a separate Function invocation and cannot upgrade.
+        transports: ["websocket"],
         reconnection: true,
-        reconnectionAttempts: 5,
+        // Vercel closes a socket at the Function's maximum duration, so keep
+        // reconnecting and let Socket.IO restore personal/conversation rooms.
+        reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 30000,
       });
 
       socketRef.current = newSocket;
