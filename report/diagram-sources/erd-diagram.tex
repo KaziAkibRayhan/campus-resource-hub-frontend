@@ -1,11 +1,11 @@
 \documentclass[tikz,border=12pt]{standalone}
 \usepackage{newtxtext}
 \usetikzlibrary{arrows.meta,positioning,fit,calc}
-\definecolor{navy}{HTML}{173B70}
-\definecolor{content}{HTML}{EAF7EF}
-\definecolor{chat}{HTML}{FFF4DD}
-\definecolor{security}{HTML}{FDECEC}
-\definecolor{ai}{HTML}{EEEEF2}
+\definecolor{navy}{HTML}{000000}
+\definecolor{content}{HTML}{FFFFFF}
+\definecolor{chat}{HTML}{FFFFFF}
+\definecolor{security}{HTML}{FFFFFF}
+\definecolor{ai}{HTML}{F5F5F5}
 \tikzset{
   entity/.style={draw=navy,thick,rounded corners=2pt,fill=white,
     text width=35mm,align=left,font=\sffamily\scriptsize,inner sep=4pt},
@@ -38,9 +38,9 @@
 
   \node[contententity,below left=14mm and 12mm of user] (lost) {
     \entitytitle{LOST FOUND ITEM}\textbf{PK} \_id\\\textit{FK} postedBy, claims.user\\status, contact, moderation};
-  \node[entity,below=14mm of user,fill={rgb,255:red,255;green,243;blue,224}] (club) {
+  \node[entity,below=14mm of user,fill=white] (club) {
     \entitytitle{CLUB}\textbf{PK} \_id\\\textit{FK} createdBy, members.user\\joinPolicy, joinRequests[]};
-  \node[entity,below right=14mm and 12mm of user,fill={rgb,255:red,242;green,232;blue,252}] (notification) {
+  \node[entity,below right=14mm and 12mm of user,fill=white] (notification) {
     \entitytitle{NOTIFICATION}\textbf{PK} \_id\\\textit{FK} recipient, sender\\type, link, read};
 
   \node[chatentity,below=32mm of announcement] (conversation) {

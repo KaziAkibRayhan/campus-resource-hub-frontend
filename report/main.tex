@@ -34,6 +34,7 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{longtable}
+\usepackage{pdflscape}
 \usepackage{caption}
 \usepackage{enumitem}
 \usepackage{titlesec}
@@ -65,8 +66,8 @@
   \begin{figure}[htbp]
     \centering
     \IfFileExists{figures/#2}%
-      {\fbox{\includegraphics[width=#1\textwidth]{figures/#2}}}%
-      {\fbox{\parbox[c][5.5cm][c]{0.8\textwidth}{\centering
+      {\fbox{\includegraphics[width=#1\linewidth]{figures/#2}}}%
+      {\fbox{\parbox[c][5.5cm][c]{0.8\linewidth}{\centering
         \textit{Screenshot placeholder}\\[4pt]
         (add \texttt{figures/#2})}}}
     \caption{#3}
@@ -629,8 +630,11 @@ central design pattern shared by moderated content flows is
 \emph{create $\rightarrow$ safety scan $\rightarrow$ auto-publish
 when fully clean, otherwise human review $\rightarrow$ notify}.
 
-\reportfig[0.98]{workflow-diagram.pdf}{Overall system workflow,
-simplified from the project's detailed draw.io design}{fig:workflow}
+\begin{landscape}
+\reportfig[0.80]{workflow-diagram.pdf}{End-to-end user access,
+resource moderation, publication, campus-service, and notification
+workflow}{fig:workflow}
+\end{landscape}
 
 \subsection{User Roles}
 Access control follows a three-tier role model. Table~\ref{tab:roles}
@@ -698,8 +702,11 @@ collections share a common moderation sub-document
 AI verdict), which keeps the approval workflow uniform across
 modules.
 
-\reportfig[0.98]{erd-diagram.pdf}{Entity--relationship diagram of the
-twelve MongoDB collections, simplified from the draw.io design}{fig:erd}
+\begin{landscape}
+\reportfig[0.80]{erd-diagram.pdf}{MongoDB collection relationships
+supporting authorization, academic content, communication, and AI
+retrieval}{fig:erd}
+\end{landscape}
 
 \begin{table}[htbp]
 \centering
