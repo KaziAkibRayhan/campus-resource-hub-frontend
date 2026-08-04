@@ -583,15 +583,16 @@ data tier consists of MongoDB Atlas (documents and vector index),
 Cloudinary (file objects), and external service providers for email
 (Brevo SMTP) and AI moderation (Groq).
 
-\begin{figure}[htbp]
+\begin{landscape}
+\begin{figure}[p]
 \centering
-\resizebox{0.82\textwidth}{!}{%
+\resizebox{0.84\linewidth}{!}{%
 \begin{tikzpicture}[
-  node distance=1.05cm and 0.65cm,
+  node distance=1.15cm and 1.25cm,
   core/.style={draw=black,line width=0.8pt,rounded corners=3pt,
-               align=center,font=\normalsize,minimum height=1.15cm,
-               minimum width=4.3cm,fill=white},
-  primary/.style={core,line width=1.2pt,minimum width=6.2cm},
+               align=center,font=\normalsize,minimum height=1.45cm,
+               minimum width=4.5cm,fill=white},
+  primary/.style={core,line width=1.2pt,minimum width=4.8cm},
   external/.style={core,dashed,fill=black!3},
   lbl/.style={font=\scriptsize\itshape,fill=white,inner sep=1.5pt},
   arr/.style={-{Stealth[length=2.5mm]},line width=0.85pt,draw=black}]
@@ -599,36 +600,38 @@ Cloudinary (file objects), and external service providers for email
   \node[primary] (react) {\scriptsize\bfseries PRESENTATION TIER\\[2pt]
     \textbf{React Single-Page Application}\\Vercel global CDN};
 
-  \node[primary,below=1.2cm of react] (api)
+  \node[primary,right=1.55cm of react] (api)
        {\scriptsize\bfseries APPLICATION TIER\\[2pt]
         \textbf{Node.js / Express REST API}\\Socket.io gateway on Render};
 
-  \node[core,below left=1.35cm and 0.1cm of api] (data)
+  \node[core,right=2.0cm of api] (data)
        {\scriptsize\bfseries DATA SERVICES\\[2pt]
         \textbf{MongoDB Atlas}\\documents, indexes, vectors\\[3pt]
         \textbf{Cloudinary}\\resource and image storage};
-  \node[external,below=1.35cm of api] (mail)
+  \node[external,above=0.75cm of data] (mail)
        {\scriptsize\bfseries COMMUNICATION SERVICE\\[2pt]
         \textbf{Brevo SMTP}\\OTP and account e-mail};
-  \node[external,below right=1.35cm and 0.1cm of api] (ai)
+  \node[external,below=0.75cm of data] (ai)
        {\scriptsize\bfseries AI SERVICES\\[2pt]
         \textbf{Moderation and Assistance}\\Groq $\rightarrow$ Hugging Face\\$\rightarrow$ OpenAI};
 
-  \draw[arr,<->] (react) -- node[lbl,right]{HTTPS / WSS} (api);
-  \draw[arr,<->] (api.south) -- (data.north);
-  \draw[arr] (api.south) -- (mail.north);
-  \draw[arr] (api.south) -- (ai.north);
+  \draw[arr,<->] (react) -- node[lbl,above]{HTTPS / WSS} (api);
+  \draw[arr,<->] (api.east) -- (data.west);
+  \draw[arr] (api.east) to[out=25,in=180] (mail.west);
+  \draw[arr] (api.east) to[out=-25,in=180] (ai.west);
 
   \node[draw=black!60,rounded corners=5pt,inner sep=6pt,
         fit=(react)(api)(data)(mail)(ai)] (platform) {};
   \node[font=\scriptsize\bfseries,fill=white,inner sep=2pt,
-        above left=-1mm and 3mm of platform.north west]
+        below right=1mm and 2mm of platform.north west]
         {CORE CAMPUS RESOURCE HUB};
 \end{tikzpicture}
 }
+\captionsetup{width=0.62\linewidth}
 \caption{Three-tier system architecture, data services, and external integrations}
 \label{fig:arch}
 \end{figure}
+\end{landscape}
 
 \subsection{System Workflow}
 Figure~\ref{fig:workflow} shows the complete system workflow. After
