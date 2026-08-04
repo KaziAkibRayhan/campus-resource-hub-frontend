@@ -42,6 +42,9 @@
 \usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit}
 \usepackage[hidelinks]{hyperref}
 
+\definecolor{crhblue}{HTML}{173B70}
+\definecolor{crhgold}{HTML}{C59A3D}
+
 \onehalfspacing
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
@@ -76,27 +79,50 @@
 % COVER PAGE
 % ============================================================
 \begin{titlepage}
+  \begin{tikzpicture}[remember picture,overlay]
+    \draw[crhblue,line width=1.2pt]
+      ([xshift=1.25cm,yshift=-1.25cm]current page.north west)
+      rectangle
+      ([xshift=-1.25cm,yshift=1.25cm]current page.south east);
+    \draw[crhgold,line width=0.45pt]
+      ([xshift=1.38cm,yshift=-1.38cm]current page.north west)
+      rectangle
+      ([xshift=-1.38cm,yshift=1.38cm]current page.south east);
+  \end{tikzpicture}
   \begin{center}
-    \vspace*{1.0cm}
-    {\Large\bfseries Campus Resource Hub:\\[4pt]
-      A Centralized Web Platform for Academic\\[4pt]
-      Resource Sharing with AI-Powered Moderation\par}
-    \vspace{2.3cm}
+    \vspace*{0.65cm}
+    {\color{crhblue}\small\bfseries\MakeUppercase{Final Year Project Report}\par}
+    \vspace{0.28cm}
+    {\color{crhgold}\rule{4.6cm}{0.8pt}\par}
+    \vspace{0.95cm}
 
-    {\large A Project Report Submitted in Partial Fulfillment of the
+    {\color{crhblue}\LARGE\bfseries Campus Resource Hub\par}
+    \vspace{0.35cm}
+    {\Large\bfseries A Centralized Web Platform for Academic\\[5pt]
+      Resource Sharing with AI-Powered Moderation\par}
+    \vspace{0.65cm}
+    {\large\itshape A secure and intelligent platform for academic\\
+      resources and campus collaboration\par}
+    \vspace{1.25cm}
+
+    {\normalsize A project report submitted in partial fulfillment of the
       Requirements for the Degree of Bachelor of Science in Computer
       Science \& Engineering\par}
-    \vspace{1.5cm}
+    \vspace{1.15cm}
 
     \IfFileExists{figures/university-logo.png}%
-      {\includegraphics[width=3.4cm]{figures/university-logo.png}}%
+      {\includegraphics[width=3.15cm]{figures/university-logo.png}}%
       {\fbox{\parbox[c][3.5cm][c]{4cm}{\centering\textit{University\\logo}}}}
-    \vspace{1.5cm}
+    \vspace{1.05cm}
 
-    {\large\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\\
-      NORTHERN UNIVERSITY BANGLADESH\par}
-    \vspace{0.7cm}
-    {\large \SubmissionDate}
+    {\color{crhblue}\large\bfseries
+      DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+    \vspace{0.18cm}
+    {\large\bfseries NORTHERN UNIVERSITY BANGLADESH\par}
+    \vspace{0.55cm}
+    {\color{crhgold}\rule{3.2cm}{0.7pt}\par}
+    \vspace{0.28cm}
+    {\large\bfseries \SubmissionDate}
   \end{center}
 \end{titlepage}
 
