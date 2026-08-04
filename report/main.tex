@@ -74,6 +74,20 @@
     \label{#4}
   \end{figure}}
 
+% Landscape diagrams use a conservative printable area so that the
+% illustration, frame, and caption remain clear of every page edge.
+\newcommand{\reportwidefig}[4][0.78]{%
+  \begin{figure}[p]
+    \centering
+    \IfFileExists{figures/#2}%
+      {\fbox{\includegraphics[width=#1\linewidth]{figures/#2}}}%
+      {\fbox{\parbox[c][5.5cm][c]{0.72\linewidth}{\centering
+        \textit{Diagram unavailable}}}}
+    \captionsetup{width=0.66\linewidth}
+    \caption{#3}
+    \label{#4}
+  \end{figure}}
+
 \begin{document}
 
 % ============================================================
@@ -571,14 +585,14 @@ Cloudinary (file objects), and external service providers for email
 
 \begin{figure}[htbp]
 \centering
-\resizebox{0.98\textwidth}{!}{%
+\resizebox{0.92\textwidth}{!}{%
 \begin{tikzpicture}[
-  node distance=0.85cm and 1.15cm,
+  node distance=1.0cm and 0.55cm,
   core/.style={draw=black,line width=0.8pt,rounded corners=3pt,
-               align=center,font=\small,minimum height=1.05cm,
-               minimum width=3.7cm,fill=white},
-  primary/.style={core,line width=1.2pt,minimum width=5.2cm},
-  external/.style={core,dashed,minimum width=3.1cm,fill=black!3},
+               align=center,font=\normalsize,minimum height=1.15cm,
+               minimum width=4.1cm,fill=white},
+  primary/.style={core,line width=1.2pt,minimum width=6.2cm},
+  external/.style={core,dashed,fill=black!3},
   lbl/.style={font=\scriptsize\itshape,fill=white,inner sep=1.5pt},
   arr/.style={-{Stealth[length=2.5mm]},line width=0.85pt,draw=black}]
 
@@ -589,34 +603,34 @@ Cloudinary (file objects), and external service providers for email
        {\scriptsize\bfseries APPLICATION TIER\\[2pt]
         \textbf{Node.js / Express REST API}\\Socket.io gateway on Render};
 
-  \node[core,below left=1.2cm and -0.25cm of api] (mongo)
+  \node[core,below left=1.25cm and 0.45cm of api] (mongo)
        {\scriptsize\bfseries DATA TIER\\[2pt]
         \textbf{MongoDB Atlas}\\documents, indexes, vectors};
-  \node[core,below right=1.2cm and -0.25cm of api] (cloud)
+  \node[core,below right=1.25cm and 0.45cm of api] (cloud)
        {\scriptsize\bfseries DATA TIER\\[2pt]
         \textbf{Cloudinary}\\resource and image storage};
 
-  \node[external,below=1.05cm of mongo] (brevo)
-       {\textbf{Brevo SMTP}\\OTP and account e-mail};
-  \node[external,below=1.05cm of cloud] (ai)
-       {\textbf{AI Provider Chain}\\Groq $\rightarrow$ Hugging Face $\rightarrow$ OpenAI};
+  \node[external,below=1.0cm of mongo] (brevo)
+       {\scriptsize\bfseries EXTERNAL SERVICE\\[2pt]
+        \textbf{Brevo SMTP}\\OTP and account e-mail};
+  \node[external,below=1.0cm of cloud] (ai)
+       {\scriptsize\bfseries AI SERVICES\\[2pt]
+        \textbf{Provider Chain}\\Groq $\rightarrow$ Hugging Face $\rightarrow$ OpenAI};
 
   \draw[arr,<->] (react) -- node[lbl,right]{HTTPS / WSS} (api);
-  \draw[arr,<->] (api) -- node[lbl,left,pos=.62]{Mongoose} (mongo);
-  \draw[arr,<->] (api) -- node[lbl,right,pos=.62]{signed media access} (cloud);
-  \draw[arr] (api.west) -- ++(-2.55cm,0) |-
-    node[lbl,left,pos=.72]{transactional e-mail} (brevo.west);
-  \draw[arr] (api.east) -- ++(2.55cm,0) |-
-    node[lbl,right,pos=.72]{moderation and answers} (ai.east);
+  \draw[arr,<->] (api.south) -- (mongo.north);
+  \draw[arr,<->] (api.south) -- (cloud.north);
+  \draw[arr] (api.west) -- ++(-3.25cm,0) |- (brevo.west);
+  \draw[arr] (api.east) -- ++(3.25cm,0) |- (ai.east);
 
   \node[draw=black!60,rounded corners=5pt,inner sep=6pt,
-        fit=(react)(api)(mongo)(cloud)] (platform) {};
+        fit=(react)(api)(mongo)(cloud)(brevo)(ai)] (platform) {};
   \node[font=\scriptsize\bfseries,fill=white,inner sep=2pt,
         above left=-1mm and 3mm of platform.north west]
         {CORE CAMPUS RESOURCE HUB};
 \end{tikzpicture}
 }
-\caption{Monochrome three-tier system architecture and external service boundaries}
+\caption{Three-tier system architecture, data services, and external integrations}
 \label{fig:arch}
 \end{figure}
 
@@ -631,9 +645,8 @@ central design pattern shared by moderated content flows is
 when fully clean, otherwise human review $\rightarrow$ notify}.
 
 \begin{landscape}
-\reportfig[0.80]{workflow-diagram.pdf}{End-to-end user access,
-resource moderation, publication, campus-service, and notification
-workflow}{fig:workflow}
+\reportwidefig{workflow-diagram.pdf}{User access, resource moderation,
+publication, campus services, and notification workflow}{fig:workflow}
 \end{landscape}
 
 \subsection{User Roles}
@@ -703,9 +716,8 @@ AI verdict), which keeps the approval workflow uniform across
 modules.
 
 \begin{landscape}
-\reportfig[0.80]{erd-diagram.pdf}{MongoDB collection relationships
-supporting authorization, academic content, communication, and AI
-retrieval}{fig:erd}
+\reportwidefig{erd-diagram.pdf}{MongoDB collections for authorization,
+academic content, communication, and AI-assisted retrieval}{fig:erd}
 \end{landscape}
 
 \begin{table}[htbp]
