@@ -605,12 +605,12 @@ OTP-verified signup and JWT login, users reach a role-aware
 dashboard from which all eleven functional flows branch out:
 resources, events, clubs, lost-and-found, announcements, chat,
 notifications, AI search, admin panel, and profile management. The
-central design pattern shared by all content flows is
-\emph{create $\rightarrow$ AI scan $\rightarrow$ moderator approval
-$\rightarrow$ publish $\rightarrow$ notify}.
+central design pattern shared by moderated content flows is
+\emph{create $\rightarrow$ safety scan $\rightarrow$ auto-publish
+when fully clean, otherwise human review $\rightarrow$ notify}.
 
-\reportfig[0.95]{workflow.png}{Overall system workflow (exported
-from the project's Lucidchart/draw.io diagram)}{fig:workflow}
+\reportfig[0.98]{workflow-diagram.pdf}{Overall system workflow,
+simplified from the project's detailed draw.io design}{fig:workflow}
 
 \subsection{User Roles}
 Access control follows a three-tier role model. Table~\ref{tab:roles}
@@ -668,7 +668,7 @@ Hosting  & Vercel / Render & Frontend CDN / backend server \\
 \end{table}
 
 \section{Database Design}
-The database consists of eleven MongoDB collections. Their fields
+The database consists of twelve MongoDB collections. Their fields
 and relationships are shown in the entity--relationship diagram
 (Figure~\ref{fig:erd}) and summarized in
 Table~\ref{tab:collections}. The \texttt{User} collection is the
@@ -678,8 +678,8 @@ collections share a common moderation sub-document
 AI verdict), which keeps the approval workflow uniform across
 modules.
 
-\reportfig[0.95]{erd.png}{Entity--relationship diagram of the
-eleven MongoDB collections (exported from draw.io)}{fig:erd}
+\reportfig[0.98]{erd-diagram.pdf}{Entity--relationship diagram of the
+twelve MongoDB collections, simplified from the draw.io design}{fig:erd}
 
 \begin{table}[htbp]
 \centering
