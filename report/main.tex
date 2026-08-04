@@ -364,7 +364,8 @@ concludes the report.
 % ------------------------------------------------------------
 \section{Discussion on Existing Solutions}
 Several categories of existing tools partially address campus
-information sharing:
+information sharing. Each category solves a useful part of the
+problem, but none provides a complete student-centered campus hub.
 
 \textbf{Social media groups (Facebook Groups, Messenger, WhatsApp).}
 These are the de-facto standard in most universities because they
@@ -372,24 +373,65 @@ are free and familiar. However, they mix academic content with
 unrelated posts, provide no file categorization (a lecture note from
 last semester is effectively unfindable), have no moderation
 tailored to academic norms, and expose members' personal profiles.
+Search is normally limited to message text, so students must remember
+who posted a file or approximately when it appeared. Ownership and
+moderation also depend on informal group administrators rather than
+institutional roles.
 
 \textbf{Learning Management Systems (Moodle, Google Classroom).}
 LMS platforms organize course content well, but they are
 teacher-centric: students cannot freely share peer resources, and
 campus-life features --- clubs, events with RSVP, lost-and-found,
 peer chat --- are out of scope. Institutional LMS deployments also
-carry licensing and administration overhead.
+carry licensing and administration overhead. Their course-by-course
+structure is effective for formal teaching, yet it fragments
+cross-department resources and does not provide a unified discovery
+experience for the wider campus community.
 
 \textbf{Generic cloud drives (Google Drive, OneDrive).} Shared
 folders solve storage but not discovery: there is no rating, no
 moderation, no metadata like course/semester, and links rot as
-owners graduate.
+owners graduate. Access is often controlled through manually shared
+links, which makes permission management inconsistent and gives
+students little confidence that a document is current, safe, or
+academically relevant.
 
 \textbf{University notice boards and websites.} Official channels
 are one-directional, updated slowly, and offer no interactivity or
-personalization.
+personalization. They remain valuable for authoritative notices, but
+usually do not support student contributions, targeted department
+feeds, event registration, real-time updates, or searchable archives.
 
-\section{Our Proposed Solution}
+\textbf{Specialized campus applications.} Some institutions deploy
+separate systems for events, library services, student clubs, or
+lost-and-found reporting. Such applications provide deeper support
+for one workflow, but students must maintain several accounts and
+move between disconnected interfaces. Data produced in one service
+cannot normally improve search or recommendations in another.
+
+\section{Limitations Identified in Previous Work}
+The review reveals five recurring gaps. First, information is
+\textbf{fragmented}: academic files, events, notices, and community
+activities live in separate channels. Second, discovery is mostly
+\textbf{keyword- or time-dependent}; users cannot ask a natural
+language question and retrieve relevant passages from inside files.
+Third, peer-contributed content often lacks a reliable
+\textbf{safety and approval process}. Fourth, the systems provide
+inconsistent \textbf{privacy and role controls}, especially for
+personal contact information and student-generated posts. Finally,
+many products omit the \textbf{interactive campus workflows} that
+connect information with action, such as registering for an event,
+joining a club, claiming a found item, or messaging another user.
+
+These gaps are not independent. For example, adding cloud storage
+without metadata improves availability but not discovery; adding a
+search box without moderation may make unsafe material easier to
+find; and publishing notices without notifications does not ensure
+that the intended students see them. A useful campus platform must
+therefore treat storage, retrieval, safety, authorization, and
+interaction as parts of one architecture.
+
+\section{Comparison with the Proposed System}
 Campus Resource Hub combines the useful parts of each category into
 one student-centric platform and adds capabilities none of them
 provide in this context:
@@ -397,9 +439,9 @@ provide in this context:
   \item \textbf{Structured resource repository} with course,
         department, and semester metadata, ratings, view/download
         analytics, and in-browser preview.
-  \item \textbf{Two-layer moderation}: an automated AI safety scan
-        at upload time plus a moderator approval queue --- stronger
-        than social media groups and absent from cloud drives.
+  \item \textbf{Fail-safe two-layer moderation}: an automated AI
+        safety scan at upload time, with unsafe, partial, or
+        provider-unavailable checks held for moderator review.
   \item \textbf{Campus-life modules} (events with capacity-aware
         RSVP, clubs with join policies and officer roles, claim-based
         lost-and-found with private contact reveal) that LMS
@@ -410,6 +452,59 @@ provide in this context:
   \item \textbf{Zero-cost deployment} on free cloud tiers, making
         the system realistic for a public university budget.
 \end{itemize}
+
+Table~\ref{tab:related-comparison} summarizes the functional
+positioning. ``Yes'' means that the capability is a normal part of
+the category; ``Limited'' means that it depends on manual setup,
+separate tools, or basic keyword matching.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of related solutions with Campus Resource Hub}
+\label{tab:related-comparison}
+\small
+\begin{tabular}{@{}p{3.5cm}ccccc@{}}
+\toprule
+\textbf{Capability} & \textbf{Social media} & \textbf{LMS} &
+\textbf{Cloud drive} & \textbf{Notice site} & \textbf{CRH} \\
+\midrule
+Structured academic metadata & No & Yes & Limited & No & \textbf{Yes} \\
+Student resource contribution & Yes & Limited & Yes & No & \textbf{Yes} \\
+Automated safety moderation & No & No & No & No & \textbf{Yes} \\
+Semantic file-content search & No & Limited & Limited & No & \textbf{Yes} \\
+Events, clubs, and lost-found & Limited & No & No & Limited & \textbf{Yes} \\
+Role-aware privacy controls & Limited & Yes & Limited & No & \textbf{Yes} \\
+Real-time chat and alerts & Yes & Limited & Limited & No & \textbf{Yes} \\
+Numbered AI answer sources & No & No & No & No & \textbf{Yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Research Positioning and Contribution}
+The proposed work is not intended to replace an LMS or an official
+university website. Instead, it occupies the space between formal
+teaching systems and informal student communication. It preserves
+the low-friction contribution model of social platforms, the
+organization of an LMS, the storage flexibility of cloud drives,
+and the authority controls of institutional systems within one
+role-aware application.
+
+Its principal contribution is the integration of these established
+ideas with two applied-AI workflows. The first inspects uploaded text
+and images before publication and fails safely to human review when
+automatic inspection is incomplete. The second indexes metadata and
+ordered passages from PDF, Office, and safe image resources, enabling
+grounded questions and summaries with visible sources. Combining
+these workflows with events, clubs, lost-and-found, notifications,
+and real-time messaging makes the system broader than a document
+repository while remaining focused on everyday university use.
+
+This comparison also defines the evaluation criteria used later in
+the report: discoverability, publication safety, authorization,
+workflow completeness, responsiveness, and deployment cost. The
+Result and Analysis chapter evaluates the implemented platform
+against these criteria rather than claiming that any single existing
+product is universally inadequate.
 
 % ------------------------------------------------------------
 \chapter{Methodology}
