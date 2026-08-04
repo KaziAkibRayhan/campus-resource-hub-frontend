@@ -36,6 +36,7 @@
 \usepackage{longtable}
 \usepackage{pdflscape}
 \usepackage{caption}
+\usepackage{float}
 \usepackage{enumitem}
 \usepackage{titlesec}
 \usepackage{xcolor}
@@ -76,7 +77,7 @@
 
 % Full-page diagrams use a conservative portrait-page printable area.
 \newcommand{\reportwidefig}[4][0.92]{%
-  \begin{figure}[p]
+  \begin{figure}[H]
     \centering
     \IfFileExists{figures/#2}%
       {\fbox{\includegraphics[width=#1\linewidth]{figures/#2}}}%
@@ -582,7 +583,7 @@ data tier consists of MongoDB Atlas (documents and vector index),
 Cloudinary (file objects), and external service providers for email
 (Brevo SMTP) and AI moderation (Groq).
 
-\begin{figure}[p]
+\begin{figure}[H]
 \centering
 \resizebox{0.90\textwidth}{!}{%
 \begin{tikzpicture}[
@@ -629,7 +630,6 @@ Cloudinary (file objects), and external service providers for email
 \caption{Three-tier system architecture, data services, and external integrations}
 \label{fig:arch}
 \end{figure}
-\clearpage
 
 \subsection{System Workflow}
 Figure~\ref{fig:workflow} shows the complete system workflow. After
@@ -643,7 +643,6 @@ when fully clean, otherwise human review $\rightarrow$ notify}.
 
 \reportwidefig{workflow-diagram.pdf}{User access, resource moderation,
 publication, campus services, and notification workflow}{fig:workflow}
-\clearpage
 
 \subsection{User Roles}
 Access control follows a three-tier role model. Table~\ref{tab:roles}
@@ -713,7 +712,6 @@ modules.
 
 \reportwidefig{erd-diagram.pdf}{MongoDB collections for authorization,
 academic content, communication, and AI-assisted retrieval}{fig:erd}
-\clearpage
 
 \begin{table}[htbp]
 \centering
