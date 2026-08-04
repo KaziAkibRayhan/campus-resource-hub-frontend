@@ -570,32 +570,52 @@ Cloudinary (file objects), and external service providers for email
 
 \begin{figure}[htbp]
 \centering
+\resizebox{0.98\textwidth}{!}{%
 \begin{tikzpicture}[
-  node distance=0.55cm and 1.1cm,
-  box/.style={draw, rounded corners=2pt, align=center, font=\small,
-              minimum height=0.95cm, minimum width=2.9cm, fill=blue!5},
-  ext/.style={draw, rounded corners=2pt, align=center, font=\small,
-              minimum height=0.95cm, minimum width=2.9cm, fill=gray!10},
-  lbl/.style={font=\scriptsize\itshape, text=black!60},
-  arr/.style={-{Stealth[length=2.5mm]}, thick}]
+  node distance=0.85cm and 1.15cm,
+  core/.style={draw=black,line width=0.8pt,rounded corners=3pt,
+               align=center,font=\small,minimum height=1.05cm,
+               minimum width=3.7cm,fill=white},
+  primary/.style={core,line width=1.2pt,minimum width=5.2cm},
+  external/.style={core,dashed,minimum width=3.1cm,fill=black!3},
+  lbl/.style={font=\scriptsize\itshape,fill=white,inner sep=1.5pt},
+  arr/.style={-{Stealth[length=2.5mm]},line width=0.85pt,draw=black}]
 
-  \node[box, fill=green!8] (react) {React SPA\\(Vercel CDN)};
-  \node[box, below=1.1cm of react, minimum width=4.6cm]
-       (api) {Node.js / Express REST API\\+ Socket.io (Render)};
-  \node[box, below left=1.1cm and -0.4cm of api] (mongo)
-       {MongoDB Atlas\\documents + vector index};
-  \node[box, below right=1.1cm and -0.4cm of api] (cloud)
-       {Cloudinary\\file storage};
-  \node[ext, right=of api] (groq) {Groq API\\AI moderation};
-  \node[ext, left=of api] (brevo) {Brevo SMTP\\OTP e-mail};
+  \node[primary] (react) {\scriptsize\bfseries PRESENTATION TIER\\[2pt]
+    \textbf{React Single-Page Application}\\Vercel global CDN};
 
-  \draw[arr, <->] (react) -- node[lbl, right]{HTTPS / WSS} (api);
-  \draw[arr, <->] (api) -- (mongo);
-  \draw[arr, <->] (api) -- (cloud);
-  \draw[arr, ->] (api) -- (groq);
-  \draw[arr, ->] (api) -- (brevo);
+  \node[primary,below=1.2cm of react] (api)
+       {\scriptsize\bfseries APPLICATION TIER\\[2pt]
+        \textbf{Node.js / Express REST API}\\Socket.io gateway on Render};
+
+  \node[core,below left=1.2cm and -0.25cm of api] (mongo)
+       {\scriptsize\bfseries DATA TIER\\[2pt]
+        \textbf{MongoDB Atlas}\\documents, indexes, vectors};
+  \node[core,below right=1.2cm and -0.25cm of api] (cloud)
+       {\scriptsize\bfseries DATA TIER\\[2pt]
+        \textbf{Cloudinary}\\resource and image storage};
+
+  \node[external,below=1.05cm of mongo] (brevo)
+       {\textbf{Brevo SMTP}\\OTP and account e-mail};
+  \node[external,below=1.05cm of cloud] (ai)
+       {\textbf{AI Provider Chain}\\Groq $\rightarrow$ Hugging Face $\rightarrow$ OpenAI};
+
+  \draw[arr,<->] (react) -- node[lbl,right]{HTTPS / WSS} (api);
+  \draw[arr,<->] (api) -- node[lbl,left,pos=.62]{Mongoose} (mongo);
+  \draw[arr,<->] (api) -- node[lbl,right,pos=.62]{signed media access} (cloud);
+  \draw[arr] (api.west) -- ++(-2.55cm,0) |-
+    node[lbl,left,pos=.72]{transactional e-mail} (brevo.west);
+  \draw[arr] (api.east) -- ++(2.55cm,0) |-
+    node[lbl,right,pos=.72]{moderation and answers} (ai.east);
+
+  \node[draw=black!60,rounded corners=5pt,inner sep=6pt,
+        fit=(react)(api)(mongo)(cloud)] (platform) {};
+  \node[font=\scriptsize\bfseries,fill=white,inner sep=2pt,
+        above left=-1mm and 3mm of platform.north west]
+        {CORE CAMPUS RESOURCE HUB};
 \end{tikzpicture}
-\caption{Three-tier system architecture of Campus Resource Hub}
+}
+\caption{Monochrome three-tier system architecture and external service boundaries}
 \label{fig:arch}
 \end{figure}
 
