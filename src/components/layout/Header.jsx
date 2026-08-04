@@ -22,9 +22,9 @@ import NotificationDropdown from "./NotificationDropdown";
 
 const SUGGESTED_PROMPTS = [
   "What CSE resources are available?",
-  "Any upcoming events?",
-  "হারানো জিনিস দেখাও",
-  "Kon club e join korte pari?",
+  "Summarize the latest PDF resource",
+  "এই image resource-এ কী আছে?",
+  "Kon document e database niye bola ache?",
 ];
 
 const Header = ({ toggleSidebar }) => {
@@ -151,7 +151,7 @@ const Header = ({ toggleSidebar }) => {
           patchLastTurn({ content: data.answer || "", streaming: false });
         },
       });
-    } catch (error) {
+    } catch {
       if (controller.signal.aborted) return; // superseded by a newer question
       // Streaming failed — silently fall back to the non-streaming endpoint.
       try {
@@ -228,7 +228,7 @@ const Header = ({ toggleSidebar }) => {
                     askAi(aiQuery);
                   }
                 }}
-                placeholder="Ask AI about resources..."
+                placeholder="Ask what a file contains or request a summary..."
                 className="w-full pl-10 pr-20 py-2.5 rounded-xl text-sm leading-relaxed transition-[border,box-shadow] outline-none border border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-[var(--bg-secondary)] text-[var(--text-main)] resize-none overflow-y-auto shadow-sm focus:shadow-xl"
               />
               <div className="absolute right-2 top-1.5 flex items-center gap-1">
@@ -260,9 +260,9 @@ const Header = ({ toggleSidebar }) => {
                     <Bot size={18} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-[var(--text-main)]">AI Search</p>
+                    <p className="font-bold text-[var(--text-main)]">Campus Knowledge Search</p>
                     <p className="text-[11px] text-blue-500 flex items-center gap-1">
-                      <Sparkles size={10} /> Semantic search over your campus hub data
+                      <Sparkles size={10} /> Answers grounded in accessible hub records and files
                     </p>
                   </div>
                   {aiThread.length > 0 && (
@@ -326,7 +326,7 @@ const Header = ({ toggleSidebar }) => {
                               Sources ({turn.sources.length}) — click to expand
                             </summary>
                             <div className="mt-2 space-y-2">
-                              {turn.sources.map((source) => (
+                              {turn.sources.map((source, sourceIndex) => (
                                 <button
                                   key={`${index}-${source.type}-${source.id}`}
                                   type="button"
@@ -336,16 +336,26 @@ const Header = ({ toggleSidebar }) => {
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                      <p className="text-sm font-bold text-[var(--text-main)] truncate">{source.title}</p>
+                                      <p className="text-sm font-bold text-[var(--text-main)] truncate">
+                                        <span className="text-blue-500 mr-1">[{sourceIndex + 1}]</span>
+                                        {source.title}
+                                      </p>
                                       <p className="text-[11px] text-[var(--text-muted)] mt-0.5 truncate">{source.subtitle}</p>
                                     </div>
                                     <span className={`text-[9px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${typeColors[source.type]}`}>
-                                      {typeLabels[source.type] || source.type}
+                                      {source.type === "resource" && source.fileType
+                                        ? `${source.fileType} resource`
+                                        : typeLabels[source.type] || source.type}
                                     </span>
                                   </div>
                                   {source.description && (
                                     <p className="text-xs text-[var(--text-muted)] mt-2 line-clamp-2">
                                       {source.description}
+                                    </p>
+                                  )}
+                                  {source.type === "resource" && source.knowledgeReady && (
+                                    <p className="text-[10px] text-emerald-500 mt-2 font-semibold">
+                                      File content indexed · open the matching resource
                                     </p>
                                   )}
                                 </button>
