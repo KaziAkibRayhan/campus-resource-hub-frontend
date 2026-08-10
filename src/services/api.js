@@ -7,6 +7,9 @@ export const SOCKET_URL = API_BASE_URL.replace(/\/api\/?$/, "");
 const API = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
+  // Do not leave the whole protected UI on its loading screen forever when a
+  // cold backend instance or a transient Vercel edge connection is unavailable.
+  timeout: 15000,
 });
 
 // Add token to headers if it exists in localStorage

@@ -34,7 +34,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Token verification error:", error);
-      logout();
+      // Only an authentication rejection invalidates the local session. A
+      // timeout, network error, or temporary 5xx should not log the user out;
+      // keep the cached user so the shell can render and retry normally later.
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
