@@ -1,0 +1,92 @@
+==========================================================
+Campus Resource Hub — ডাটাবেস ডায়াগ্রাম / ERD (draw.io)
+ফাইল: crh-database-erd.drawio
+==========================================================
+
+ডাটাবেস: MongoDB (Mongoose ODM দিয়ে)। মোট ১১টি collection।
+প্রতিটি টেবিলের প্রথম লাইনে _id (Primary Key), আর যেসব ফিল্ডে
+"FK -> User" লেখা, সেগুলো অন্য collection-এর ডকুমেন্টকে refer করে।
+
+----------------------------------------------------------
+১১টি Collection — কোনটার কাজ কী:
+----------------------------------------------------------
+
+১. User (নীল)
+   সব ইউজারের তথ্য: নাম, ইমেইল (unique), পাসওয়ার্ড (bcrypt দিয়ে
+   hash করা), স্টুডেন্ট আইডি (unique), ডিপার্টমেন্ট,
+   role (student/moderator/admin), প্রোফাইল ছবি, block status।
+
+২. AuthOtp (লাল)
+   Signup ও password reset-এর OTP রাখে। OTP hash আকারে সেভ হয়,
+   expiresAt-এ TTL index আছে — মেয়াদ শেষে MongoDB নিজেই ডিলিট করে।
+
+৩. Resource (সবুজ)
+   আপলোড করা স্টাডি ফাইলের তথ্য: টাইটেল, কোর্স, ডিপার্টমেন্ট, সেমিস্টার,
+   ফাইলের ধরন/সাইজ, Cloudinary লিংক, approve status, AI moderation
+   ফলাফল, ডাউনলোড/ভিউ/রেটিং সংখ্যা।
+
+৪. Announcement (সবুজ)
+   ঘোষণা: টাইটেল, কনটেন্ট, priority, pinned, নির্ধারিত publish সময়
+   (publishAt), মেয়াদ (expiresAt), কে কে পড়েছে (readBy), attachment।
+
+৫. Event (সবুজ)
+   ইভেন্ট: তারিখ, সময়, স্থান, capacity (০ = সীমাহীন), status,
+   registrations (কে RSVP করেছে — going/maybe/declined)।
+   clubRef দিয়ে Club-এর সাথে যুক্ত।
+
+৬. Club (কমলা)
+   ক্লাবের নাম (unique), বর্ণনা, joinPolicy (open/request),
+   members (role সহ: member/officer), joinRequests।
+
+৭. LostFoundItem (সবুজ)
+   হারানো/পাওয়া জিনিস: ধরন (lost/found), বর্ণনা, স্থান, contact
+   (ডিফল্টে গোপন), ছবি, status (open/claimed/resolved),
+   claims (কে দাবি করেছে), AI moderation ফলাফল।
+
+৮. Conversation (হলুদ)
+   চ্যাট থ্রেড: direct বা group, members, admins, শেষ মেসেজের রেফারেন্স।
+
+৯. Message (হলুদ)
+   প্রতিটি মেসেজ: কোন conversation-এর, কে পাঠিয়েছে, টেক্সট, attachment,
+   reply reference, কারা পেয়েছে (deliveredTo), কারা দেখেছে (seenBy)।
+
+১০. Notification (বেগুনি)
+    ইউজারভিত্তিক নোটিফিকেশন: টাইটেল, মেসেজ, ধরন (message/announcement/
+    event ইত্যাদি), লিংক, পড়া হয়েছে কি না (read)।
+
+১১. Embedding (ধূসর)
+    AI সার্চের ভেক্টর ডেটা (৩৮৪-মাত্রার ভেক্টর)। Resource, Club,
+    Announcement, Event, LostFound — ৫ ধরনের কনটেন্টের embedding
+    এক collection-এ থাকে (sourceType + sourceId দিয়ে চেনা যায়)।
+
+----------------------------------------------------------
+প্রধান সম্পর্ক (Relationships):
+----------------------------------------------------------
+- User হলো কেন্দ্র — প্রায় সব collection User-এর সাথে 1:N সম্পর্কে যুক্ত:
+    * Resource:      কে আপলোড করেছে, কে approve করেছে
+    * Announcement:  কে পোস্ট করেছে, কারা পড়েছে
+    * Event:         কে পোস্ট করেছে, কারা RSVP করেছে
+    * Club:          কে বানিয়েছে, কারা member
+    * LostFoundItem: কে পোস্ট করেছে, কারা claim করেছে
+    * Conversation/Message: কারা member, কে sender
+    * Notification:  কার জন্য
+- Club → Event: একটি ক্লাবের অনেক ইভেন্ট (clubRef)
+- Conversation → Message: একটি থ্রেডে অনেক মেসেজ
+- Embedding → ৫টি content collection: dashed (ড্যাশ) লাইন মানে
+  polymorphic/soft link — hard foreign key নয়
+- AuthOtp → User: ইমেইল মিলিয়ে কাজ করে (dashed = কোনো hard FK নেই)
+
+----------------------------------------------------------
+চিহ্ন/রঙের অর্থ:
+----------------------------------------------------------
+- Bold প্রথম লাইন   = Primary Key (_id)
+- Italic ফিল্ড      = Foreign Key (অন্য collection-এর রেফারেন্স)
+- 1:N               = এক দিকের একটি ডকুমেন্টের সাথে অন্য দিকের অনেকগুলো
+- Dashed লাইন       = soft/polymorphic সম্পর্ক
+- রঙ: নীল=User, সবুজ=কনটেন্ট, হলুদ=চ্যাট, কমলা=ক্লাব,
+  বেগুনি=নোটিফিকেশন, লাল=OTP, ধূসর=AI ভেক্টর
+
+draw.io-তে খোলার নিয়ম:
+app.diagrams.net → File → Open from → Device →
+crh-database-erd.drawio ফাইলটি সিলেক্ট করুন।
+==========================================================
