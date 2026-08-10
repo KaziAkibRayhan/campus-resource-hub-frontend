@@ -1,5 +1,5 @@
 // src/pages/AdminPanel.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Users, FileText, HardDrive, Download, Trash2, BarChart2,
@@ -85,8 +85,10 @@ const AdminPanel = () => {
   const [users, setUsers]                 = useState([]);
   const [stats, setStats]                 = useState(null);
   const [loading, setLoading]             = useState(true);
+  const [failedSections, setFailedSections] = useState([]);
   const [resourceSearch, setResourceSearch] = useState("");
   const [userSearch, setUserSearch]         = useState("");
+  const fetchSequence = useRef(0);
 
   const fmt  = (v = 0) => Intl.NumberFormat().format(v);
   const fmtB = (b = 0) => {
@@ -96,35 +98,61 @@ const AdminPanel = () => {
     return `${(b / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${u[i]}`;
   };
 
-  // ── Fetch all data ──────────────────────────────────────────────
+  // Fetch only the visible tab's data. Requests settle independently so one
+  // slow endpoint cannot blank every section of the admin panel.
   const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [allRes, pendRes, pendLf, annRes, evtRes, lfRes, usrRes, stRes] = await Promise.all([
-        adminService.getAllResources({ limit: 100, sortBy: "createdAt", order: "desc" }),
-        resourceService.getAll({ isPending: true, limit: 100 }), // flagged, awaiting review
-        lostFoundService.getPending(),         // flagged L&F, awaiting review
-        announcementService.getAll({ limit: 100 }),  // admin sees all
-        eventService.getAll({ limit: 100 }),          // admin sees all
-        lostFoundService.getAll({ limit: 100 }),      // admin sees all
-        adminService.getUsers(),
-        adminService.getStats(),
-      ]);
-      setAllResources(allRes.data.resources     || []);
-      setPendingResources(pendRes.data.resources || []);
-      setPendingLostFound(pendLf.data.items      || []);
-      setAnnouncements(annRes.data.announcements || []);
-      setEvents(evtRes.data.events               || []);
-      setLostFound(lfRes.data.items              || []);
-      setUsers(usrRes.data.users                 || []);
-      setStats(stRes.data.stats);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
+    const requestId = ++fetchSequence.current;
+    setLoading(true);
+    setFailedSections([]);
+
+    const requestsByTab = {
+      overview: [
+        ["resources", () => adminService.getAllResources({ limit: 100, sortBy: "createdAt", order: "desc" }), (res) => setAllResources(res.data.resources || [])],
+        ["announcements", () => announcementService.getAll({ limit: 100 }), (res) => setAnnouncements(res.data.announcements || [])],
+        ["events", () => eventService.getAll({ limit: 100 }), (res) => setEvents(res.data.events || [])],
+        ["lost & found", () => lostFoundService.getAll({ limit: 100 }), (res) => setLostFound(res.data.items || [])],
+        ["statistics", () => adminService.getStats(), (res) => setStats(res.data.stats)],
+      ],
+      review: [
+        ["pending resources", () => resourceService.getAll({ isPending: true, limit: 100 }), (res) => setPendingResources(res.data.resources || [])],
+        ["pending lost & found", () => lostFoundService.getPending(), (res) => setPendingLostFound(res.data.items || [])],
+      ],
+      resources: [
+        ["resources", () => adminService.getAllResources({ limit: 100, sortBy: "createdAt", order: "desc" }), (res) => setAllResources(res.data.resources || [])],
+      ],
+      content: [
+        ["announcements", () => announcementService.getAll({ limit: 100 }), (res) => setAnnouncements(res.data.announcements || [])],
+        ["events", () => eventService.getAll({ limit: 100 }), (res) => setEvents(res.data.events || [])],
+        ["lost & found", () => lostFoundService.getAll({ limit: 100 }), (res) => setLostFound(res.data.items || [])],
+      ],
+      users: [
+        ["users", () => adminService.getUsers(), (res) => setUsers(res.data.users || [])],
+      ],
+    };
+
+    const requests = requestsByTab[activeTab] || requestsByTab.overview;
+    const results = await Promise.allSettled(requests.map(([, request]) => request()));
+    if (requestId !== fetchSequence.current) return;
+    const failures = [];
+
+    results.forEach((result, index) => {
+      const [label, , applyResult] = requests[index];
+      if (result.status === "fulfilled") {
+        applyResult(result.value);
+      } else {
+        failures.push(label);
+        console.error(`Failed to load admin ${label}:`, result.reason);
+      }
+    });
+
+    setFailedSections(failures);
+    if (failures.length > 0) {
+      toast.error(`Could not load: ${failures.join(", ")}`, {
+        description: "Other dashboard data remains available. Use Refresh to retry.",
+      });
     }
-  }, []);
+    setLoading(false);
+  }, [activeTab]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -999,6 +1027,24 @@ const AdminPanel = () => {
           </button>
         ))}
       </div>
+
+      {failedSections.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+          <div>
+            <p className="font-semibold">Some data could not be loaded</p>
+            <p className="text-sm opacity-90">
+              Unavailable: {failedSections.join(", ")}. Existing data has been kept.
+            </p>
+          </div>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold hover:bg-red-100 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/30"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Retry
+          </button>
+        </div>
+      )}
 
       {/* Tab content */}
       {activeTab === "overview"  && renderOverview()}
