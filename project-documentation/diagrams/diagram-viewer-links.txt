@@ -1,6 +1,5 @@
-Campus Resource Hub Diagrams — Tabbed Preview
-https://app.diagrams.net/#Uhttps%3A%2F%2Fraw.githubusercontent.com%2FKaziAkibRayhan%2Fcampus-resource-hub-frontend%2Fmain%2Fproject-documentation%2Fdiagrams%2Fcampus-resource-hub-diagrams.drawio
+CRH Database ERD
+https://app.diagrams.net/#Uhttps%3A%2F%2Fraw.githubusercontent.com%2FKaziAkibRayhan%2Fcampus-resource-hub-frontend%2Fmain%2Fproject-documentation%2Fdiagrams%2Fcrh-database-erd.drawio
 
-Tabs:
-1. CRH Database ERD
-2. CRH System Workflow
+CRH System Workflow
+https://app.diagrams.net/#Uhttps%3A%2F%2Fraw.githubusercontent.com%2FKaziAkibRayhan%2Fcampus-resource-hub-frontend%2Fmain%2Fproject-documentation%2Fdiagrams%2Fcrh-workflow.drawio
