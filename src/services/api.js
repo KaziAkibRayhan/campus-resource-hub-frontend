@@ -1,4 +1,5 @@
 import axios from "axios";
+import { shouldRetryRequest } from "../utils/request";
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -12,6 +13,19 @@ const API = axios.create({
   timeout: 15000,
 });
 
+const delay = (ms, signal) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        reject(new axios.CanceledError());
+      },
+      { once: true }
+    );
+  });
+
 // Add token to headers if it exists in localStorage
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -19,6 +33,31 @@ API.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+});
+
+// A cold serverless instance or a short Atlas/network interruption should not
+// make every screen fail. Retry safe reads only; mutations are never repeated.
+API.interceptors.response.use(undefined, async (error) => {
+  const config = error.config;
+  if (!config || config.signal?.aborted || axios.isCancel(error)) throw error;
+
+  const method = (config.method || "get").toLowerCase();
+  const status = error.response?.status;
+  const attempt = config.__retryAttempt || 0;
+  if (!shouldRetryRequest({
+    method,
+    status,
+    hasResponse: Boolean(error.response),
+    attempt,
+  })) throw error;
+
+  config.__retryAttempt = attempt + 1;
+  const retryAfter = Number(error.response?.headers?.["retry-after"]);
+  const waitMs = Number.isFinite(retryAfter)
+    ? Math.min(retryAfter * 1000, 5000)
+    : 350 * 2 ** attempt + Math.floor(Math.random() * 150);
+  await delay(waitMs, config.signal);
+  return API(config);
 });
 
 export const authService = {
@@ -33,7 +72,7 @@ export const authService = {
 };
 
 export const resourceService = {
-  getAll: (params) => API.get("/resources", { params }),
+  getAll: (params, config = {}) => API.get("/resources", { ...config, params }),
   getById: (id) => API.get(`/resources/${id}`),
   // Long timeout: upload + server-side content safety scan can take a while
   // for big PDFs. Progress callback drives the global upload bar.
@@ -53,7 +92,7 @@ export const resourceService = {
 };
 
 export const announcementService = {
-  getAll: (params) => API.get("/announcements", { params }),
+  getAll: (params, config = {}) => API.get("/announcements", { ...config, params }),
   getMine: () => API.get("/announcements", { params: { mine: true } }),
   // FormData (title/content/department + attachments[]); long timeout for file uploads
   create: (data) => API.post("/announcements", data, { timeout: 120000 }),
@@ -69,7 +108,7 @@ export const announcementService = {
 };
 
 export const eventService = {
-  getAll: (params) => API.get("/events", { params }),
+  getAll: (params, config = {}) => API.get("/events", { ...config, params }),
   getMine: () => API.get("/events", { params: { mine: true } }),
   create: (data) => API.post("/events", data),
   update: (id, data) => API.put(`/events/${id}`, data),
@@ -92,7 +131,7 @@ export const adminService = {
 };
 
 export const lostFoundService = {
-  getAll: (params) => API.get("/lost-found", { params }),
+  getAll: (params, config = {}) => API.get("/lost-found", { ...config, params }),
   getMine: () => API.get("/lost-found", { params: { mine: true } }),
   getPending: () => API.get("/lost-found", { params: { pending: true } }),
   create: (formData) => API.post("/lost-found", formData),
@@ -108,7 +147,7 @@ export const lostFoundService = {
 };
 
 export const clubService = {
-  getAll: (params) => API.get("/clubs", { params }),
+  getAll: (params, config = {}) => API.get("/clubs", { ...config, params }),
   getById: (id) => API.get(`/clubs/${id}`),
   create: (data) => API.post("/clubs", data),
   update: (id, data) => API.put(`/clubs/${id}`, data),

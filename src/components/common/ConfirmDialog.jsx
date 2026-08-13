@@ -21,6 +21,7 @@ import { AlertTriangle, CheckCircle, Info, Trash2 } from "lucide-react";
 
 const ConfirmContext = createContext(() => Promise.resolve(false));
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useConfirm = () => useContext(ConfirmContext);
 
 const VARIANTS = {

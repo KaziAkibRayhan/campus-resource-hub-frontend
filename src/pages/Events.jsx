@@ -1,5 +1,5 @@
 // src/pages/Events.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import useDebounce from "../hooks/useDebounce";
 import {
   Calendar,
@@ -24,6 +24,7 @@ import useHighlight from "../hooks/useHighlight";
 import { useConfirm } from "../components/common/ConfirmDialog";
 import { SkeletonGrid } from "../components/common/Skeleton";
 import EmptyState from "../components/common/EmptyState";
+import { isCanceledRequest } from "../utils/request";
 
 const PAGE_SIZE = 12;
 const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
@@ -52,6 +53,7 @@ const Events = () => {
   const [monthAnchor, setMonthAnchor] = useState(startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const listRequestRef = useRef(null);
 
   const [clubs, setClubs] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
@@ -69,45 +71,59 @@ const Events = () => {
 
   const fetchList = useCallback(
     async (targetPage = 1, append = false) => {
+      const controller = new AbortController();
+      listRequestRef.current?.abort();
+      listRequestRef.current = controller;
       try {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE, scope };
         if (debouncedSearch) params.search = debouncedSearch;
-        const res = await eventService.getAll(params);
+        const res = await eventService.getAll(params, { signal: controller.signal });
         const fetched = res.data.events || [];
         setTotalPages(res.data.totalPages || 1);
         setPage(res.data.currentPage || targetPage);
         setEvents((prev) => (append ? [...prev, ...fetched] : fetched));
       } catch (error) {
+        if (isCanceledRequest(error)) return;
         console.error("Events fetch error:", error);
         toast.error(error.response?.data?.message || "Failed to fetch events");
       } finally {
-        append ? setLoadingMore(false) : setLoading(false);
+        if (listRequestRef.current === controller) {
+          append ? setLoadingMore(false) : setLoading(false);
+        }
       }
     },
     [scope, debouncedSearch]
   );
 
   const fetchMonth = useCallback(async () => {
+    const controller = new AbortController();
+    listRequestRef.current?.abort();
+    listRequestRef.current = controller;
     try {
       setLoading(true);
-      const res = await eventService.getAll({
-        from: startOfMonth(monthAnchor).toISOString(),
-        to: endOfMonth(monthAnchor).toISOString(),
-        limit: 200,
-      });
+      const res = await eventService.getAll(
+        {
+          from: startOfMonth(monthAnchor).toISOString(),
+          to: endOfMonth(monthAnchor).toISOString(),
+          limit: 200,
+        },
+        { signal: controller.signal }
+      );
       setEvents(res.data.events || []);
     } catch (error) {
+      if (isCanceledRequest(error)) return;
       console.error("Events month fetch error:", error);
       toast.error(error.response?.data?.message || "Failed to fetch events");
     } finally {
-      setLoading(false);
+      if (listRequestRef.current === controller) setLoading(false);
     }
   }, [monthAnchor]);
 
   useEffect(() => {
     if (view === "calendar") fetchMonth();
     else fetchList(1, false);
+    return () => listRequestRef.current?.abort();
   }, [view, fetchMonth, fetchList]);
 
   useEffect(() => {

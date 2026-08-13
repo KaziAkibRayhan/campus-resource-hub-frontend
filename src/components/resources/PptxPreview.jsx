@@ -106,10 +106,13 @@ const PptxPreview = ({ url, mode = "viewer", onLoad, onError }) => {
 
     loadPresentation();
 
+    const container = containerRef.current;
     return () => {
       cancelled = true;
-      if (containerRef.current) containerRef.current.innerHTML = "";
+      if (container) container.innerHTML = "";
     };
+    // Rendering options are intentionally captured for one URL load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   if (status === "error") {

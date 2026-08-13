@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import useDebounce from "../hooks/useDebounce";
 import {
   Users,
@@ -21,6 +21,7 @@ import useHighlight from "../hooks/useHighlight";
 import { useConfirm } from "../components/common/ConfirmDialog";
 import { SkeletonGrid } from "../components/common/Skeleton";
 import EmptyState from "../components/common/EmptyState";
+import { isCanceledRequest } from "../utils/request";
 
 const PAGE_SIZE = 12;
 
@@ -48,27 +49,34 @@ const Clubs = () => {
   const [busyId, setBusyId] = useState(null);
   const [detail, setDetail] = useState(null); // { club, events }
   const [detailLoading, setDetailLoading] = useState(false);
+  const listRequestRef = useRef(null);
 
   const canManage = user?.role === "admin" || user?.role === "moderator";
 
   const fetchClubs = useCallback(
     async (targetPage = 1, append = false) => {
+      const controller = new AbortController();
+      listRequestRef.current?.abort();
+      listRequestRef.current = controller;
       try {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE };
         if (debouncedSearch) params.search = debouncedSearch;
         if (categoryFilter !== "all") params.category = categoryFilter;
-        const response = await clubService.getAll(params);
+        const response = await clubService.getAll(params, { signal: controller.signal });
         const fetched = response.data.clubs || [];
         setCategories(response.data.categories || []);
         setTotalPages(response.data.totalPages || 1);
         setPage(response.data.currentPage || targetPage);
         setClubs((prev) => (append ? [...prev, ...fetched] : fetched));
       } catch (error) {
+        if (isCanceledRequest(error)) return;
         console.error("Clubs fetch error:", error);
         toast.error(error.response?.data?.message || "Failed to fetch clubs");
       } finally {
-        append ? setLoadingMore(false) : setLoading(false);
+        if (listRequestRef.current === controller) {
+          append ? setLoadingMore(false) : setLoading(false);
+        }
       }
     },
     [debouncedSearch, categoryFilter]
@@ -76,6 +84,7 @@ const Clubs = () => {
 
   useEffect(() => {
     fetchClubs(1, false);
+    return () => listRequestRef.current?.abort();
   }, [fetchClubs]);
 
   useEffect(() => {

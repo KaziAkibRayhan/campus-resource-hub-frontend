@@ -1,5 +1,5 @@
 // src/pages/Resources.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -28,6 +28,7 @@ import { SkeletonGrid } from "../components/common/Skeleton";
 import EmptyState from "../components/common/EmptyState";
 import useHighlight from "../hooks/useHighlight";
 import useDebounce from "../hooks/useDebounce";
+import { isCanceledRequest } from "../utils/request";
 import { useSocket } from "../context/SocketContext";
 
 const Resources = () => {
@@ -48,6 +49,7 @@ const Resources = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResources, setTotalResources] = useState(0);
+  const listRequestRef = useRef(null);
   const pageSize = 12;
 
   const getDocumentBadgeClass = (fileType) => {
@@ -86,6 +88,9 @@ const Resources = () => {
     ["pptx", "pptm", "ppsx", "ppsm", "potx", "potm"].includes(getResourceExtension(resource));
 
   const fetchResources = useCallback(async () => {
+    const controller = new AbortController();
+    listRequestRef.current?.abort();
+    listRequestRef.current = controller;
     try {
       setLoading(true);
       const params = {};
@@ -97,7 +102,7 @@ const Resources = () => {
       params.page = currentPage;
       params.limit = pageSize;
 
-      const response = await resourceService.getAll(params);
+      const response = await resourceService.getAll(params, { signal: controller.signal });
       setResources(response.data.resources);
       setIsSemantic(Boolean(response.data.semantic));
       const nextTotalPages = response.data.totalPages || 1;
@@ -107,14 +112,16 @@ const Resources = () => {
         setCurrentPage(nextTotalPages);
       }
     } catch (error) {
+      if (isCanceledRequest(error)) return;
       toast.error(error.response?.data?.message || "Failed to fetch resources");
     } finally {
-      setLoading(false);
+      if (listRequestRef.current === controller) setLoading(false);
     }
   }, [debouncedSearch, selectedDepartment, selectedSemester, sortBy, order, currentPage]);
 
   useEffect(() => {
     fetchResources();
+    return () => listRequestRef.current?.abort();
   }, [fetchResources]);
 
   // Refresh when a background upload finishes

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import useDebounce from "../hooks/useDebounce";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import {
@@ -24,6 +24,7 @@ import useHighlight from "../hooks/useHighlight";
 import { useConfirm } from "../components/common/ConfirmDialog";
 import { SkeletonGrid } from "../components/common/Skeleton";
 import EmptyState from "../components/common/EmptyState";
+import { isCanceledRequest } from "../utils/request";
 
 const PAGE_SIZE = 12;
 
@@ -52,11 +53,15 @@ const LostFound = () => {
   const [claimTarget, setClaimTarget] = useState(null);
   const [claimNote, setClaimNote] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const listRequestRef = useRef(null);
 
   const canManage = user?.role === "admin" || user?.role === "moderator";
 
   const fetchItems = useCallback(
     async (targetPage = 1, append = false) => {
+      const controller = new AbortController();
+      listRequestRef.current?.abort();
+      listRequestRef.current = controller;
       try {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE };
@@ -64,16 +69,19 @@ const LostFound = () => {
         if (debouncedSearch) params.search = debouncedSearch;
         if (mineOnly) params.mine = true;
 
-        const response = await lostFoundService.getAll(params);
+        const response = await lostFoundService.getAll(params, { signal: controller.signal });
         const fetched = response.data.items || [];
         setTotalPages(response.data.totalPages || 1);
         setPage(response.data.currentPage || targetPage);
         setItems((prev) => (append ? [...prev, ...fetched] : fetched));
       } catch (error) {
+        if (isCanceledRequest(error)) return;
         console.error("Lost found fetch error:", error);
         toast.error(error.response?.data?.message || "Failed to fetch items");
       } finally {
-        append ? setLoadingMore(false) : setLoading(false);
+        if (listRequestRef.current === controller) {
+          append ? setLoadingMore(false) : setLoading(false);
+        }
       }
     },
     [filter, debouncedSearch, mineOnly]
@@ -81,6 +89,7 @@ const LostFound = () => {
 
   useEffect(() => {
     fetchItems(1, false);
+    return () => listRequestRef.current?.abort();
   }, [fetchItems]);
 
   // Realtime: keep cards in sync with claim/status changes.

@@ -11,9 +11,12 @@ const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll, loading } = useNotifications();
   const dropdownRef = useRef(null);
+  const navigationNonceRef = useRef(0);
   const navigate = useNavigate();
 
   const handleNotificationClick = (notification) => {
+    navigationNonceRef.current += 1;
+    const nonce = navigationNonceRef.current;
     if (!notification.read) markAsRead(notification._id);
     if (MESSAGE_TYPES.includes(notification.type)) {
       setIsOpen(false);
@@ -22,7 +25,7 @@ const NotificationDropdown = () => {
       // clicks on the same conversation re-trigger the open.
       navigate(
         conversationId
-          ? `/messages?c=${conversationId}&t=${Date.now()}`
+          ? `/messages?c=${conversationId}&t=${nonce}`
           : "/messages"
       );
     } else if (notification.link) {
@@ -30,7 +33,7 @@ const NotificationDropdown = () => {
       // `t` nonce so re-clicking the same notification re-triggers the
       // highlight scroll even when the target page is already open.
       const separator = notification.link.includes("?") ? "&" : "?";
-      navigate(`${notification.link}${separator}t=${Date.now()}`);
+      navigate(`${notification.link}${separator}t=${nonce}`);
     }
   };
 

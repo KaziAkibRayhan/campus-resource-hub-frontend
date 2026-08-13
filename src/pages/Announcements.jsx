@@ -27,6 +27,7 @@ import useHighlight from "../hooks/useHighlight";
 import { useConfirm } from "../components/common/ConfirmDialog";
 import { SkeletonRow } from "../components/common/Skeleton";
 import EmptyState from "../components/common/EmptyState";
+import { isCanceledRequest } from "../utils/request";
 
 const MAX_ATTACHMENTS = 5;
 const PAGE_SIZE = 20;
@@ -76,6 +77,7 @@ const Announcements = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const listRequestRef = useRef(null);
 
   const emptyForm = {
     title: "",
@@ -92,6 +94,9 @@ const Announcements = () => {
 
   const fetchAnnouncements = useCallback(
     async (targetPage = 1, append = false) => {
+      const controller = new AbortController();
+      listRequestRef.current?.abort();
+      listRequestRef.current = controller;
       try {
         append ? setLoadingMore(true) : setLoading(true);
         const params = { page: targetPage, limit: PAGE_SIZE };
@@ -99,15 +104,18 @@ const Announcements = () => {
         if (priorityFilter !== "all") params.priority = priorityFilter;
         if (debouncedSearch) params.search = debouncedSearch;
         if (archived) params.scope = "archived";
-        const response = await announcementService.getAll(params);
+        const response = await announcementService.getAll(params, { signal: controller.signal });
         const fetched = response.data.announcements || [];
         setTotalPages(response.data.totalPages || 1);
         setPage(response.data.currentPage || targetPage);
         setAnnouncements((prev) => (append ? [...prev, ...fetched] : fetched));
       } catch (error) {
+        if (isCanceledRequest(error)) return;
         toast.error(error.response?.data?.message || "Failed to fetch announcements");
       } finally {
-        append ? setLoadingMore(false) : setLoading(false);
+        if (listRequestRef.current === controller) {
+          append ? setLoadingMore(false) : setLoading(false);
+        }
       }
     },
     [deptFilter, priorityFilter, debouncedSearch, archived]
@@ -115,6 +123,7 @@ const Announcements = () => {
 
   useEffect(() => {
     fetchAnnouncements(1, false);
+    return () => listRequestRef.current?.abort();
   }, [fetchAnnouncements]);
 
   // Realtime

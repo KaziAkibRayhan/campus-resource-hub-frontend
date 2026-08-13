@@ -14,6 +14,7 @@ import { resourceService } from "../services/api";
 
 const UploadContext = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useUpload = () => useContext(UploadContext);
 
 export const UploadProvider = ({ children }) => {
