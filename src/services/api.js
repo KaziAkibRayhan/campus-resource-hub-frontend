@@ -174,8 +174,11 @@ export const notificationService = {
 export const chatService = {
   verifyAccess: () => API.post("/chat/verify"),
   searchHub: (params) => API.get("/chat/search", { params }),
+  // Retrieval + a full (non-streamed) LLM completion routinely runs past the
+  // 15s default, and a cold backend instance runs well past it. Timing out
+  // here surfaces as a bare "AI search failed" even though the server is fine.
   askAssistant: (question, history = []) =>
-    API.post("/chat/assistant", { question, history }),
+    API.post("/chat/assistant", { question, history }, { timeout: 90000 }),
   getUsers: () => API.get("/chat/users"),
   getConversations: () => API.get("/chat/conversations"),
   createDirect: (userId) => API.post("/chat/conversations/direct", { userId }),

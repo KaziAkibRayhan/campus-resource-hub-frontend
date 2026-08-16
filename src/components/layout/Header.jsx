@@ -163,7 +163,15 @@ const Header = ({ toggleSidebar }) => {
         });
       } catch (fallbackError) {
         patchLastTurn({ streaming: false });
-        setAiError(fallbackError.response?.data?.message || "AI search failed");
+        // No response at all means the request timed out or never reached the
+        // backend — say so, instead of implying the assistant rejected it.
+        const noResponse = !fallbackError.response;
+        setAiError(
+          fallbackError.response?.data?.message ||
+            (noResponse
+              ? "Could not reach the assistant. Check your connection and try again."
+              : "AI search failed")
+        );
       }
     } finally {
       if (!controller.signal.aborted) setAiSearching(false);

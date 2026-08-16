@@ -4,6 +4,11 @@
 // POST /chat/assistant.
 import { API_BASE_URL } from "./api";
 
+// Longest silence tolerated between SSE bytes. A backend that hangs mid-answer
+// would otherwise leave the bubble streaming forever; aborting throws, which
+// sends the caller to the non-streaming fallback.
+const STALL_MS = 25000;
+
 export async function streamAssistant({
   question,
   history = [],
@@ -13,59 +18,83 @@ export async function streamAssistant({
   onDone,
 }) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/chat/assistant/stream`, {
-    method: "POST",
-    signal,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ question, history }),
-  });
 
-  if (!res.ok || !res.body) {
-    throw new Error("stream-unavailable");
+  // Internal controller so the stall watchdog never trips the caller's signal:
+  // the caller reads its own `aborted` flag to tell "superseded by a newer
+  // question" (give up) from "stream broke" (fall back).
+  const internal = new AbortController();
+  const abortInternal = () => internal.abort();
+  if (signal) {
+    if (signal.aborted) internal.abort();
+    else signal.addEventListener("abort", abortInternal, { once: true });
   }
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let finished = false;
-
-  const handleFrame = (frame) => {
-    const event = /^event: (.+)$/m.exec(frame)?.[1];
-    const rawData = /^data: (.+)$/m.exec(frame)?.[1];
-    if (!event || !rawData) return;
-    let data;
-    try {
-      data = JSON.parse(rawData);
-    } catch {
-      return;
-    }
-    if (event === "sources") onSources?.(data.sources || [], data);
-    else if (event === "token") onToken?.(data.t || "");
-    else if (event === "done") {
-      finished = true;
-      onDone?.(data);
-    } else if (event === "error") {
-      throw new Error(data.message || "stream-error");
-    }
+  let stallTimer;
+  const armStall = () => {
+    clearTimeout(stallTimer);
+    stallTimer = setTimeout(abortInternal, STALL_MS);
   };
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let idx;
-    while ((idx = buffer.indexOf("\n\n")) !== -1) {
-      const frame = buffer.slice(0, idx);
-      buffer = buffer.slice(idx + 2);
-      handleFrame(frame);
-    }
-  }
+  try {
+    armStall();
+    const res = await fetch(`${API_BASE_URL}/chat/assistant/stream`, {
+      method: "POST",
+      signal: internal.signal,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ question, history }),
+    });
 
-  if (!finished) {
-    throw new Error("stream-incomplete");
+    if (!res.ok || !res.body) {
+      throw new Error("stream-unavailable");
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let finished = false;
+
+    const handleFrame = (frame) => {
+      const event = /^event: (.+)$/m.exec(frame)?.[1];
+      const rawData = /^data: (.+)$/m.exec(frame)?.[1];
+      if (!event || !rawData) return;
+      let data;
+      try {
+        data = JSON.parse(rawData);
+      } catch {
+        return;
+      }
+      if (event === "sources") onSources?.(data.sources || [], data);
+      else if (event === "token") onToken?.(data.t || "");
+      else if (event === "done") {
+        finished = true;
+        onDone?.(data);
+      } else if (event === "error") {
+        throw new Error(data.message || "stream-error");
+      }
+    };
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      armStall();
+      buffer += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        const frame = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        handleFrame(frame);
+      }
+    }
+
+    if (!finished) {
+      throw new Error("stream-incomplete");
+    }
+  } finally {
+    clearTimeout(stallTimer);
+    signal?.removeEventListener("abort", abortInternal);
   }
 }
