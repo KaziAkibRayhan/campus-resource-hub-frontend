@@ -23,7 +23,7 @@ import NotificationDropdown from "./NotificationDropdown";
 const SUGGESTED_PROMPTS = [
   "What CSE resources are available?",
   "Summarize the latest PDF resource",
-  "এই image resource-এ কী আছে?",
+  "Latest image resource-এ কী আছে?",
   "Kon document e database niye bola ache?",
 ];
 
