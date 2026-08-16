@@ -107,8 +107,8 @@ const Header = ({ toggleSidebar }) => {
   const askAi = async (rawQuestion) => {
     const question = (rawQuestion || "").trim();
 
-    if (question.length < 2) {
-      setAiError("Type at least 2 characters");
+    if (question.length < 3) {
+      setAiError("Type at least 3 characters");
       setSearchOpen(true);
       return;
     }
