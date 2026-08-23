@@ -1,0 +1,562 @@
+CAMPUS RESOURCE HUB
+ENGLISH DEFENCE PRESENTATION SCRIPT
+============================================================
+
+Deck: Campus_Resource_Hub_Project_Presentation_Final_No_Questions.pptx
+Number of slides: 16
+Suggested duration: approximately 13–16 minutes, excluding the live demo
+
+How to use this script
+------------------------------------------------------------
+1. Treat it as a speaking guide; do not read every sentence from the page.
+2. Look at the slide, explain its main claim, and use the transition naturally.
+3. On slides 7, 11 and 12, mention the primary AI models. Use the final
+   “AI and Model Viva Quick Reference” only if the faculty requests more detail.
+4. Say “configured fallback chain.” The providers are attempted sequentially;
+   all models do not run on every request.
+5. Do not present prototype screenshots as adoption evidence or planning
+   estimates as guaranteed production limits.
+
+
+SLIDE 01 — CAMPUS RESOURCE HUB
+Suggested time: 45–50 seconds
+------------------------------------------------------------
+Speaker Script:
+
+Assalamu Alaikum and good morning. I am Akib Rayhan, and today our team is
+presenting Campus Resource Hub. It is a centralized web platform that brings
+academic resource sharing, campus services, and real-time communication into
+one secure system.
+
+Our objective was not simply to build another file-sharing website. We wanted
+to create one verified and role-aware place where students can discover trusted
+study materials, follow campus updates, use privacy-aware lost-and-found
+services, and communicate with one another. We also added fail-safe AI-assisted
+moderation with human review to protect user-generated content.
+
+Today I will begin with the existing problems, then explain our solution, core
+workflows, architecture, database design, and verification results.
+
+Transition:
+To understand why this platform is necessary, let me begin with the problems
+in the existing campus workflow.
+
+
+SLIDE 02 — PROBLEMS IN EXISTING CAMPUS SYSTEMS
+Suggested time: 60–65 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The main problem is fragmentation.
+
+Study files are commonly shared through Messenger, WhatsApp, or Facebook
+groups, where useful materials quickly disappear under newer messages. They
+also lack reliable course, department, and semester metadata.
+
+Announcements, events, and club updates are split across notice boards and
+social groups, so they reach only part of the student community.
+
+Lost-and-found posts may expose personal contact details before a claim is
+verified. Finally, ordinary chat groups provide neither structured moderation
+nor reliable meaning-based search.
+
+These are not four unrelated issues. Together, they create an information
+environment that is difficult to search, difficult to verify, and difficult
+to manage safely. Existing tools therefore do not provide one searchable,
+verified, role-aware campus workflow.
+
+Transition:
+Campus Resource Hub addresses these gaps by bringing the separate workflows
+into one verified platform.
+
+
+SLIDE 03 — PROPOSED SOLUTION: ONE VERIFIED CAMPUS HUB
+Suggested time: 55–60 seconds
+------------------------------------------------------------
+Speaker Script:
+
+Our proposed solution is a single campus hub built around verified users and
+structured workflows.
+
+Reviewed academic resources remain organized and searchable instead of
+disappearing in conversations. Announcements, events, and clubs are presented
+through a shared campus platform. Lost-and-found claims protect private contact
+information until the correct claimant is approved. Real-time chat,
+notifications, and semantic search connect these services instead of leaving
+them isolated.
+
+The dashboard shown here is a prototype captured during project testing. It
+demonstrates the implemented interface; it is not campus-wide adoption data.
+
+The central idea is simple: one secure place to discover information,
+communicate, and act according to the user’s verified role.
+
+Transition:
+Before explaining the implementation, I would like to introduce the project
+team and our shared goal.
+
+
+SLIDE 04 — MEET THE PROJECT TEAM
+Suggested time: 40–45 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The project was developed by three team members: Akib Rayhan, student ID
+42230200858; Rakibul Hasan, student ID 42230200859; and Mahdi Hasan, student
+ID 42230200717.
+
+We completed the project under the supervision of Tanmoy Mazumder, Lecturer in
+the Department of Computer Science and Engineering.
+
+Our shared goal was to build a secure, searchable, and real-time platform that
+supports both academic resource sharing and everyday campus coordination. This
+required us to combine frontend design, backend services, authentication,
+authorization, content safety, database modelling, real-time communication,
+semantic search, and cloud deployment in one working full-stack system.
+
+Transition:
+I will now show how verified access connects all of those workflows.
+
+
+SLIDE 05 — VERIFIED ACCESS CONNECTS EVERY WORKFLOW
+Suggested time: 60–65 seconds
+------------------------------------------------------------
+Speaker Script:
+
+Every workflow begins with a verified identity. During registration, the user
+confirms e-mail ownership through an OTP. After verification and login, the
+backend issues a signed JWT and directs the user to a role-aware dashboard.
+Invalid or blocked requests are rejected.
+
+From the dashboard, users can access resources, events, clubs, lost-and-found,
+announcements, chat, profiles, and authorized administrative functions.
+Resources follow an extract, scan, review-if-needed, publish, and index
+pipeline. Other campus services apply their own role and ownership rules,
+while Socket.io delivers live messages and notifications.
+
+Importantly, the server does not trust only the frontend. It checks JWT
+validity, role, ownership, approval status, and publication visibility again
+on protected requests.
+
+Transition:
+The next slide explains how the same verified identity receives different
+permissions according to its role.
+
+
+SLIDE 06 — ACCESS DEPENDS ON IDENTITY AND ROLE
+Suggested time: 55–60 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The access model has three principal roles.
+
+A student can browse and upload resources, RSVP to events, join clubs,
+participate in chat, submit lost-and-found claims, and manage a profile.
+
+A moderator can perform normal student actions and also review held or flagged
+content, create campus updates, and help manage community safety.
+
+An administrator has broader authority over users, roles, review queues, and
+platform-wide management functions.
+
+OTP verification proves e-mail ownership, while the signed JWT supports
+authenticated requests. However, possessing a token does not grant every
+capability. Backend middleware and controller-level checks still decide
+whether the user has the required role or owns the requested record. New
+accounts receive the student role, so a user cannot assign a privileged role
+to themselves.
+
+Transition:
+With the access model established, we can examine the project’s central
+feature: academic resource sharing.
+
+
+SLIDE 07 — EVERY RESOURCE IS CHECKED BEFORE PUBLICATION
+Suggested time: 70–80 seconds
+------------------------------------------------------------
+Speaker Script:
+
+An authenticated user can upload PDF, DOCX, PPTX, XLSX, or image files together
+with academic metadata.
+
+The backend extracts available text and visual samples. A deterministic local
+keyword filter first catches obvious unsafe text at zero API cost.
+
+AI moderation then prefers Groq. The primary text safeguard model is
+“openai/gpt-oss-safeguard-20b,” and the configured vision model is
+“qwen/qwen3.6-27b.” If Groq is unavailable, the configured fallback chain can
+try Hugging Face “zai-org/GLM-4.5V” and the optional final OpenAI moderation
+model “omni-moderation-latest.”
+
+Clean, fully inspected files can be published and indexed. Flagged files,
+incomplete inspections, or provider-unavailable scans remain unpublished for
+human review. A moderator may then approve or reject the submission.
+
+The fail-safe principle is important: a failed AI service can never make unsafe
+content automatically appear safe and become public.
+
+Transition:
+The same structured approach also improves announcements, events, and club
+participation.
+
+
+SLIDE 08 — CAMPUS UPDATES SHOULD NOT GET LOST
+Suggested time: 60–65 seconds
+------------------------------------------------------------
+Speaker Script:
+
+Campus Resource Hub treats updates as structured records rather than temporary
+chat messages.
+
+Announcements support normal, important, or urgent priority, scheduled
+publication, expiry dates, attachments, and read tracking.
+
+Events include location, time, optional capacity, and RSVP choices such as
+going, maybe, or declined. A capacity of zero means unlimited capacity;
+otherwise the system can control additional going registrations.
+
+Clubs can use either open membership or a request-based joining policy, and
+members may have member or officer roles.
+
+These features create consistent participation processes while keeping each
+service distinct. Centralization therefore does not remove administrative
+control; it makes information and participation easier to discover and manage.
+
+Transition:
+One workflow where structured control is especially important is lost-and-found.
+
+
+SLIDE 09 — LOST-AND-FOUND PROTECTS CONTACT DETAILS
+Suggested time: 55–60 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The lost-and-found workflow was designed around both discovery and privacy.
+
+A user posts the item type, description, location, and an optional image. The
+post passes the same safety process before becoming visible.
+
+Contact visibility is private by default, so personal information is not
+exposed in the public feed. Another user can submit a claim with supporting
+information. The poster or an authorized moderator then approves or rejects
+the claim.
+
+Private contact details become available only to the approved claimant. The
+item moves through the states open, claimed, and resolved.
+
+This lifecycle keeps the claim status auditable while protecting both the
+poster and the claimant.
+
+Transition:
+After protecting item claims, the platform also needs a secure way for users
+to coordinate directly.
+
+
+SLIDE 10 — REAL-TIME CHAT KEEPS COORDINATION MOVING
+Suggested time: 50–55 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The platform supports both direct and group conversations. Users can send
+text, attachments, replies, and edited messages.
+
+The REST API stores Conversation and Message records in MongoDB, while
+Socket.io pushes new messages, typing status, delivery, seen information, and
+live notifications. This allows the interface to update without repeated
+manual refreshing.
+
+Real-time transport does not replace authorization. The server verifies
+conversation membership before allowing a user to read or send messages.
+Therefore, knowing a conversation ID is not enough to access another user’s
+history.
+
+This design provides faster coordination while keeping the backend as the
+security authority.
+
+Transition:
+Communication handles immediate coordination; semantic search helps users
+recover knowledge across the whole platform.
+
+
+SLIDE 11 — SEARCH BY MEANING, NOT JUST KEYWORDS
+Suggested time: 75–85 seconds
+------------------------------------------------------------
+Speaker Script:
+
+Traditional keyword search can miss relevant content when the user and the
+stored title use different words. CRH therefore supports meaning-based
+semantic search.
+
+The exact local, quantized embedding model is
+“Xenova/paraphrase-multilingual-MiniLM-L12-v2.” It converts Bangla and English
+content into 384-dimensional vectors. Titles, descriptions, metadata, and
+extracted file passages are indexed, with ResourceChunk supporting
+passage-level retrieval.
+
+MongoDB Atlas Vector Search ranks the closest candidates. If the vector path
+is unavailable, the backend can fall back to in-memory cosine similarity and
+then deterministic regex search.
+
+The RAG assistant produces answers with numbered, clickable sources. Its
+preferred generation provider is Groq using “openai/gpt-oss-120b.” The
+configured sequential fallbacks are Hugging Face “openai/gpt-oss-20b,”
+OpenRouter “nvidia/nemotron-3-nano-30b-a3b:free,” Google Gemini
+“gemini-flash-latest,” and optional OpenAI “gpt-4.1-mini.”
+
+Before any result is shown, CRH re-checks approval, ownership, department, and
+role visibility.
+
+Transition:
+These search and assistant components operate within a maintainable three-tier
+system architecture.
+
+
+SLIDE 12 — A THREE-TIER STACK KEEPS CRH MAINTAINABLE
+Suggested time: 70–80 seconds
+------------------------------------------------------------
+Speaker Script:
+
+CRH separates presentation, application, and data responsibilities.
+
+React with Vite provides the responsive single-page interface. Node.js and
+Express expose the REST API, enforce business rules, and work with Socket.io
+for live updates.
+
+MongoDB Atlas stores application records, resource chunks, embeddings, and the
+vector index, while Cloudinary stores uploaded files and images.
+
+Google Cloud’s Gmail API with OAuth 2.0 delivers signup and password-reset OTP
+messages. The AI layer uses a Groq-led configured fallback chain, and human
+review protects publication when automated inspection cannot finish.
+
+Both the frontend and backend are deployed on Vercel. Browser, API, and live
+traffic use HTTPS or WSS.
+
+One clarification is important: the ChatGPT product is not integrated.
+OpenAI API is only a configured final fallback. The openai SDK is also used as
+a protocol-compatible client for Groq, Hugging Face, OpenRouter, and Gemini,
+so seeing that SDK in the code does not mean every request goes to OpenAI.
+
+Transition:
+The next slide shows how the database structure supports both conventional
+campus services and AI retrieval.
+
+
+SLIDE 13 — THE DATA MODEL SUPPORTS SERVICES AND AI
+Suggested time: 60–65 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The current backend uses twelve MongoDB collections.
+
+User is the central authorization record and connects to most service
+relationships. AuthOtp temporarily stores signup and password-reset
+verification data.
+
+Resources, announcements, events, clubs, and lost-and-found items store the
+ownership, approval, and moderation information required by their workflows.
+
+Resource has a one-to-many relationship with ResourceChunk, which stores
+ordered file passages and passage-level embeddings. The shared Embedding
+collection stores semantic vectors and source references.
+
+Conversation and Message are separated so thread membership can be managed
+independently from message history, sender, replies, delivery, and seen status.
+
+In the diagram, solid lines represent stored ObjectId references. Dashed lines
+represent softer or polymorphic relationships. This structure supports both
+traditional campus services and AI retrieval.
+
+Transition:
+A sound design still needs evidence, so I will now summarize the reported
+verification results.
+
+
+SLIDE 14 — THE REPORTED TESTS SUPPORT THE CORE BUILD
+Suggested time: 60–65 seconds
+------------------------------------------------------------
+Speaker Script:
+
+These figures are the documented project-report snapshot, not a claim of full
+production certification.
+
+All six reported backend unit tests passed. Fifty-four approved resources were
+indexed with no extraction failures in that indexing run. The authorization
+check returned eight permitted sources and zero unauthorized sources. The
+frontend production build also completed successfully.
+
+The team also verified OTP and JWT access, five upload formats, fail-safe
+moderation behavior, events and clubs, private lost-and-found claims,
+real-time chat, semantic search, and administrative approvals across student,
+moderator, and administrator roles.
+
+Testing considered not only successful requests but also provider failures,
+incomplete inspections, and unauthorized access. However, these numbers are a
+report snapshot and do not replace continuous production monitoring.
+
+Transition:
+Based on the implemented system and these checks, we can define a realistic
+first deployment scope.
+
+
+SLIDE 15 — CRH IS READY FOR A DEPARTMENT-SCALE PILOT
+Suggested time: 65–70 seconds
+------------------------------------------------------------
+Speaker Script:
+
+The current architecture is intended for a department-scale pilot rather than
+an immediate university-wide rollout.
+
+Under the report’s free-tier assumptions, the planning estimate is
+approximately fifty to one hundred concurrently active users and two hundred
+to three hundred connected users when idle sessions are included. These
+figures are not a guaranteed service-level benchmark. Actual capacity depends
+on request patterns, file sizes, AI quotas, and cloud limits.
+
+The present recurring infrastructure cost is zero on the selected free cloud
+tiers. The main bottleneck is simultaneous upload-time extraction, AI scanning,
+and embedding work on limited CPU.
+
+The next steps are background job processing, mobile and push notifications,
+university SSO, Bangla localization, accessibility improvements, and paid
+compute and database tiers for larger usage.
+
+The current version is pilot-ready, and the growth path is clearly defined.
+
+Transition:
+I will finish by returning to the main value the project provides.
+
+
+SLIDE 16 — THANK YOU
+Suggested time: 30–40 seconds
+------------------------------------------------------------
+Speaker Script:
+
+To conclude, Campus Resource Hub addresses the four problems we began with:
+scattered academic files, the limited reach of campus updates, unsafe
+lost-item claims, and weak moderation and search.
+
+The system combines verified access, organized resource sharing, structured
+campus services, privacy-aware claims, real-time communication, and secure
+semantic retrieval in one role-controlled platform.
+
+It is a student-built full-stack system that can begin as a department-level
+pilot and grow through the improvements we have identified.
+
+Thank you to our supervisor, the faculty members, and everyone present for your
+time and attention. We are now ready to demonstrate the live system and answer
+questions.
+
+Transition:
+This concludes the slide presentation. I will now begin the live demonstration
+of Campus Resource Hub.
+
+
+AI AND MODEL VIVA QUICK REFERENCE
+============================================================
+
+1. Assistant / RAG generation
+------------------------------------------------------------
+Preferred provider:
+- Groq — openai/gpt-oss-120b
+
+Configured fallback order:
+- Hugging Face Inference — openai/gpt-oss-20b
+- OpenRouter — nvidia/nemotron-3-nano-30b-a3b:free
+- Google Gemini — gemini-flash-latest
+- OpenAI API — gpt-4.1-mini, final optional fallback
+
+Defence wording:
+“Groq is our preferred provider. If it is unavailable, the system tries the
+configured fallback chain sequentially. All models do not run on every request.”
+
+
+2. Content moderation
+------------------------------------------------------------
+First layer:
+- Local deterministic keyword safety filter
+
+AI moderation:
+- Groq text model — openai/gpt-oss-safeguard-20b
+- Groq vision model — qwen/qwen3.6-27b
+- Hugging Face multimodal fallback — zai-org/GLM-4.5V
+- OpenAI final moderation fallback — omni-moderation-latest
+
+Fail-safe policy:
+- Flagged, incomplete, or provider-unavailable content is held for human review.
+- Provider failure never produces an automatic safe verdict.
+
+
+3. Semantic search
+------------------------------------------------------------
+Embedding model:
+- Xenova/paraphrase-multilingual-MiniLM-L12-v2
+
+Key facts:
+- Local and quantized
+- Supports Bangla and English
+- Produces 384-dimensional embeddings
+- MongoDB Atlas Vector Search is the primary retrieval path
+- In-memory cosine similarity is the second path
+- Regex search is the final deterministic fallback
+
+
+4. Resource-image descriptions for search / Q&A
+------------------------------------------------------------
+Configured order:
+- Groq — qwen/qwen3.6-27b
+- Hugging Face — zai-org/GLM-4.5V
+- OpenAI — gpt-4.1-mini
+
+
+5. ChatGPT versus OpenAI
+------------------------------------------------------------
+- The ChatGPT app or product is not integrated.
+- OpenAI API is configured only as a final fallback.
+- The openai npm SDK is also a compatible client for Groq, Hugging Face,
+  OpenRouter, and Gemini endpoints.
+- The openai/gpt-oss model IDs may be served by Groq or Hugging Face; they are
+  not the ChatGPT product.
+
+
+6. Important defence caveat
+------------------------------------------------------------
+- Say “configured fallback chain,” not “all providers run together.”
+- A provider participates only when its API key is configured in the deployment.
+- Local development had Groq preferred with multiple fallbacks configured.
+- Do not reveal deployment secrets or API keys during the defence.
+- Cerebras is not an implemented provider and should not be mentioned.
+
+
+SHORT ANSWERS TO LIKELY VIVA QUESTIONS
+============================================================
+
+Question: What happens if an AI provider fails?
+Answer: The backend tries the next configured provider. If moderation cannot
+finish, the content is held for human review and is not automatically published.
+
+Question: Did you integrate ChatGPT?
+Answer: No. Groq is the preferred provider. The OpenAI API is only an optional
+final fallback; the ChatGPT product is not integrated.
+
+Question: Why did you use MiniLM?
+Answer: It is lightweight, multilingual, locally runnable, and creates
+384-dimensional embeddings, making Bangla-English semantic search efficient
+and cost-effective.
+
+Question: What is RAG?
+Answer: Retrieval-Augmented Generation. The system first retrieves approved,
+visible project data, then generates an answer from that context and returns
+numbered sources.
+
+Question: How do you control AI mistakes?
+Answer: We combine a deterministic keyword filter, provider fallbacks,
+fail-safe human review, approval state, and role and visibility re-checks.
+
+Question: Can vector search bypass authorization?
+Answer: No. After retrieving candidates, the backend re-queries the original
+records and checks approval, ownership, department, and role visibility.
+
+Question: Are the capacity figures guaranteed?
+Answer: No. They are planning estimates from the report assumptions. Actual
+capacity depends on measured load and cloud-service limits.

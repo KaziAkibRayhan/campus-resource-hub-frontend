@@ -1,0 +1,573 @@
+CAMPUS RESOURCE HUB
+বাংলা ডিফেন্স প্রেজেন্টেশন স্ক্রিপ্ট
+============================================================
+
+Deck: Campus_Resource_Hub_Project_Presentation_Final_No_Questions.pptx
+Slide সংখ্যা: ১৬
+প্রস্তাবিত সময়: প্রায় ১৩–১৬ মিনিট, live demo ছাড়া
+
+ব্যবহারের নিয়ম
+------------------------------------------------------------
+১. এটি word-for-word মুখস্থ না করে নিজের স্বাভাবিক ভাষায় বলবেন।
+২. Slide-এর দিকে তাকিয়ে key point বলবেন; পুরো paragraph পড়বেন না।
+৩. AI model-এর সব নাম main presentation-এ একসঙ্গে বলার প্রয়োজন নেই।
+   Slide 7, 11 ও 12-এ primary model বলবেন; faculty প্রশ্ন করলে নিচের
+   “AI ও Model Viva Quick Reference” ব্যবহার করবেন।
+৪. “Configured fallback chain” বলবেন—সব model একই request-এ একসঙ্গে চলে না।
+৫. Prototype screenshot বা capacity estimate-কে production adoption বা
+   guaranteed benchmark হিসেবে উপস্থাপন করবেন না।
+
+উচ্চারণ সহায়তা
+------------------------------------------------------------
+JWT = জে-ডব্লিউ-টি
+OAuth = ও-অথ
+Groq = গ্রক / গ্রোক
+MiniLM = মিনি-এল-এম
+RAG = র‌্যাগ
+Qwen = কিউ-ওয়েন
+WSS = ডব্লিউ-এস-এস
+
+
+SLIDE 01 — CAMPUS RESOURCE HUB
+সময়: প্রায় ৪৫–৫০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+আসসালামু আলাইকুম। সম্মানিত স্যার এবং faculty members, আমি Akib Rayhan।
+আজ আমাদের team উপস্থাপন করছে “Campus Resource Hub”। এটি একটি centralized
+web platform, যেখানে academic resource sharing, campus services এবং
+real-time communication একটি secure system-এর মধ্যে আনা হয়েছে।
+
+আমাদের লক্ষ্য শুধু আরেকটি file-sharing website তৈরি করা ছিল না। আমরা এমন
+একটি verified ও role-aware platform তৈরি করতে চেয়েছি, যেখানে student একটি
+জায়গা থেকে trusted study material খুঁজতে, campus update পেতে, lost-and-found
+ব্যবহার করতে এবং অন্যদের সঙ্গে যোগাযোগ করতে পারে। User-generated content
+নিরাপদ রাখার জন্য fail-safe AI-assisted moderation এবং human review-ও রাখা
+হয়েছে।
+
+আজ আমরা প্রথমে existing system-এর problem, তারপর proposed solution, core
+workflow, architecture, database design এবং verification result দেখাব।
+
+Transition:
+প্রথমে দেখা যাক, বর্তমানে প্রচলিত campus system-গুলোতে কী কী সমস্যা রয়েছে।
+
+
+SLIDE 02 — PROBLEMS IN EXISTING CAMPUS SYSTEMS
+সময়: প্রায় ৬০–৬৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+এই slide-এর বিষয়গুলো আমাদের project-এর সমস্যা নয়; এগুলো existing campus
+systems-এর limitation, যেগুলো CRH সমাধান করার চেষ্টা করে।
+
+প্রথমত, study file সাধারণত Messenger, WhatsApp বা Facebook group-এ share
+হয়। ফলে useful file নতুন message-এর নিচে হারিয়ে যায় এবং course, department
+বা semester অনুযায়ী খুঁজে পাওয়া কঠিন হয়।
+
+দ্বিতীয়ত, event, club এবং announcement update বিভিন্ন group ও notice board-এ
+ছড়িয়ে থাকায় campus-এর একটি অংশ খবর পায়, অন্য অংশ পায় না।
+
+তৃতীয়ত, lost item claim-এর সময় personal phone number বা contact detail
+publicly expose হয়ে যেতে পারে, কিন্তু claimant সত্যি owner কি না তা যাচাইয়ের
+structured process থাকে না।
+
+চতুর্থত, shared content-এর reliable moderation, approval এবং meaning-based
+search থাকে না। তাই existing tools information রাখলেও একটি searchable,
+verified এবং role-aware campus workflow দেয় না।
+
+Transition:
+এই চারটি gap-এর সরাসরি সমাধান হিসেবেই আমরা Campus Resource Hub প্রস্তাব করেছি।
+
+
+SLIDE 03 — PROPOSED SOLUTION: ONE VERIFIED CAMPUS HUB
+সময়: প্রায় ৬০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+আমাদের proposed solution হলো সব গুরুত্বপূর্ণ campus workflow একটি verified
+hub-এর মধ্যে আনা।
+
+Study resources এখানে course, department ও semester metadata অনুযায়ী
+organized থাকে। User resource preview, download, rating এবং search করতে পারে।
+Announcement, event ও club update একই platform-এ পাওয়া যায়, তাই information-এর
+reach বাড়ে।
+
+Lost-and-found module-এ contact details defaultভাবে private থাকে। Claim
+approve হওয়ার পরই approved claimant প্রয়োজনীয় contact information দেখতে পারে।
+Direct ও group chat, live notification এবং semantic search প্রতিটি module-কে
+একে অন্যের সঙ্গে যুক্ত করে।
+
+Dashboard screenshotটি project testing-এর সময় captured prototype। এটি
+campus-wide adoption data নয়; বরং implemented interface-এর evidence।
+
+অর্থাৎ CRH শুধু file repository নয়—এটি information discover, communicate
+এবং role অনুযায়ী action নেওয়ার একটি unified campus workflow।
+
+Transition:
+Implementation ব্যাখ্যা করার আগে আমাদের team এবং shared project goal পরিচয়
+করিয়ে দিচ্ছি।
+
+
+SLIDE 04 — MEET THE PROJECT TEAM
+সময়: প্রায় ৪০–৪৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+এই project team-এ আমরা তিনজন কাজ করেছি—Akib Rayhan, ID 42230200858;
+Rakibul Hasan, ID 42230200859; এবং Mahdi Hasan, ID 42230200717।
+
+আমাদের project supervisor ছিলেন Department of Computer Science and
+Engineering-এর Lecturer, Tanmoy Mazumder Sir।
+
+আমাদের shared goal ছিল এমন একটি full-stack system তৈরি করা, যা academic
+resource sharing-এর পাশাপাশি প্রতিদিনের campus coordination-ও সহজ করবে।
+তাই আমরা শুধু interface তৈরি করিনি; authentication, authorization, content
+safety, database relationship, real-time communication, semantic search এবং
+cloud deployment—সব layer একটি working system-এর মধ্যে integrate করেছি।
+
+Transition:
+এখন complete workflow দিয়ে দেখাই, verified access কীভাবে সব feature-কে
+একসঙ্গে যুক্ত করে।
+
+
+SLIDE 05 — VERIFIED ACCESS CONNECTS EVERY WORKFLOW
+সময়: প্রায় ৬০–৬৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+Workflow-এর শুরুতে নতুন user e-mail OTP দিয়ে account verify করে। Existing
+user login করলে backend signed JWT দেয়। Valid এবং unblocked user-কে
+role-aware dashboard-এ নেওয়া হয়; invalid বা blocked request reject করা হয়।
+
+Dashboard থেকে resources, events, clubs, lost-and-found, announcements,
+chat, profile এবং administrative functions-এ যাওয়া যায়। Resource upload-এর
+ক্ষেত্রে file extract ও safety scan হয়। Clean content publish হয়, আর flagged,
+partially inspected অথবা provider-unavailable content human review-তে যায়।
+
+Campus service-গুলো role ও ownership rule follow করে। Socket.io message এবং
+notification live update দেয়।
+
+গুরুত্বপূর্ণ বিষয় হলো, security শুধু frontend button hide করার ওপর নির্ভর
+করে না। প্রতিটি protected backend request-এ JWT, role, ownership, approval
+এবং publication visibility আবার verify করা হয়।
+
+Transition:
+এই access control আরও পরিষ্কারভাবে বোঝার জন্য তিনটি user role-এর permission
+দেখি।
+
+
+SLIDE 06 — ACCESS DEPENDS ON IDENTITY AND ROLE
+সময়: প্রায় ৫৫–৬০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+CRH-এ Role-Based Access Control বা RBAC তিনটি প্রধান level-এ কাজ করে।
+
+Student published resource browse ও search করতে পারে, resource upload করতে
+পারে, event-এ RSVP দিতে, club-এ join করতে, lost item claim করতে, chat করতে
+এবং নিজের profile manage করতে পারে।
+
+Moderator student-এর সাধারণ permission-এর পাশাপাশি held বা flagged content
+review করতে পারে, campus update তৈরি করতে পারে এবং community safety manage
+করতে পারে।
+
+Admin সর্বোচ্চ privileged role। Admin user role পরিবর্তন, user management,
+platform-wide control এবং statistics access করতে পারে।
+
+Signup-এর পর default role student হওয়ায় কোনো user নিজে থেকে moderator বা
+admin permission নিতে পারে না। JWT identity প্রমাণ করে, কিন্তু প্রতিটি
+specific action-এর permission backend আলাদাভাবে check করে।
+
+Transition:
+Role clear হওয়ার পর এখন project-এর প্রধান feature—resource publication
+pipeline—দেখানো যাক।
+
+
+SLIDE 07 — EVERY RESOURCE IS CHECKED BEFORE PUBLICATION
+সময়: প্রায় ৭০–৮০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+Authenticated user PDF, DOCX, PPTX, XLSX অথবা image upload করতে পারে এবং
+title, course, department ও semester metadata দেয়। Backend প্রথমে file-এর
+available text এবং visual sample extract করে।
+
+Safety pipeline-এর প্রথম ধাপ একটি local deterministic keyword filter, যা
+obvious unsafe text zero API cost-এ ধরতে পারে। এরপর AI moderation-এর primary
+provider হলো Groq। Text moderation-এর জন্য primary safeguard model
+“openai/gpt-oss-safeguard-20b”, এবং image বা visual inspection-এর জন্য
+configured model “qwen/qwen3.6-27b”।
+
+Groq unavailable হলে configured fallback হিসেবে Hugging Face-এর
+“zai-org/GLM-4.5V” চেষ্টা করা হয়; final optional moderation fallback হলো
+OpenAI “omni-moderation-latest”।
+
+Content fully checked এবং clean হলে publish ও index হয়। Harmful, partially
+inspected অথবা provider-unavailable file public না করে human review queue-তে
+রাখা হয়। Moderator approve করলে publish হয়; reject করলে uploader notification
+পায়।
+
+এই fail-safe design-এর মূল কথা হলো—AI service fail করলেও content কখনো
+silently safe ধরে automatic publish করা হয় না।
+
+Transition:
+Resource-এর পাশাপাশি campus update কীভাবে structured রাখা হয়েছে, এখন সেই
+module-গুলো দেখি।
+
+
+SLIDE 08 — CAMPUS UPDATES SHOULD NOT GET LOST
+সময়: প্রায় ৬০–৬৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+এই slide-এ announcements, events এবং clubs—তিনটি related workflow দেখানো
+হয়েছে।
+
+Announcement-এ normal, important অথবা urgent priority, attachment, scheduled
+publishing, expiry এবং read tracking support আছে। ফলে notice কখন visible হবে
+এবং কারা পড়েছে, তা system-এ record থাকে।
+
+Event module-এ date, time, location এবং optional capacity থাকে। Student going,
+maybe অথবা declined RSVP দিতে পারে। Capacity zero হলে unlimited, আর নির্দিষ্ট
+capacity পূর্ণ হলে অতিরিক্ত going registration control করা যায়।
+
+Club-এর ক্ষেত্রে open policy হলে সরাসরি join করা যায়; request policy হলে
+approval প্রয়োজন হয়। Member ও officer role club management structured রাখে।
+
+তাই scattered notice-এর বদলে information এবং participation—দুটিই একই
+platform-এ controlled workflow হিসেবে পরিচালিত হয়।
+
+Transition:
+Campus coordination-এর আরেকটি sensitive workflow হলো lost-and-found, যেখানে
+privacy সবচেয়ে গুরুত্বপূর্ণ।
+
+
+SLIDE 09 — LOST-AND-FOUND PROTECTS CONTACT DETAILS
+সময়: প্রায় ৫৫–৬০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+Lost-and-found workflow চারটি ধাপে কাজ করে।
+
+প্রথমে user হারানো বা পাওয়া item-এর description, location এবং optional photo
+দিয়ে post করে। Postটি safety check-এর পর visible হয়।
+
+Contact information defaultভাবে private থাকে। তাই public feed থেকে personal
+phone number বা e-mail নেওয়া যায় না।
+
+অন্য user itemটি নিজের বলে মনে করলে supporting informationসহ claim submit
+করে। Item poster অথবা authorized moderator claim approve বা reject করে।
+Approve হওয়ার পর শুধু approved claimant contact information দেখতে পারে।
+
+এরপর item status open থেকে claimed এবং সবশেষে resolved হয়। এই lifecycle
+claim-এর অবস্থাকে auditable রাখে এবং poster ও claimant—দুই পক্ষের privacy
+protect করে।
+
+Transition:
+Claim এবং অন্যান্য coordination দ্রুত করতে platform-এ real-time messaging
+যুক্ত করা হয়েছে।
+
+
+SLIDE 10 — REAL-TIME CHAT KEEPS COORDINATION MOVING
+সময়: প্রায় ৫০–৫৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+CRH-এর chat module direct এবং group—দুই ধরনের conversation support করে।
+User text message-এর পাশাপাশি attachment পাঠাতে, previous message-এর reply
+দিতে এবং নিজের message edit করতে পারে।
+
+REST API Conversation ও Message data MongoDB-তে persist করে, আর Socket.io
+new message, typing status, delivery, seen এবং live notification push করে।
+তাই page refresh ছাড়াই interface update হয়।
+
+Real-time transport authorization bypass করে না। Server conversation membership
+verify করার পরই user message read বা send করতে পারে। অর্থাৎ শুধু conversation
+ID জানলেই অন্যের chat history access করা যায় না।
+
+এই design দ্রুত coordination দেয়, কিন্তু backend-কে security authority হিসেবেই
+রাখে।
+
+Transition:
+Communication real-time হলেও পুরোনো information খুঁজে পেতে traditional
+keyword search-এর চেয়ে শক্তিশালী ব্যবস্থা প্রয়োজন।
+
+
+SLIDE 11 — SEARCH BY MEANING, NOT JUST KEYWORDS
+সময়: প্রায় ৭৫–৮৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+Traditional keyword search-এ query এবং stored title-এর exact word না মিললে
+relevant content miss হতে পারে। CRH meaning-based semantic search ব্যবহার করে।
+
+Exact embedding model হলো local quantized
+“Xenova/paraphrase-multilingual-MiniLM-L12-v2”। এটি Bangla ও English text-কে
+384-dimensional vector-এ convert করে। Resource title ও metadata-এর পাশাপাশি
+PDF বা Office file-এর extracted passage ResourceChunk হিসেবে index করা হয়।
+
+User প্রশ্ন করলে query embedding তৈরি হয় এবং MongoDB Atlas Vector Search
+relevant content rank করে। Atlas unavailable হলে in-memory cosine similarity,
+তারপর regex search fallback আছে।
+
+Retrieved content ব্যবহার করে RAG assistant numbered ও clickable sourceসহ
+answer দেয়। Assistant generation-এর primary provider হলো Groq model
+“openai/gpt-oss-120b”। Configured fallback chain-এ Hugging Face
+“openai/gpt-oss-20b”, OpenRouter “nvidia/nemotron-3-nano-30b-a3b:free”,
+Google Gemini “gemini-flash-latest” এবং final optional OpenAI
+“gpt-4.1-mini” আছে।
+
+সবচেয়ে গুরুত্বপূর্ণ security step হলো—vector result দেখানোর আগে approval,
+ownership এবং role visibility আবার check করা হয়।
+
+Transition:
+এই search, chat ও campus workflow কোন technology layer-এর ওপর চলছে, এখন
+architecture দিয়ে সেটি দেখি।
+
+
+SLIDE 12 — A THREE-TIER STACK KEEPS CRH MAINTAINABLE
+সময়: প্রায় ৭০–৮০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+Systemটি three-tier architecture অনুসরণ করে।
+
+Presentation tier-এ React ও Vite দিয়ে responsive single-page application
+তৈরি হয়েছে। Application tier-এ Node.js ও Express REST API authentication,
+business rules ও data operation পরিচালনা করে; Socket.io live communication
+দেয়।
+
+Data tier-এ MongoDB Atlas documents, ResourceChunk, embeddings এবং vector index
+রাখে। Cloudinary uploaded file ও image store করে।
+
+Signup এবং password-reset OTP Google Cloud-এর Gmail API ও OAuth 2.0-এর মাধ্যমে
+পাঠানো হয়। AI service Groq-led configured fallback chain ব্যবহার করে, আর
+automated inspection complete না হলে human review থাকে।
+
+Frontend এবং backend—দুটিই Vercel-এ deployed। Browser, API এবং live gateway
+HTTPS/WSS-এর মাধ্যমে communicate করে।
+
+একটি important clarification: project-এ ChatGPT app বা product integrate করা
+হয়নি। OpenAI API শুধু configured final fallback। Code-এ openai SDK Groq,
+Hugging Face, OpenRouter ও Gemini-এর OpenAI-compatible endpoint call করতেও
+ব্যবহৃত হয়। তাই openai SDK থাকা মানেই ChatGPT ব্যবহার নয়।
+
+Transition:
+Architecture-এর serviceগুলো data হিসেবে কীভাবে সম্পর্কিত, সেটি ERD-তে দেখা
+যায়।
+
+
+SLIDE 13 — THE DATA MODEL SUPPORTS SERVICES AND AI
+সময়: প্রায় ৬০–৬৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+বর্তমান data model-এ মোট 12টি MongoDB collection আছে।
+
+User হলো authorization hub, কারণ Resource, Event, Club, LostFoundItem,
+Conversation, Message এবং Notification-এর মতো অধিকাংশ record user-এর সঙ্গে
+সম্পর্কিত। AuthOtp signup ও password-reset verification data সাময়িকভাবে রাখে।
+
+Resource-এর সঙ্গে one-to-many relationship-এ ResourceChunk থাকে, যেখানে
+file-এর ordered passage এবং passage-level embedding রাখা হয়। Shared Embedding
+collection published content-এর semantic vector ও source reference রাখে।
+
+Conversation thread-level membership রাখে, আর Message আলাদাভাবে sender,
+reply, delivery ও seen informationসহ message history রাখে।
+
+Diagram-এর solid line stored ObjectId reference বোঝায়। Dashed line e-mail
+match অথবা polymorphic soft link বোঝায়। এই structure traditional campus
+service এবং AI retrieval—দুটিকেই support করে।
+
+Transition:
+Data model design করার পর core workflow-গুলো test ও verification step দিয়ে
+পরীক্ষা করা হয়েছে।
+
+
+SLIDE 14 — THE REPORTED TESTS SUPPORT THE CORE BUILD
+সময়: প্রায় ৬০–৬৫ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+এই slide project report-এর documented verification snapshot দেখায়; এটি full
+production certification নয়।
+
+Report snapshot-এ ছয়টির ছয়টি backend unit test pass করেছে। 54টি approved
+resource index করার সময় extraction failure ছিল শূন্য। Authorization regression
+check-এ আটটি permitted source visible ছিল এবং unauthorized source ছিল শূন্য।
+Frontend production build-ও successfully complete হয়েছে।
+
+Functional verification-এ OTP ও JWT access, পাঁচ ধরনের upload format,
+fail-safe moderation, event ও club workflow, private lost-and-found claim,
+real-time chat, semantic search এবং admin approval অন্তর্ভুক্ত ছিল।
+
+Testing শুধু success path-এ সীমাবদ্ধ ছিল না; provider failure, unauthorized
+access এবং incomplete inspection-এর মতো safety-related condition-ও বিবেচনা
+করা হয়েছে। তবে slide-এর numbers report snapshot—continuous production
+monitoring-এর বিকল্প নয়।
+
+Transition:
+এই verified core build বাস্তবে কোন scope-এ ব্যবহারযোগ্য, এখন capacity ও
+next step দিয়ে সেটি ব্যাখ্যা করছি।
+
+
+SLIDE 15 — CRH IS READY FOR A DEPARTMENT-SCALE PILOT
+সময়: প্রায় ৬৫–৭০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+বর্তমান free-tier assumptions অনুযায়ী CRH department-scale pilot-এর জন্য
+designed।
+
+Capacity analysis-এ আনুমানিক 50 থেকে 100 concurrent active user এবং idle
+sessionসহ 200 থেকে 300 connected user ধরা হয়েছে। এগুলো planning estimate;
+formal service-level guarantee বা complete load-test result নয়। Actual capacity
+request pattern, file size এবং cloud quota-এর ওপর নির্ভর করবে।
+
+সবচেয়ে বেশি load তৈরি হয় simultaneous file upload-এর সময়, কারণ content
+extraction, safety scanning এবং embedding generation compute-intensive।
+Free-tier ব্যবহারের কারণে current recurring infrastructure cost শূন্য।
+
+Campus-wide scale-এর জন্য background job queue, paid compute এবং database tier
+প্রয়োজন হবে। Future enhancement-এর মধ্যে mobile app, push notification,
+university SSO, Bangla localization এবং accessibility improvement রয়েছে।
+
+অর্থাৎ current version pilot-ready, আর scale করার growth path-ও পরিষ্কার।
+
+Transition:
+শেষ slide-এ project-এর মূল contribution একবার সংক্ষেপে তুলে ধরছি।
+
+
+SLIDE 16 — THANK YOU
+সময়: প্রায় ৩০–৪০ সেকেন্ড
+------------------------------------------------------------
+Speaker Script:
+
+সবশেষে, আমরা যে চারটি problem দিয়ে শুরু করেছিলাম—scattered resource,
+campus update-এর limited reach, unsafe lost-item claim এবং weak
+moderation/search—Campus Resource Hub সেগুলো একটি integrated platform-এর
+মাধ্যমে address করে।
+
+Systemটি verified access, organized resource sharing, structured campus
+services, privacy-aware claim, real-time communication এবং secure semantic
+retrieval একসঙ্গে প্রদান করে।
+
+এটি একটি student-built full-stack system, যা department-level pilot হিসেবে
+শুরু করা যায় এবং future improvement-এর মাধ্যমে scale করা সম্ভব।
+
+আমাদের supervisor, সম্মানিত faculty members এবং উপস্থিত সবাইকে আন্তরিক
+ধন্যবাদ। এখন আমরা live system demonstrate করতে এবং আপনাদের প্রশ্নের উত্তর
+দিতে প্রস্তুত।
+
+Transition:
+এখন Campus Resource Hub-এর live demonstration শুরু করছি।
+
+
+AI ও MODEL VIVA QUICK REFERENCE
+============================================================
+
+১. Assistant / RAG generation
+------------------------------------------------------------
+Primary provider:
+- Groq — openai/gpt-oss-120b
+
+Configured fallback order:
+- Hugging Face Inference — openai/gpt-oss-20b
+- OpenRouter — nvidia/nemotron-3-nano-30b-a3b:free
+- Google Gemini — gemini-flash-latest
+- OpenAI API — gpt-4.1-mini (final optional fallback)
+
+যেভাবে বলবেন:
+“Groq is our preferred provider. If it is unavailable, the system tries the
+configured fallback chain sequentially. All models do not run on every request.”
+
+
+২. Content moderation
+------------------------------------------------------------
+First layer:
+- Local deterministic keyword safety filter
+
+AI moderation:
+- Groq text model — openai/gpt-oss-safeguard-20b
+- Groq vision model — qwen/qwen3.6-27b
+- Hugging Face multimodal fallback — zai-org/GLM-4.5V
+- OpenAI final moderation fallback — omni-moderation-latest
+
+Fail-safe policy:
+- Flagged, incomplete অথবা provider-unavailable content human review-এর জন্য
+  hold হয়।
+- Provider failure কখনো automatic safe verdict তৈরি করে না।
+
+
+৩. Semantic search
+------------------------------------------------------------
+Embedding model:
+- Xenova/paraphrase-multilingual-MiniLM-L12-v2
+
+Key facts:
+- Local ও quantized
+- Bangla এবং English support
+- 384-dimensional embedding
+- MongoDB Atlas Vector Search primary retrieval
+- In-memory cosine similarity second fallback
+- Regex search final deterministic fallback
+
+
+৪. Resource image description for search / Q&A
+------------------------------------------------------------
+Configured order:
+- Groq — qwen/qwen3.6-27b
+- Hugging Face — zai-org/GLM-4.5V
+- OpenAI — gpt-4.1-mini
+
+
+৫. ChatGPT এবং OpenAI-এর পার্থক্য
+------------------------------------------------------------
+- Project-এ ChatGPT app/product integrate করা হয়নি।
+- OpenAI API configured final fallback হিসেবে আছে।
+- openai npm SDK Groq, Hugging Face, OpenRouter ও Gemini-এর compatible endpoint
+  call করতেও ব্যবহৃত হয়।
+- openai/gpt-oss model নাম থাকলেও request Groq অথবা Hugging Face endpoint দিয়ে
+  serve হতে পারে; এটি ChatGPT নয়।
+
+
+৬. Faculty প্রশ্ন করলে গুরুত্বপূর্ণ caveat
+------------------------------------------------------------
+- বলবেন “configured fallback chain”, “all providers run together” বলবেন না।
+- Provider তখনই chain-এ থাকে, যখন তার API key deployment environment-এ
+  configured থাকে।
+- Local development configuration-এ Groq preferred এবং multiple fallbacks
+  configured ছিল; production Vercel secret faculty-কে দেখাবেন না।
+- Cerebras project-এর implemented provider নয়; এটি mention করবেন না।
+
+
+সম্ভাব্য Viva প্রশ্নের সংক্ষিপ্ত উত্তর
+============================================================
+
+প্রশ্ন: AI provider fail করলে কী হয়?
+উত্তর: System next configured provider try করে। Moderation complete না হলে
+content human review-এর জন্য hold হয়; automatic publish হয় না।
+
+প্রশ্ন: ChatGPT ব্যবহার করেছেন?
+উত্তর: ChatGPT product integrate করা হয়নি। Groq preferred provider; OpenAI API
+শুধু optional final fallback।
+
+প্রশ্ন: MiniLM কেন ব্যবহার করেছেন?
+উত্তর: এটি lightweight, multilingual, locally runnable এবং 384-dimensional
+embedding তৈরি করে; তাই Bangla-English semantic search-এর জন্য cost-efficient।
+
+প্রশ্ন: RAG কী?
+উত্তর: Retrieval-Augmented Generation। প্রথমে approved ও visible project data
+retrieve করি, তারপর সেই context দিয়ে answer তৈরি করি এবং numbered source দিই।
+
+প্রশ্ন: AI ভুল করলে কীভাবে control করেন?
+উত্তর: Deterministic keyword filter, provider fallback, fail-safe human review,
+approval state এবং role/visibility re-check—একাধিক layer ব্যবহার করি।
+
+প্রশ্ন: Vector result কি authorization bypass করতে পারে?
+উত্তর: না। Candidate retrieve করার পরে original record re-query করে approval,
+ownership, department এবং role visibility check করা হয়।
+
+প্রশ্ন: Capacity number কি guaranteed?
+উত্তর: না। এগুলো report assumptions-এর planning estimate; actual load test ও
+cloud quota অনুযায়ী capacity পরিবর্তিত হবে।
