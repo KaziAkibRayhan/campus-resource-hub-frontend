@@ -88,7 +88,7 @@ const Sidebar = ({ isOpen, isCollapsed, toggleSidebar, toggleCollapsed }) => {
               aria-expanded={!isCollapsed}
               aria-controls="primary-sidebar"
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="absolute -right-3 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-muted)] shadow-md hover:border-blue-500/50 hover:bg-[var(--bg-hover)] hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:flex"
+              className="absolute bottom-0 right-0 hidden h-7 w-7 translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-muted)] shadow-md hover:border-blue-500/50 hover:bg-[var(--bg-hover)] hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:flex"
             >
               {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>

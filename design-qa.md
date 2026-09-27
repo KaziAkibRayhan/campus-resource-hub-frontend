@@ -3,6 +3,7 @@
 - Source visual truth:
   - `/Users/bayshorecommunication/Desktop/Screenshot 2026-09-27 at 11.25.47 AM.png`
   - `/var/folders/_y/1bg_zrxs0bb1r1652v_trcbc0000gn/T/codex-clipboard-061aca42-a4d3-4470-8196-9f8e88fbd536.png`
+  - `/Users/bayshorecommunication/Desktop/Screenshot 2026-09-27 at 12.45.59 PM.png`
 - Implementation: `http://127.0.0.1:4174/dashboard` and `http://127.0.0.1:4174/resources`
 - Implementation screenshot evidence: Codex in-app browser tab 2 inline captures for the expanded desktop, collapsed desktop, full icon rail, mobile closed drawer, and mobile open drawer states. The browser API did not expose a filesystem export path.
 - Source pixels: `352 × 124` and `305 × 121`; density metadata was not available.
@@ -19,7 +20,7 @@
 ## Focused-region comparison evidence
 
 - Compared the source header/sidebar crop with a `500 × 240` implementation capture.
-- The divider, logo alignment, top-row height, background colors, and header search spacing remain consistent. The circular chevron control is centered on the divider and does not overlap the logo or search field.
+- The divider, logo alignment, top-row height, background colors, and header search spacing remain consistent. The circular chevron control is centered on the junction where the sidebar divider meets the header's bottom divider and does not overlap the logo or search field.
 - A collapsed `300 × 420` capture confirmed the icon-only rail, active navigation treatment, and content expansion.
 
 ## Required fidelity surfaces
@@ -46,6 +47,7 @@
 
 - Pass 1: mobile base spacing was corrected so a persisted desktop collapse preference never removes mobile logo, navigation, user, or logout spacing.
 - Pass 2: expanded, collapsed, reload persistence, mobile drawer, route-close, and breakpoint evidence passed without further P0/P1/P2 findings.
+- Pass 3: the latest annotated source moved the toggle from the middle of the logo row to the sidebar/header divider junction; the control was repositioned to that exact intersection.
 
 ## Follow-up polish
 
