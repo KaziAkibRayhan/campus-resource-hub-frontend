@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FileText, Megaphone, Calendar, Package,
   Edit3, Trash2, RefreshCw, Save,
-  ChevronUp, FolderOpen, Upload,
+  ChevronUp, FolderOpen, Upload, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -66,14 +66,19 @@ const Select = ({ options, ...props }) => (
 // ═══════════════════════════════════════════════════════════════
 
 const ResourceEditForm = ({ item, onSave, onCancel, saving }) => {
+  const isTextResource =
+    item.resourceType === "TEXT" || item.fileType === "TEXT";
   const [form, setForm] = useState({
     title: item.title || "",
     course: item.course || "",
     department: item.department || "",
     semester: item.semester || "",
     description: item.description || "",
+    ...(isTextResource ? { content: item.content || "" } : {}),
   });
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
+  const textLength = form.content?.trim().length || 0;
+  const contentInvalid = isTextResource && textLength < 50;
 
   return (
     <div className="mt-4 p-4 bg-[var(--bg-secondary)] rounded-xl space-y-3 border border-[var(--border-color)]">
@@ -88,9 +93,23 @@ const ResourceEditForm = ({ item, onSave, onCancel, saving }) => {
         </Field>
       </div>
       <Field label="Description"><Textarea rows={3} value={form.description} onChange={set("description")} /></Field>
+      {isTextResource && (
+        <Field label="Blog / Text Content">
+          <Textarea
+            rows={10}
+            maxLength={50000}
+            value={form.content}
+            onChange={set("content")}
+            placeholder="Write the full resource content here..."
+          />
+          <p className={`mt-1 text-xs ${contentInvalid ? "text-red-500" : "text-[var(--text-muted)]"}`}>
+            {textLength.toLocaleString()} / 50,000 characters (minimum 50)
+          </p>
+        </Field>
+      )}
       <div className="flex justify-end gap-2 pt-1">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition">Cancel</button>
-        <button onClick={() => onSave(form)} disabled={saving} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
+        <button onClick={() => onSave(form)} disabled={saving || contentInvalid} className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
           <Save size={14} />{saving ? "Saving..." : "Save"}
         </button>
       </div>
@@ -201,7 +220,7 @@ const LostFoundEditForm = ({ item, onSave, onCancel, saving }) => {
 // ═══════════════════════════════════════════════════════════════
 // ITEM CARD — generic wrapper
 // ═══════════════════════════════════════════════════════════════
-const ItemCard = ({ title, meta, badges, date, onDelete, editForm, expanded, onToggle }) => (
+const ItemCard = ({ title, meta, badges, date, onDelete, editForm, expanded, onToggle, editingLoading = false }) => (
   <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] shadow-sm overflow-hidden transition hover:shadow-lg hover:-translate-y-0.5">
     <div className="p-5">
       <div className="flex items-start justify-between gap-4">
@@ -221,10 +240,17 @@ const ItemCard = ({ title, meta, badges, date, onDelete, editForm, expanded, onT
           <div className="flex gap-1">
             <button
               onClick={onToggle}
+              disabled={editingLoading}
               className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 transition"
               title={expanded ? "Close edit" : "Edit"}
             >
-              {expanded ? <ChevronUp size={16} /> : <Edit3 size={16} />}
+              {editingLoading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : expanded ? (
+                <ChevronUp size={16} />
+              ) : (
+                <Edit3 size={16} />
+              )}
             </button>
             <button
               onClick={onDelete}
@@ -262,6 +288,7 @@ const MyUploads = () => {
   const [loading, setLoading]         = useState(true);
 
   const [editingId, setEditingId]     = useState(null);
+  const [loadingEditId, setLoadingEditId] = useState(null);
   const [saving, setSaving]           = useState(false);
 
   const fetchAll = useCallback(async () => {
@@ -313,12 +340,48 @@ const MyUploads = () => {
   const saveResource = async (id, data) => {
     setSaving(true);
     try {
-      await resourceService.update(id, data);
-      toast.success("Resource updated", { description: data.title });
+      const response = await resourceService.update(id, data);
+      if (response.data?.code === "UNDER_REVIEW") {
+        toast.info("Resource updated and sent for review", {
+          description: data.title,
+        });
+      } else {
+        toast.success("Resource updated", { description: data.title });
+      }
       setEditingId(null);
       fetchAll();
     } catch (error) { toast.error(error.response?.data?.message || "Failed to update resource"); }
     finally { setSaving(false); }
+  };
+
+  const toggleResourceEdit = async (resource) => {
+    if (editingId === resource._id) {
+      setEditingId(null);
+      return;
+    }
+
+    const isTextResource =
+      resource.resourceType === "TEXT" || resource.fileType === "TEXT";
+    if (!isTextResource || resource.content !== undefined) {
+      setEditingId(resource._id);
+      return;
+    }
+
+    setLoadingEditId(resource._id);
+    try {
+      const response = await resourceService.getById(resource._id);
+      const detailed = response.data.resource;
+      setResources((current) =>
+        current.map((item) =>
+          item._id === resource._id ? { ...item, ...detailed } : item
+        )
+      );
+      setEditingId(resource._id);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to load resource content");
+    } finally {
+      setLoadingEditId(null);
+    }
   };
 
   const saveAnnouncement = async (id, data) => {
@@ -363,8 +426,8 @@ const MyUploads = () => {
       <EmptyState
         icon={Upload}
         title="No uploads yet"
-        hint="Share your notes, past papers and study materials with the campus."
-        actionLabel="Upload a resource"
+        hint="Share a file, study note, or blog post with the campus."
+        actionLabel="Create a resource"
         onAction={() => navigate("/upload-resource")}
       />
     ) :
@@ -382,11 +445,18 @@ const MyUploads = () => {
           { label: r.course,      color: "blue"   },
           { label: r.department,  color: "green"  },
           { label: r.semester ? `${r.semester} Sem` : null, color: "purple" },
-          { label: r.fileType,    color: "gray"   },
+          {
+            label:
+              r.resourceType === "TEXT" || r.fileType === "TEXT"
+                ? "Blog / Text"
+                : r.fileType,
+            color: "gray",
+          },
         ].filter((b) => b.label)}
         date={`Uploaded ${fmtDate(r.createdAt)}`}
         expanded={editingId === r._id}
-        onToggle={() => setEditingId(editingId === r._id ? null : r._id)}
+        editingLoading={loadingEditId === r._id}
+        onToggle={() => toggleResourceEdit(r)}
         onDelete={() =>
           askDelete({
             kind: "upload",

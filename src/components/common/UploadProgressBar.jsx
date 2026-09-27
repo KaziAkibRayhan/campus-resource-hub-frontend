@@ -19,7 +19,7 @@ const UploadProgressBar = () => {
 
   if (!upload) return null;
 
-  const { phase, progress, fileName, message } = upload;
+  const { phase, progress, resourceLabel, hasFile, message } = upload;
 
   // Flagged uploads are stored but held for a moderator to review.
   if (phase === "review") {
@@ -28,7 +28,7 @@ const UploadProgressBar = () => {
         <Clock className="text-indigo-500 flex-shrink-0 mt-0.5" size={20} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-300">
-            Under review — {fileName}
+            Under review — {resourceLabel}
           </p>
           <p className="text-sm mt-0.5 text-indigo-700 dark:text-indigo-400">
             {message ||
@@ -69,7 +69,7 @@ const UploadProgressBar = () => {
                 : "text-amber-800 dark:text-amber-300"
             }`}
           >
-            {isRejected ? "Upload blocked" : "Upload failed"} — {fileName}
+            {isRejected ? "Resource blocked" : "Resource creation failed"} — {resourceLabel}
           </p>
           <p
             className={`text-sm mt-0.5 ${
@@ -109,10 +109,12 @@ const UploadProgressBar = () => {
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-medium text-[var(--text-main)] truncate">
               {isSuccess
-                ? `${fileName} uploaded successfully`
+                ? `${resourceLabel} created successfully`
                 : isChecking
-                ? `Checking content of ${fileName} for safety…`
-                : `Uploading ${fileName}…`}
+                ? `Checking ${resourceLabel} for safety…`
+                : hasFile
+                ? `Uploading ${resourceLabel}…`
+                : `Creating ${resourceLabel}…`}
             </p>
             {!isSuccess && !isChecking && (
               <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex-shrink-0">

@@ -79,7 +79,9 @@ export const resourceService = {
   upload: (formData, onUploadProgress) =>
     API.post("/resources", formData, { timeout: 300000, onUploadProgress }),
   getMyUploads: () => API.get("/resources/user/my-uploads"),
-  update: (id, data) => API.put(`/resources/${id}`, data),
+  // Text resources with attachments are re-fetched, extracted, and safety-
+  // checked on content edits, so allow the same window as a new upload.
+  update: (id, data) => API.put(`/resources/${id}`, data, { timeout: 300000 }),
   delete: (id) => API.delete(`/resources/${id}`),
   incrementDownload: (id) => API.put(`/resources/${id}/download`),
   approve: (id) => API.put(`/resources/${id}/approve`),
@@ -88,6 +90,12 @@ export const resourceService = {
   // `download: true` forces a download; otherwise it's served inline for preview.
   fileUrl: (id, { download = false } = {}) =>
     `${API_BASE_URL}/resources/${id}/file${download ? "?download=1" : ""}`,
+  // Authenticated blob read for owner/moderator access to unpublished files.
+  getFileBlob: (id, { download = false } = {}) =>
+    API.get(`/resources/${id}/file`, {
+      params: download ? { download: 1 } : undefined,
+      responseType: "blob",
+    }),
   previewHtmlUrl: (id) => `${API_BASE_URL}/resources/${id}/preview-html`,
 };
 

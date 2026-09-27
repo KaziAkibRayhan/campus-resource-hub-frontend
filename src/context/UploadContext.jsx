@@ -36,8 +36,13 @@ export const UploadProvider = ({ children }) => {
     clearTimeout(hideTimerRef.current);
 
     const file = formData.get("file");
+    const hasFile = file instanceof File && file.size > 0;
+    const resourceLabel = hasFile
+      ? file.name
+      : formData.get("title") || "resource";
     setUpload({
-      fileName: file?.name || "file",
+      resourceLabel,
+      hasFile,
       title: formData.get("title") || "",
       phase: "uploading",
       progress: 0,
@@ -78,7 +83,7 @@ export const UploadProvider = ({ children }) => {
         if (underReview) {
           toast.info("Your resource is under review by a moderator.");
         } else {
-          toast.success(response.data.message || "Resource uploaded successfully!");
+          toast.success(response.data.message || "Resource created successfully!");
         }
         window.dispatchEvent(
           new CustomEvent("resource:uploaded", { detail: response.data.resource })
@@ -104,8 +109,8 @@ export const UploadProvider = ({ children }) => {
         } else {
           const message =
             error.code === "ECONNABORTED"
-              ? "Upload timed out. Please try again with a smaller file or check your connection."
-              : data?.message || "Error uploading resource";
+              ? "Request timed out. Please try again or check your connection."
+              : data?.message || "Error creating resource";
           setUpload((current) =>
             current ? { ...current, phase: "error", message } : current
           );

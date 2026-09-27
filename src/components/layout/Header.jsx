@@ -352,7 +352,9 @@ const Header = ({ toggleSidebar }) => {
                                     </div>
                                     <span className={`text-[9px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${typeColors[source.type]}`}>
                                       {source.type === "resource" && source.fileType
-                                        ? `${source.fileType} resource`
+                                        ? source.fileType === "TEXT"
+                                          ? "Blog / Text"
+                                          : `${source.fileType} resource`
                                         : typeLabels[source.type] || source.type}
                                     </span>
                                   </div>
@@ -363,7 +365,7 @@ const Header = ({ toggleSidebar }) => {
                                   )}
                                   {source.type === "resource" && source.knowledgeReady && (
                                     <p className="text-[10px] text-emerald-500 mt-2 font-semibold">
-                                      File content indexed · open the matching resource
+                                      Resource content indexed · open the matching resource
                                     </p>
                                   )}
                                 </button>

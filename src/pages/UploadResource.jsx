@@ -6,6 +6,7 @@ import { uploadResourceSchema } from "../utils/validationSchemas";
 import {
   Upload,
   FileText,
+  BookOpen,
   ArrowLeft,
   Image,
   Loader2,
@@ -55,17 +56,27 @@ const UploadResource = () => {
   // owns the success / under-review / rejected / error toasts on completion.
   const handleSubmit = (values, { setSubmitting, resetForm }) => {
     const formData = new FormData();
+    formData.append("resourceType", values.resourceType);
     formData.append("title", values.title);
     formData.append("course", values.course);
     formData.append("department", values.department);
     formData.append("semester", values.semester);
     formData.append("description", values.description);
-    formData.append("file", values.file);
+    if (values.resourceType === "TEXT") {
+      formData.append("content", values.content.trim());
+    }
+    if (values.file) {
+      formData.append("file", values.file);
+    }
 
     const started = startUpload(formData);
     setSubmitting(false);
     if (started) {
-      toast.info("Upload started — you can keep browsing while we process it.");
+      toast.info(
+        values.resourceType === "TEXT"
+          ? "Publishing started — you can keep browsing while we process it."
+          : "Upload started — you can keep browsing while we process it."
+      );
       resetForm();
       setFilePreview(null);
       navigate("/resources");
@@ -94,10 +105,10 @@ const UploadResource = () => {
         </div>
         <div>
           <h2 className="text-3xl font-bold text-[var(--text-main)]">
-            Upload Resource
+            Create Resource
           </h2>
           <p className="text-[var(--text-muted)] mt-1">
-            Share your study materials with fellow students
+            Share a file or publish text for fellow students
           </p>
         </div>
       </div>
@@ -105,17 +116,26 @@ const UploadResource = () => {
       {/* Upload Form */}
       <Formik
         initialValues={{
+          resourceType: "FILE",
           title: "",
           course: "",
           department: "",
           semester: "",
           description: "",
+          content: "",
           file: null,
         }}
         validationSchema={uploadResourceSchema}
         onSubmit={handleSubmit}
       >
-        {({ isSubmitting, errors, touched, setFieldValue, setFieldTouched }) => (
+        {({
+          isSubmitting,
+          errors,
+          touched,
+          values,
+          setFieldValue,
+          setFieldTouched,
+        }) => (
           <Form className="space-y-6">
             {/* Resource Details */}
             <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 md:p-8 border border-[var(--border-color)]">
@@ -134,6 +154,71 @@ const UploadResource = () => {
               </div>
 
               <div className="space-y-6">
+                {/* Resource Type */}
+                <fieldset>
+                  <legend className="block text-sm font-semibold text-[var(--text-muted)] mb-2">
+                    Resource Type <span className="text-red-500">*</span>
+                  </legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {[
+                      {
+                        value: "FILE",
+                        label: "File resource",
+                        hint: "Upload a PDF, Office file, image, text file or ZIP",
+                        Icon: Upload,
+                      },
+                      {
+                        value: "TEXT",
+                        label: "Blog / text",
+                        hint: "Write and publish the resource directly",
+                        Icon: BookOpen,
+                      },
+                    ].map((option) => {
+                      const selected = values.resourceType === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => {
+                            setFieldValue("resourceType", option.value);
+                            setFieldTouched("resourceType", true, false);
+                          }}
+                          className={`flex items-start gap-3 rounded-xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+                            selected
+                              ? "border-blue-500 bg-blue-500/10"
+                              : "border-[var(--border-color)] bg-[var(--bg-main)] hover:border-blue-400 hover:bg-[var(--bg-hover)]"
+                          }`}
+                        >
+                          <span
+                            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border ${
+                              selected
+                                ? "border-blue-500/30 bg-blue-500/15 text-blue-500"
+                                : "border-[var(--border-color)] text-[var(--text-muted)]"
+                            }`}
+                          >
+                            {React.createElement(option.Icon, { size: 20 })}
+                          </span>
+                          <span>
+                            <span className="block font-bold text-[var(--text-main)]">
+                              {option.label}
+                            </span>
+                            <span className="mt-0.5 block text-xs leading-relaxed text-[var(--text-muted)]">
+                              {option.hint}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <ErrorMessage
+                    name="resourceType"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </fieldset>
+
                 {/* Title */}
                 <div>
                   <label
@@ -274,7 +359,54 @@ const UploadResource = () => {
               </div>
             </div>
 
-            {/* File */}
+            {values.resourceType === "TEXT" && (
+              /* Blog / text content */
+              <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 md:p-8 border border-[var(--border-color)]">
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    <BookOpen size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--text-main)]">
+                      Blog / Text Content <span className="text-red-500">*</span>
+                    </h3>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      Write at least 50 characters. A file is not required.
+                    </p>
+                  </div>
+                </div>
+
+                <label
+                  htmlFor="content"
+                  className="block text-sm font-semibold text-[var(--text-muted)] mb-2"
+                >
+                  Content <span className="text-red-500">*</span>
+                </label>
+                <Field
+                  as="textarea"
+                  id="content"
+                  name="content"
+                  rows="14"
+                  maxLength="50000"
+                  placeholder="Write your notes, tutorial, explanation or study guide here..."
+                  className={`w-full px-4 py-3 leading-relaxed ${
+                    errors.content && touched.content ? "border-red-500" : ""
+                  }`}
+                />
+                <div className="mt-1 flex items-start justify-between gap-4">
+                  <ErrorMessage
+                    name="content"
+                    component="div"
+                    className="text-red-500 text-sm"
+                  />
+                  <span className="ml-auto flex-shrink-0 text-xs text-[var(--text-muted)]">
+                    {values.content.length.toLocaleString()} / 50,000
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* File / optional text-resource attachment */}
             <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 md:p-8 border border-[var(--border-color)]">
               <div className="flex items-center gap-2.5 mb-6">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20">
@@ -282,10 +414,16 @@ const UploadResource = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-[var(--text-main)]">
-                    File <span className="text-red-500">*</span>
+                    {values.resourceType === "TEXT" ? (
+                      "Attachment (optional)"
+                    ) : (
+                      <>
+                        File <span className="text-red-500">*</span>
+                      </>
+                    )}
                   </h3>
                   <p className="text-xs text-[var(--text-muted)]">
-                    PDF, Word, PowerPoint, Excel or images, up to 20MB
+                    PDF, Word, PowerPoint, Excel, images, TXT or ZIP, up to 20MB
                   </p>
                 </div>
               </div>
@@ -319,7 +457,7 @@ const UploadResource = () => {
                   type="file"
                   id="file"
                   name="file"
-                  accept=".pdf,.doc,.docx,.docm,.dot,.dotx,.dotm,.ppt,.pptx,.pptm,.pps,.ppsx,.ppsm,.pot,.potx,.potm,.xls,.xlsx,.xlsm,.xlsb,.xlt,.xltx,.xltm,.jpg,.jpeg,.png,.webp,.gif,.avif,.svg,.bmp"
+                  accept=".pdf,.doc,.docx,.docm,.dot,.dotx,.dotm,.ppt,.pptx,.pptm,.pps,.ppsx,.ppsm,.pot,.potx,.potm,.xls,.xlsx,.xlsm,.xlsb,.xlt,.xltx,.xltm,.jpg,.jpeg,.png,.webp,.gif,.avif,.svg,.bmp,.txt,.zip"
                   onChange={(event) => {
                     handleSelectedFile(
                       event.currentTarget.files?.[0],
@@ -374,7 +512,7 @@ const UploadResource = () => {
                         Click to upload or drag & drop
                       </p>
                       <p className="text-sm text-[var(--text-muted)]">
-                        PDF, Word, PowerPoint, Excel, Images (Max 20MB)
+                        PDF, Word, PowerPoint, Excel, Images, TXT, ZIP (Max 20MB)
                       </p>
                     </div>
                   </label>
@@ -405,8 +543,16 @@ const UploadResource = () => {
                 </>
               ) : (
                 <>
-                  <Upload size={20} />
-                  <span>Upload Resource</span>
+                  {values.resourceType === "TEXT" ? (
+                    <BookOpen size={20} />
+                  ) : (
+                    <Upload size={20} />
+                  )}
+                  <span>
+                    {values.resourceType === "TEXT"
+                      ? "Publish Text Resource"
+                      : "Upload Resource"}
+                  </span>
                 </>
               )}
             </button>

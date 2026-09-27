@@ -11,4 +11,13 @@ export const semesters = [
   "8th",
 ];
 
-export const fileTypes = ["PDF", "DOCX", "PPTX", "XLSX", "IMAGE"];
+export const fileTypes = [
+  "PDF",
+  "DOCX",
+  "PPTX",
+  "XLSX",
+  "IMAGE",
+  "TXT",
+  "ZIP",
+  "TEXT",
+];

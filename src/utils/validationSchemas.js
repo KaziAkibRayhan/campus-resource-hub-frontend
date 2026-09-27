@@ -66,6 +66,9 @@ export const resetPasswordSchema = Yup.object({
 
 // Upload Resource Validation Schema
 export const uploadResourceSchema = Yup.object({
+  resourceType: Yup.string()
+    .oneOf(["FILE", "TEXT"], "Select a valid resource type")
+    .required("Resource type is required"),
   title: Yup.string()
     .min(5, "Title must be at least 5 characters")
     .max(100, "Title must be less than 100 characters")
@@ -77,13 +80,23 @@ export const uploadResourceSchema = Yup.object({
     .min(10, "Description must be at least 10 characters")
     .max(500, "Description must be less than 500 characters")
     .required("Description is required"),
+  content: Yup.string().when("resourceType", {
+    is: "TEXT",
+    then: (schema) =>
+      schema
+        .trim()
+        .min(50, "Content must be at least 50 characters")
+        .max(50000, "Content must be less than 50,000 characters")
+        .required("Content is required for a text resource"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   file: Yup.mixed()
-    .required("File is required")
+    .nullable()
     .test("fileSize", "File size must be less than 20MB", (value) => {
-      return value && value.size <= 20 * 1024 * 1024; // 20MB
+      return !value || value.size <= 20 * 1024 * 1024; // 20MB
     })
-    .test("fileType", "Only PDF, Word, PowerPoint, Excel, and images are allowed", (value) => {
-      if (!value) return false;
+    .test("fileType", "Only PDF, Word, PowerPoint, Excel, images, TXT, and ZIP files are allowed", (value) => {
+      if (!value) return true;
 
       const allowedTypes = [
         "application/pdf",
@@ -115,6 +128,9 @@ export const uploadResourceSchema = Yup.object({
         "image/avif",
         "image/svg+xml",
         "image/bmp",
+        "text/plain",
+        "application/zip",
+        "application/x-zip-compressed",
       ];
       const allowedExtensions = [
         ".pdf",
@@ -148,6 +164,8 @@ export const uploadResourceSchema = Yup.object({
         ".avif",
         ".svg",
         ".bmp",
+        ".txt",
+        ".zip",
       ];
       const fileName = value.name?.toLowerCase() || "";
 
@@ -155,6 +173,11 @@ export const uploadResourceSchema = Yup.object({
         allowedTypes.includes(value.type) ||
         allowedExtensions.some((extension) => fileName.endsWith(extension))
       );
+    })
+    .when("resourceType", {
+      is: "FILE",
+      then: (schema) => schema.required("File is required"),
+      otherwise: (schema) => schema.notRequired(),
     }),
 });
 

@@ -199,7 +199,7 @@ const Dashboard = () => {
               compact
               icon={BookOpen}
               title="No recent resources"
-              hint="Uploaded study materials will show up here."
+              hint="Shared files and text resources will show up here."
             />
           ) : (
             <div className="space-y-3">
@@ -224,8 +224,17 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-[var(--text-muted)] flex-shrink-0">
-                    <Download size={16} />
-                    <span>{resource.downloads}</span>
+                    {resource.fileUrl ? (
+                      <>
+                        <Download size={16} />
+                        <span>{resource.downloads}</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen size={16} />
+                        <span>Text</span>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -304,7 +313,7 @@ const Dashboard = () => {
           >
             <BookOpen className="text-blue-600 dark:text-blue-400 mb-2" size={32} />
             <span className="text-sm font-semibold text-[var(--text-main)]">
-              Upload Resource
+              Create Resource
             </span>
           </Link>
           <Link

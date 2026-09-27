@@ -74,6 +74,7 @@ const AdminPanel = () => {
   const [pendingResources, setPendingResources] = useState([]);
   const [pendingLostFound, setPendingLostFound] = useState([]);
   const [reviewing, setReviewing]         = useState(null); // item id being approved/rejected
+  const [viewingResource, setViewingResource] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null); // { label, onConfirm }
   const [deleting, setDeleting]           = useState(false);
   const [rejectTarget, setRejectTarget]   = useState(null); // item pending rejection
@@ -218,6 +219,37 @@ const AdminPanel = () => {
     }
   };
 
+  const handleViewResourceAttachment = async (resource) => {
+    const previewWindow = window.open("", "_blank");
+    if (previewWindow) {
+      previewWindow.opener = null;
+      previewWindow.document.title = "Loading attachment…";
+      previewWindow.document.body.textContent = "Loading attachment…";
+    }
+    setViewingResource(resource._id);
+    try {
+      const response = await resourceService.getFileBlob(resource._id);
+      const blobUrl = URL.createObjectURL(response.data);
+      if (previewWindow) {
+        previewWindow.location.href = blobUrl;
+      } else {
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (error) {
+      previewWindow?.close();
+      toast.error(error.response?.data?.message || "Failed to open attachment");
+    } finally {
+      setViewingResource(null);
+    }
+  };
+
   const handleApproveLostFound = async (item) => {
     const ok = await confirm({
       title: "Publish this item?",
@@ -313,7 +345,8 @@ const AdminPanel = () => {
   const filteredResources = allResources.filter(
     (r) => !resourceSearch ||
       r.title?.toLowerCase().includes(resourceSearch.toLowerCase()) ||
-      r.course?.toLowerCase().includes(resourceSearch.toLowerCase())
+      r.course?.toLowerCase().includes(resourceSearch.toLowerCase()) ||
+      r.content?.toLowerCase().includes(resourceSearch.toLowerCase())
   );
 
   const filteredUsers = users.filter(
@@ -460,10 +493,14 @@ const AdminPanel = () => {
                   <tr key={r._id} className="hover:bg-[var(--bg-hover)] transition">
                     <td className="px-5 py-4">
                       <p className="font-semibold text-[var(--text-main)] truncate max-w-[220px]">{r.title}</p>
-                      <p className="text-xs text-[var(--text-muted)]">{r.course} · {r.fileType}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {r.course} · {r.fileType === "TEXT" ? "Blog / Text" : r.fileType}
+                      </p>
                     </td>
                     <td className="px-5 py-4 text-sm text-[var(--text-muted)]">{r.uploadedBy?.name || "Unknown"}</td>
-                    <td className="px-5 py-4 text-sm text-[var(--text-muted)]">{r.downloads || 0}</td>
+                    <td className="px-5 py-4 text-sm text-[var(--text-muted)]">
+                      {r.fileUrl ? r.downloads || 0 : "—"}
+                    </td>
                     <td className="px-5 py-4 text-sm text-[var(--text-muted)]">{new Date(r.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-4 text-right">
                       <button
@@ -531,7 +568,7 @@ const AdminPanel = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-[var(--text-main)] truncate">{r.title}</p>
                       <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-full">
-                        {r.fileType}
+                        {r.fileType === "TEXT" ? "Blog / Text" : r.fileType}
                       </span>
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-1">
@@ -539,6 +576,16 @@ const AdminPanel = () => {
                     </p>
                     {r.description && (
                       <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2">{r.description}</p>
+                    )}
+                    {r.content && (
+                      <details className="mt-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-3">
+                        <summary className="cursor-pointer text-xs font-semibold text-blue-500">
+                          Read submitted text
+                        </summary>
+                        <p className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-main)]">
+                          {r.content}
+                        </p>
+                      </details>
                     )}
                     {categories.length > 0 && (
                       <div className="flex items-center gap-2 flex-wrap mt-3">
@@ -558,14 +605,21 @@ const AdminPanel = () => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <a
-                      href={resourceService.fileUrl(r._id)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-hover)] transition"
-                    >
-                      <Eye size={16} /> View
-                    </a>
+                    {r.fileUrl && (
+                      <button
+                        type="button"
+                        onClick={() => handleViewResourceAttachment(r)}
+                        disabled={viewingResource === r._id}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-hover)] transition"
+                      >
+                        {viewingResource === r._id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Eye size={16} />
+                        )}
+                        View attachment
+                      </button>
+                    )}
                     <button
                       onClick={() => handleApproveResource(r)}
                       disabled={busy}
@@ -741,10 +795,12 @@ const AdminPanel = () => {
                     <td className="px-5 py-4 text-sm text-[var(--text-muted)]">{r.uploadedBy?.name || "Unknown"}</td>
                     <td className="px-5 py-4">
                       <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full">
-                        {r.fileType}
+                        {r.fileType === "TEXT" ? "Blog / Text" : r.fileType}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-sm text-[var(--text-muted)]">{r.downloads || 0}</td>
+                    <td className="px-5 py-4 text-sm text-[var(--text-muted)]">
+                      {r.fileUrl ? r.downloads || 0 : "—"}
+                    </td>
                     <td className="px-5 py-4 text-sm text-[var(--text-muted)]">{new Date(r.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-4 text-right">
                       <button

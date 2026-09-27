@@ -42,6 +42,7 @@ const Resources = () => {
   const [isSemantic, setIsSemantic] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedSemester, setSelectedSemester] = useState("all");
+  const [selectedFileType, setSelectedFileType] = useState("all");
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
   const [previewResource, setPreviewResource] = useState(null);
@@ -56,6 +57,7 @@ const Resources = () => {
     if (fileType === "PDF") return "bg-red-600/90";
     if (["PPT", "PPTX"].includes(fileType)) return "bg-orange-600/90";
     if (fileType === "XLSX") return "bg-green-600/90";
+    if (fileType === "TEXT") return "bg-violet-600/90";
     return "bg-blue-600/90";
   };
 
@@ -69,8 +71,27 @@ const Resources = () => {
       return { Icon: FileSpreadsheet, from: "from-green-500/15", to: "to-emerald-500/5", ring: "text-green-500" };
     if (["DOC", "DOCX"].includes(fileType))
       return { Icon: FileText, from: "from-blue-500/15", to: "to-sky-500/5", ring: "text-blue-500" };
+    if (fileType === "TXT")
+      return { Icon: FileText, from: "from-cyan-500/15", to: "to-sky-500/5", ring: "text-cyan-500" };
+    if (fileType === "TEXT")
+      return { Icon: BookOpen, from: "from-violet-500/15", to: "to-fuchsia-500/5", ring: "text-violet-500" };
     return { Icon: File, from: "from-slate-500/15", to: "to-slate-500/5", ring: "text-slate-400" };
   };
+
+  const getResourceFileType = (resource) => {
+    const fileType =
+      resource?.fileType ||
+      (resource?.resourceType === "TEXT" ? "TEXT" : "");
+    return String(fileType).toUpperCase();
+  };
+
+  const getResourceTypeLabel = (resource) => {
+    const fileType = getResourceFileType(resource);
+    return fileType === "TEXT" ? "BLOG / TEXT" : fileType || "FILE";
+  };
+
+  const isTextResource = (resource) =>
+    getResourceFileType(resource) === "TEXT";
 
   const getResourceExtension = (resource) =>
     (resource?.fileUrl || "")
@@ -80,11 +101,11 @@ const Resources = () => {
       ?.toLowerCase();
 
   const canPreviewWord = (resource) =>
-    ["DOCX", "DOC"].includes(resource.fileType) &&
+    ["DOCX", "DOC"].includes(getResourceFileType(resource)) &&
     ["docx", "docm", "dotx", "dotm"].includes(getResourceExtension(resource));
 
   const canPreviewPresentation = (resource) =>
-    ["PPTX", "PPT"].includes(resource.fileType) &&
+    ["PPTX", "PPT"].includes(getResourceFileType(resource)) &&
     ["pptx", "pptm", "ppsx", "ppsm", "potx", "potm"].includes(getResourceExtension(resource));
 
   const fetchResources = useCallback(async () => {
@@ -97,6 +118,7 @@ const Resources = () => {
       if (debouncedSearch) params.search = debouncedSearch;
       if (selectedDepartment !== "all") params.department = selectedDepartment;
       if (selectedSemester !== "all") params.semester = selectedSemester;
+      if (selectedFileType !== "all") params.fileType = selectedFileType;
       params.sortBy = sortBy;
       params.order = order;
       params.page = currentPage;
@@ -117,7 +139,7 @@ const Resources = () => {
     } finally {
       if (listRequestRef.current === controller) setLoading(false);
     }
-  }, [debouncedSearch, selectedDepartment, selectedSemester, sortBy, order, currentPage]);
+  }, [debouncedSearch, selectedDepartment, selectedSemester, selectedFileType, sortBy, order, currentPage]);
 
   useEffect(() => {
     fetchResources();
@@ -141,9 +163,14 @@ const Resources = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, selectedDepartment, selectedSemester, sortBy, order]);
+  }, [debouncedSearch, selectedDepartment, selectedSemester, selectedFileType, sortBy, order]);
 
   const handleDownload = async (id, _fileUrl, fileName) => {
+    if (!_fileUrl) {
+      toast.error("This text resource does not include an attachment");
+      return;
+    }
+
     try {
       resourceService.incrementDownload(id).catch(() => {});
 
@@ -189,7 +216,7 @@ const Resources = () => {
               Academic Resources
             </h2>
             <p className="text-[var(--text-muted)] mt-1">
-              Browse and download study materials
+              Browse, read, and download study materials
             </p>
           </div>
         </div>
@@ -198,13 +225,13 @@ const Resources = () => {
           className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
         >
           <Upload size={20} />
-          <span>Upload Resource</span>
+          <span>Create Resource</span>
         </Link>
       </div>
 
       {/* Filters */}
       <div className="bg-[var(--bg-card)] rounded-xl shadow-md p-6 border border-[var(--border-color)]">
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {/* Search */}
           <div className="relative">
             <Search
@@ -261,6 +288,34 @@ const Resources = () => {
                   {semester}
                 </option>
               ))}
+            </select>
+            <ChevronDown
+              className="absolute right-3 top-3 text-[var(--text-muted)] pointer-events-none"
+              size={18}
+            />
+          </div>
+
+          {/* Resource Type Filter */}
+          <div className="relative">
+            <File
+              className="absolute left-3 top-3 text-[var(--text-muted)] pointer-events-none"
+              size={18}
+            />
+            <select
+              value={selectedFileType}
+              onChange={(event) => setSelectedFileType(event.target.value)}
+              className="w-full pl-10 pr-10 py-2 appearance-none"
+              aria-label="Filter by resource type"
+            >
+              <option value="all">All Types</option>
+              <option value="PDF">PDF</option>
+              <option value="DOCX">Word / DOCX</option>
+              <option value="PPTX">PowerPoint</option>
+              <option value="XLSX">Excel</option>
+              <option value="IMAGE">Images</option>
+              <option value="TXT">Text File (.txt)</option>
+              <option value="ZIP">ZIP Archive</option>
+              <option value="TEXT">Blog / Text</option>
             </select>
             <ChevronDown
               className="absolute right-3 top-3 text-[var(--text-muted)] pointer-events-none"
@@ -353,7 +408,38 @@ const Resources = () => {
                 key={resource._id}
                 className="bg-[var(--bg-card)] rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition p-5 flex flex-col border border-[var(--border-color)] overflow-hidden"
               >
-                {resource.fileType === "IMAGE" ? (
+                {isTextResource(resource) ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewResource(resource)}
+                    className="group/thumb relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border border-violet-500/20 bg-gradient-to-br from-violet-500/15 to-fuchsia-500/5 p-4 text-left"
+                    title="Click to read"
+                    aria-label={`Read ${resource.title}`}
+                  >
+                    <div className="relative flex h-full flex-col">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/15 text-violet-500">
+                          <BookOpen size={19} />
+                        </span>
+                        <span className="rounded-full bg-violet-600/90 px-2 py-1 text-[10px] font-bold text-white">
+                          BLOG / TEXT
+                        </span>
+                      </div>
+                      <p className="mt-3 line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-[var(--text-main)]">
+                        {resource.contentPreview ||
+                          resource.content ||
+                          resource.description ||
+                          "Open this resource to read the full text."}
+                      </p>
+                      <span className="mt-auto flex items-center gap-1 text-[11px] font-semibold text-violet-500 opacity-80 transition-opacity group-hover/thumb:opacity-100">
+                        <Eye size={13} /> Read full text
+                        {resource.fileUrl && resource.attachmentFileType
+                          ? ` • ${resource.attachmentFileType} attachment`
+                          : ""}
+                      </span>
+                    </div>
+                  </button>
+                ) : getResourceFileType(resource) === "IMAGE" ? (
                   <div
                     onClick={() => setPreviewResource(resource)}
                     onKeyDown={(event) => {
@@ -381,7 +467,7 @@ const Resources = () => {
                       IMAGE
                     </span>
                   </div>
-                ) : resource.fileType === "PDF" ? (
+                ) : getResourceFileType(resource) === "PDF" ? (
                   <div
                     onClick={() => setPreviewResource(resource)}
                     onKeyDown={(event) => {
@@ -433,7 +519,7 @@ const Resources = () => {
                       <Eye size={13} /> Click to preview
                     </span>
                     <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-blue-600/90 text-white rounded-full">
-                      {resource.fileType}
+                      {getResourceTypeLabel(resource)}
                     </span>
                   </div>
                 ) : canPreviewPresentation(resource) ? (
@@ -458,12 +544,13 @@ const Resources = () => {
                       <Eye size={13} /> Click to preview
                     </span>
                     <span className="absolute right-2 top-2 text-xs font-bold px-2 py-1 bg-orange-600/90 text-white rounded-full">
-                      {resource.fileType}
+                      {getResourceTypeLabel(resource)}
                     </span>
                   </div>
                 ) : (
                   (() => {
-                    const { Icon, from, to, ring } = getDocumentThumb(resource.fileType);
+                    const fileType = getResourceFileType(resource);
+                    const { Icon, from, to, ring } = getDocumentThumb(fileType);
                     return (
                       <button
                         onClick={() => setPreviewResource(resource)}
@@ -481,10 +568,10 @@ const Resources = () => {
                         </span>
                         <span
                           className={`absolute right-2 top-2 text-xs font-bold px-2 py-1 ${getDocumentBadgeClass(
-                            resource.fileType
+                            fileType
                           )} text-white rounded-full`}
                         >
-                          {resource.fileType}
+                          {getResourceTypeLabel(resource)}
                         </span>
                       </button>
                     );
@@ -503,26 +590,35 @@ const Resources = () => {
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <button
+                      type="button"
                       onClick={() => setPreviewResource(resource)}
                       className="flex-1 flex items-center justify-center space-x-1 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition text-sm font-semibold border border-[var(--border-color)]"
                     >
-                      <Eye size={16} />
-                      <span>Preview</span>
+                      {isTextResource(resource) ? (
+                        <BookOpen size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
+                      <span>{isTextResource(resource) ? "Read" : "Preview"}</span>
                     </button>
                     <ShareMenu resource={resource} variant="icon" align="right" />
-                    <button
-                      onClick={() =>
-                        handleDownload(
-                          resource._id,
-                          resource.fileUrl,
-                          resource.title
-                        )
-                      }
-                      className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-md"
-                      title="Download"
-                    >
-                      <Download size={18} />
-                    </button>
+                    {resource.fileUrl && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownload(
+                            resource._id,
+                            resource.fileUrl,
+                            resource.originalFileName || resource.title
+                          )
+                        }
+                        className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-md"
+                        title={isTextResource(resource) ? "Download attachment" : "Download"}
+                        aria-label={isTextResource(resource) ? "Download attachment" : "Download resource"}
+                      >
+                        <Download size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -537,11 +633,12 @@ const Resources = () => {
           hint={
             debouncedSearch ||
             selectedDepartment !== "all" ||
-            selectedSemester !== "all"
+            selectedSemester !== "all" ||
+            selectedFileType !== "all"
               ? "Try adjusting your search or filters to find what you're looking for."
               : "Be the first to share study materials with your campus."
           }
-          actionLabel="Upload a resource"
+          actionLabel="Create a resource"
           onAction={() => navigate("/upload-resource")}
         />
       )}
@@ -623,6 +720,7 @@ const Resources = () => {
       {/* Preview Modal */}
       {previewResource && (
         <ResourcePreview
+          key={previewResource._id}
           resource={previewResource}
           onClose={() => setPreviewResource(null)}
           onDownload={handleDownload}
