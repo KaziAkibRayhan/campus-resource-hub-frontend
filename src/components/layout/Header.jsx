@@ -204,6 +204,8 @@ const Header = ({ toggleSidebar }) => {
         <div className="flex items-center space-x-4 lg:hidden">
           <button
             onClick={toggleSidebar}
+            type="button"
+            aria-label="Open navigation menu"
             className="p-2.5 lg:hidden hover:bg-[var(--bg-hover)] rounded-xl transition-colors"
           >
             <Menu size={22} className="text-[var(--text-main)]" />
