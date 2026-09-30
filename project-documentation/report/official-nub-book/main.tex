@@ -53,6 +53,7 @@
 \usepackage{comment}
 \usepackage{fancyvrb}
 \usepackage{xurl}
+\usepackage{qrcode}
 \usepackage{float}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit}
@@ -1368,13 +1369,22 @@ Planned improvements include:
 \chapter{Supplementary Material}
 
 \section{Code Availability}
-The project source is maintained in the following repositories:
-\begin{itemize}[leftmargin=*]
-  \item \textbf{Live web application:} \href{https://campus-resource-hub-frontend.vercel.app/}{Campus Resource Hub}
-  \item \textbf{Web frontend:} \href{https://github.com/KaziAkibRayhan/campus-resource-hub-frontend}{campus-resource-hub-frontend}
-  \item \textbf{Backend API:} \href{https://github.com/KaziAkibRayhan/campus-resource-hub-backend}{campus-resource-hub-backend}
-  \item \textbf{Mobile wrapper:} \href{https://github.com/KaziAkibRayhan/campus-resource-hub-mobile}{campus-resource-hub-mobile}
+The live application and complete project source are available at the following addresses:
+\begin{itemize}[leftmargin=*,itemsep=6pt]
+  \item \textbf{Live web application}\\[-2pt]
+        {\small\url{https://campus-resource-hub-frontend.vercel.app/}}
+  \item \textbf{Web frontend repository}\\[-2pt]
+        {\small\url{https://github.com/KaziAkibRayhan/campus-resource-hub-frontend}}
+  \item \textbf{Backend API repository}\\[-2pt]
+        {\small\url{https://github.com/KaziAkibRayhan/campus-resource-hub-backend}}
+  \item \textbf{Mobile wrapper repository}\\[-2pt]
+        {\small\url{https://github.com/KaziAkibRayhan/campus-resource-hub-mobile}}
 \end{itemize}
+
+\begin{center}
+{\color{black}\qrcode*[height=27mm]{https://campus-resource-hub-frontend.vercel.app/}}\\[4pt]
+{\small Scan to open the live web application.}
+\end{center}
 
 \section{Current Automated Verification}
 At the time of final formatting, the checked repository state completed 27 backend tests, 6 frontend tests, and 1 mobile test without failures. Production-scale load testing and formal user-acceptance testing remain outside the scope of these automated suites.
