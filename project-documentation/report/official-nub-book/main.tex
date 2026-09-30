@@ -1150,7 +1150,7 @@ change --- role change restricted to admins), and review queues for pending reso
 \reportfig{admin.png}{Admin panel: statistics and review tools}{fig:admin}
 
 \section{Deployment}
-The web frontend and the current backend entry points are configured for Vercel deployment. MongoDB Atlas stores application documents, embeddings, and vector-search indexes, while Cloudinary stores resource files and images. Environment variables isolate provider credentials and deployment-specific settings. The companion React Native application currently presents the deployed web application inside a WebView with back-navigation and retry handling; a fully native API client remains future work.
+The web frontend and the current backend entry points are configured for Vercel deployment. The live web application is available at \href{https://campus-resource-hub-frontend.vercel.app/}{Campus Resource Hub}. MongoDB Atlas stores application documents, embeddings, and vector-search indexes, while Cloudinary stores resource files and images. Environment variables isolate provider credentials and deployment-specific settings. The companion React Native application currently presents the deployed web application inside a WebView with back-navigation and retry handling; a fully native API client remains future work.
 
 % ------------------------------------------------------------
 
@@ -1370,6 +1370,7 @@ Planned improvements include:
 \section{Code Availability}
 The project source is maintained in the following repositories:
 \begin{itemize}[leftmargin=*]
+  \item \textbf{Live web application:} \href{https://campus-resource-hub-frontend.vercel.app/}{Campus Resource Hub}
   \item \textbf{Web frontend:} \href{https://github.com/KaziAkibRayhan/campus-resource-hub-frontend}{campus-resource-hub-frontend}
   \item \textbf{Backend API:} \href{https://github.com/KaziAkibRayhan/campus-resource-hub-backend}{campus-resource-hub-backend}
   \item \textbf{Mobile wrapper:} \href{https://github.com/KaziAkibRayhan/campus-resource-hub-mobile}{campus-resource-hub-mobile}
